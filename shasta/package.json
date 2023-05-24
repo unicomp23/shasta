@@ -1,0 +1,26 @@
+{
+  "name": "shasta",
+  "version": "1.0.0",
+  "description": "HOPS - ho-rizontal pub/sub",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/airtimemedia/shasta.git"
+  },
+  "keywords": [
+    "horizontal",
+    "publish",
+    "subscribe",
+    "pubsub",
+    "scalable"
+  ],
+  "author": "aircore.io",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/airtimemedia/shasta/issues"
+  },
+  "homepage": "https://github.com/airtimemedia/shasta#readme"
+}
