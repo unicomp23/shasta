@@ -5,7 +5,7 @@ import {reply_to_subscriber} from "../kafka/reply_to_subscriber";
 import {Deferred, delay} from "@esfx/async";
 import {AsyncDisposableStack} from "@esfx/disposable";
 import {config, createTopics} from "../config";
-import {prettySpaces} from "../common2/constants";
+import {prettySpaces} from "../common/constants";
 
 describe(`pubsub`, () => {
     test(`primitive round trip`, async () => {
