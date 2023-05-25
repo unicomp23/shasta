@@ -1,5 +1,4 @@
-import { Kafka } from "kafkajs";
-import { config as ConfigClass } from "./config";
+import {config as ConfigClass} from "./config";
 import {createKafka} from "./common2/createKafka";
 import crypto from "crypto"; // Assuming the provided config class is in the same directory
 

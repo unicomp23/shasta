@@ -2,21 +2,20 @@ import {delay} from "@esfx/async";
 import {Consumer} from "kafkajs";
 
 export class partition_tracking {
-    private constructor() {
-    }
-
-    public static create() {
-        return new partition_tracking();
-    }
-
     private last_reply_partition_index = 0;
     private partitions_ = new Array<number>();
+    private partitions_stable = false;
+
+    private constructor() {
+    }
 
     public get partitions() {
         return this.partitions_;
     }
 
-    private partitions_stable = false;
+    public static create() {
+        return new partition_tracking();
+    }
 
     public async partitions_to_active() {
         while (!this.partitions_stable)

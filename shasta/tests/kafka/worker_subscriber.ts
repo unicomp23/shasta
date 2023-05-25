@@ -1,9 +1,7 @@
-import {Kafka} from "kafkajs";
 import crypto from "crypto";
 import {AirCoreFrame} from "../proto/gen/devinternal_pb";
 import {AsyncQueue} from "@esfx/async";
 import {AsyncDisposable} from "@esfx/disposable";
-import {kafkaLogLevel} from "./constants";
 import {config} from "../config";
 import {partition_tracking} from "./partition_tracking";
 import {createKafka} from "../common2/createKafka";
@@ -26,13 +24,7 @@ export class worker_subscriber {
         })
         return true;
     })();
-
-    public async connect() {
-        await this.consumer.connect()
-    }
-
     private joined = false;
-    public is_joined() { return this.joined; }
 
     private constructor(
         private readonly config_: config,
@@ -49,6 +41,14 @@ export class worker_subscriber {
 
     public static create(config_: config) {
         return new worker_subscriber(config_);
+    }
+
+    public async connect() {
+        await this.consumer.connect()
+    }
+
+    public is_joined() {
+        return this.joined;
     }
 
     async [AsyncDisposable.asyncDispose]() {

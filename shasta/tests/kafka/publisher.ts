@@ -1,8 +1,7 @@
-import {Kafka, Partitioners, ProducerRecord} from "kafkajs";
+import {Partitioners, ProducerRecord} from "kafkajs";
 import * as crypto from "crypto";
 import {AirCoreFrame} from "../proto/gen/devinternal_pb";
 import {AsyncDisposable} from "@esfx/disposable";
-import {kafkaLogLevel} from "./constants";
 import {config} from "../config";
 import {createKafka} from "../common2/createKafka";
 

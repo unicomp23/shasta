@@ -21,13 +21,13 @@ describe(`pubsub`, () => {
             const worker_subscriber_ = worker_subscriber.create(config_);
             disposable_stack.use(worker_subscriber_);
             await worker_subscriber_.connect();
-            while(!worker_subscriber_.is_joined())
+            while (!worker_subscriber_.is_joined())
                 await delay(1000);
 
             const reply_to_subscriber_ = reply_to_subscriber.create(config_);
             disposable_stack.use(reply_to_subscriber_);
             await reply_to_subscriber_.connect();
-            while(!reply_to_subscriber_.is_joined())
+            while (!reply_to_subscriber_.is_joined())
                 await delay(1000);
 
             let start_time = performance.now();
