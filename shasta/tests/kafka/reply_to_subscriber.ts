@@ -2,7 +2,7 @@ import crypto from "crypto";
 import {AsyncQueue} from "@esfx/async";
 import {AirCoreFrame} from "../proto/gen/devinternal_pb";
 import {AsyncDisposable} from "@esfx/disposable";
-import {config} from "../config";
+import {config} from "../integ/config";
 import {partition_tracking} from "./partition_tracking";
 import {createKafka} from "../common/createKafka";
 

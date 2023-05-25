@@ -2,7 +2,7 @@ import {Partitioners, ProducerRecord} from "kafkajs";
 import * as crypto from "crypto";
 import {AirCoreFrame} from "../proto/gen/devinternal_pb";
 import {AsyncDisposable} from "@esfx/disposable";
-import {config} from "../config";
+import {config} from "../integ/config";
 import {createKafka} from "../common/createKafka";
 
 export enum topic_type {
