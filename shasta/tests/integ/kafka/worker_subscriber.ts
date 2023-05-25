@@ -1,19 +1,19 @@
 import crypto from "crypto";
-import {AsyncQueue} from "@esfx/async";
 import {AirCoreFrame} from "../proto/gen/devinternal_pb";
+import {AsyncQueue} from "@esfx/async";
 import {AsyncDisposable} from "@esfx/disposable";
-import {config} from "../integ/config";
+import {config} from "../config";
 import {partition_tracking} from "./partition_tracking";
 import {createKafka} from "../common/createKafka";
 
-export class reply_to_subscriber {
+export class worker_subscriber {
     public readonly partition_tracking_ = partition_tracking.create();
     public readonly frames = new AsyncQueue<AirCoreFrame>();
     private readonly runner_ = (async () => {
         this.partition_tracking_.group_join(this.consumer, this.topic);
-        //console.log("reply_to_worker: ", this.config_.get_worker_topic());
+        //console.log("consumer_worker: ", this.config_.get_worker_topic());
         await this.consumer.subscribe({
-            topic: this.config_.easy_pubsub.get_reply_to_topic(),
+            topic: this.config_.easy_pubsub.get_worker_topic(),
             fromBeginning: false,
         })
         await this.consumer.run({
@@ -28,10 +28,10 @@ export class reply_to_subscriber {
 
     private constructor(
         private readonly config_: config,
-        readonly topic = config_.easy_pubsub.get_reply_to_topic(),
-        private readonly kafka = createKafka(config_.easy_pubsub.get_app_id() + '/reply_to/' + crypto.randomUUID()),
+        readonly topic = config_.easy_pubsub.get_worker_topic(),
+        private readonly kafka = createKafka(config_.easy_pubsub.get_app_id() + '/client_id/' + crypto.randomUUID()),
         private readonly consumer = kafka.consumer({
-            groupId: config_.easy_pubsub.get_reply_to_group_id()
+            groupId: config_.easy_pubsub.get_worker_group_id(),
         }),
     ) {
         consumer.on(consumer.events.FETCH_START, async () => {
@@ -40,7 +40,7 @@ export class reply_to_subscriber {
     }
 
     public static create(config_: config) {
-        return new reply_to_subscriber(config_);
+        return new worker_subscriber(config_);
     }
 
     public async connect() {
@@ -54,5 +54,9 @@ export class reply_to_subscriber {
     async [AsyncDisposable.asyncDispose]() {
         await this.consumer.stop();
         await this.consumer.disconnect();
+    }
+
+    private async partitions_active() {
+        await this.partition_tracking_.partitions_to_active();
     }
 }

@@ -1,11 +1,11 @@
-import {AirCoreFrame, PathTypes, Tags} from "../proto/gen/devinternal_pb";
-import {publisher, topic_type} from "../kafka/publisher";
-import {worker_subscriber} from "../kafka/worker_subscriber";
-import {reply_to_subscriber} from "../kafka/reply_to_subscriber";
+import {AirCoreFrame, PathTypes, Tags} from "./proto/gen/devinternal_pb";
+import {publisher, topic_type} from "./kafka/publisher";
+import {worker_subscriber} from "./kafka/worker_subscriber";
+import {reply_to_subscriber} from "./kafka/reply_to_subscriber";
 import {Deferred, delay} from "@esfx/async";
 import {AsyncDisposableStack} from "@esfx/disposable";
 import {config, createTopics} from "./config";
-import {prettySpaces} from "../common/constants";
+import {prettySpaces} from "./common/constants";
 
 describe(`pubsub`, () => {
     test(`primitive round trip`, async () => {
