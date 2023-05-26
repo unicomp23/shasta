@@ -28,10 +28,12 @@ export class publisher {
         this.topic_reply_to = config_.easy_pubsub.get_reply_to_topic();
     }
 
+    // Static create method for creating a new publisher instance
     public static create(config_: config) {
         return new publisher(config_);
     }
 
+    // Gets the corresponding topic string based on the topic_type enum value
     public get_topic(topic_type_: topic_type) {
         switch (topic_type_) {
             case topic_type.reply_to:
@@ -43,10 +45,10 @@ export class publisher {
         }
     }
 
+    // Sends a given AirCoreFrame message to the specified topic_type
     public async send(topic_type_: topic_type, frame: AirCoreFrame) {
         if (!this.connected) {
             await this.producer.connect();
-            //console.log("send.connect")
             this.connected = true;
         }
         const topic = this.get_topic(topic_type_);
@@ -56,19 +58,20 @@ export class publisher {
                 value: Buffer.from("")
             }]
         } as ProducerRecord;
-        //console.log("producing:", frame.toJsonString({prettySpaces}));
+
+        // Sets the appropriate partition and key information based on the topic_type
         switch (topic_type_) {
             case topic_type.worker: {
                 if (frame.sendTo?.kafkaKey?.kafkaPartitionKey?.x.case == "sequenceNumberPath")
                     record.messages[0].key = Buffer.from(frame.sendTo?.kafkaKey?.kafkaPartitionKey?.x.value.toBinary());
                 else
-                    throw new Error(`missing frame.sendTo?.kafkaKey?.kafkaPartitionKey?x.case:"sequenceNumberPath"`);
+                    throw new Error(`missing frame.sendTo?.kafkaKey?.kafka_partition_key?x.case:"sequence_number_path"`);
                 break;
             }
             case topic_type.reply_to: {
                 if (frame.replyTo?.kafkaKey?.kafkaPartitionKey?.x.case == "partitionInteger")
-                    record.messages[0].partition = frame.replyTo?.kafkaKey?.kafkaPartitionKey?.x.value | 0; // protobuf serialize drops zero val's
-                else throw new Error(`missing frame.replyTo?.kafkaKey?.kafkaPartitionKey?.x.case:"partitionInteger"`);
+                    record.messages[0].partition = frame.replyTo?.kafkaKey?.kafkaPartitionKey?.x.value | 0;
+                else throw new Error(`missing frame.reply_to?.kafka_key?.kafka_partition_key?.x.case:"partition_integer"`);
                 break;
             }
             default:
@@ -76,10 +79,19 @@ export class publisher {
         }
         record.messages[0].value = Buffer.from(frame.toBinary());
         await this.producer.send(record);
-        //console.log("publisher.send: ", frame.toJsonString({prettySpaces}));
     }
 
+    // Implements the asyncDispose method for clean disposal of the publisher object
     async [AsyncDisposable.asyncDispose]() {
         await this.producer.disconnect();
     }
 }
+
+/*
+The `publisher` class:
+
+1. Publishes messages to either the `worker` or `reply_to` topics based on the specified topic type
+2. Connects to the Kafka broker and initializes the Kafka producer with the appropriate partitioner and topic creation setting
+3. Sets the partition and key information based on the topic_type before sending the message
+4. Implements the asyncDispose method for clean disposal of the publisher object
+ */

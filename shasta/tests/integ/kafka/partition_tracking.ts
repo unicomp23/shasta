@@ -9,14 +9,17 @@ export class partition_tracking {
     private constructor() {
     }
 
+    // Getter for partitions
     public get partitions() {
         return this.partitions_;
     }
 
+    // Static create method for creating a new partition_tracking instance
     public static create() {
         return new partition_tracking();
     }
 
+    // Waits until the partitions become stable (consumer group join event received) or times out
     public async partitions_to_active() {
         while (!this.partitions_stable)
             await delay(100);
@@ -24,6 +27,7 @@ export class partition_tracking {
         return true;
     }
 
+    // Listens for 'consumer.group_join' events and updates the partitions list accordingly
     public group_join(consumer: Consumer, topic: string) {
         consumer.on("consumer.group_join", (event) => {
             const partitions = event.payload.memberAssignment[topic];
@@ -35,6 +39,7 @@ export class partition_tracking {
         });
     }
 
+    // Gets the next partition index in a round-robin fashion
     public async get_next_partition() {
         await this.partitions_to_active();
         this.last_reply_partition_index++;
@@ -45,3 +50,10 @@ export class partition_tracking {
         return result;
     }
 }
+
+/*
+The `partition_tracking` class:
+1. Tracks the list of partitions it is assigned to within a Kafka consumer group.
+2. Waits for the consumer group join event to occur and update the list of partitions.
+3. Provides a method to get the next partition index in a round-robin manner.
+*/
