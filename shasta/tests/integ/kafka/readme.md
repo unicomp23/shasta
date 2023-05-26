@@ -1,4 +1,5 @@
-# Easy Pub/Sub with Kafka - testing only, not for production, when prod code in /src matures this will be removed
+# Easy Pub/Sub with Kafka
+Testing only, not for production, when prod code in /src matures this will be removed.  To be used as a reference only and sanity check against aws/msk and local dev (ie docker compose) env's.
 
 In this solution, we use Kafka as a message broker to implement a simple publish-subscribe pattern for sending, handling, and receiving messages between services. We will cover the implementation details of the provided classes and their purpose, and how they can be used to create a publisher and subscribers for the `worker` and `reply_to` topics.
 

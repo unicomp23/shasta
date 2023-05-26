@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bbf031c7-6def-4b26-a42f-5afabd598aaa" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/dev.env.sh" beforeDir="false" afterPath="$PROJECT_DIR$/dev.env.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integ/kafka/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integ/kafka/readme.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
