@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="bbf031c7-6def-4b26-a42f-5afabd598aaa" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/kafka/consumer_group_worker.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/kafka/consumer_group_worker.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
