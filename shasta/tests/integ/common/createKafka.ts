@@ -1,5 +1,5 @@
 import {Kafka} from "kafkajs";
-import {kafkaLogLevel} from "../kafka/constants";
+import {kafkaLogLevel} from "../../../src/lib/kafka/constants";
 import {env} from "process";
 import {createMechanism} from "@jm18457/kafkajs-msk-iam-authentication-mechanism";
 

@@ -4,14 +4,14 @@
 // @ts-nocheck
 
 import {
-  DelayedUpsertRequest,
-  DelayedUpsertResponse,
-  GetDeltasRequest,
-  GetDeltasResponse,
-  GetSnapshotResponse,
-  KeepAlives,
-  Path,
-  UpsertRequest
+    DelayedUpsertRequest,
+    DelayedUpsertResponse,
+    GetDeltasRequest,
+    GetDeltasResponse,
+    GetSnapshotResponse,
+    KeepAlives,
+    Path,
+    UpsertRequest
 } from "./devinternal_pb";
 import {Empty, MethodKind} from "@bufbuild/protobuf";
 
