@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bbf031c7-6def-4b26-a42f-5afabd598aaa" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/tests/integ/kafka/worker_subscriber.ts" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integ/kafka/worker_subscriber.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/integ/readme.ec2.msk.test.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
