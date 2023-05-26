@@ -7,7 +7,7 @@ export class consumer_group_worker {
     private readonly runner_ = (async () => {
         // Subscribe to the worker topic
         await this.consumer.subscribe({
-            topic: this.config_.easy_pubsub.get_worker_topic(),
+            topic: this.config_.easy_pubsub.get_tag_data(),
             fromBeginning: false,
         })
 
@@ -24,7 +24,7 @@ export class consumer_group_worker {
 
     private constructor(
         private readonly config_: config,
-        readonly topic = config_.easy_pubsub.get_worker_topic(),
+        readonly topic = config_.easy_pubsub.get_tag_data(),
         private readonly kafka = createKafka(config_.easy_pubsub.get_app_id() + '/client_id/' + crypto.randomUUID()),
         private readonly consumer = kafka.consumer({
             groupId: config_.easy_pubsub.get_worker_group_id(),

@@ -3,34 +3,25 @@ import {createKafka} from "../../tests/integ/common/createKafka"; // Assuming th
 
 class config_easy_pubsub {
     private constructor(
-        private test_run_id: string
     ) {
     }
 
     public static create(test_run_id: string) {
-        return new config_easy_pubsub(test_run_id);
+        return new config_easy_pubsub();
     }
 
     // publishers, subscribers, workers
-    get_worker_topic() {
-        return 'worker-topic' + this.test_run_id;
+    get_tag_data() {
+        return 'tag-data';
     }
 
     get_worker_group_id() {
-        return 'worker-group-id' + this.test_run_id;
-    }
-
-    get_reply_to_topic() {
-        return 'reply-to-topic' + this.test_run_id;
-    }
-
-    get_reply_to_group_id() {
-        return 'reply-to-group-id' + this.test_run_id;
+        return 'tag-data-group-id';
     }
 
     /// global
     get_app_id() {
-        return 'my_app_id' + this.test_run_id;
+        return 'my_app_id';
     }
 
     get_kafka_brokers() {
@@ -46,31 +37,10 @@ class config_easy_pubsub {
     }
 }
 
-class config_timeout_publisher {
-    private constructor(
-        private test_run_id: string
-    ) {
-    }
-
-    public static create(test_run_id: string) {
-        return new config_timeout_publisher(test_run_id);
-    }
-
-    /// timeout publisher
-    get_timeout_topic() {
-        return 'timeout-worker-topic' + this.test_run_id;
-    }
-
-    get_timeout_group_id() {
-        return 'timeout-worker-group-id' + this.test_run_id;
-    }
-}
-
 export class config {
     private constructor(
         private test_run_id = "-" + crypto.randomUUID(),
         public readonly easy_pubsub = config_easy_pubsub.create(test_run_id),
-        public readonly timeout_publisher = config_timeout_publisher.create(test_run_id),
     ) {
     }
 
@@ -85,9 +55,7 @@ export async function createTopics(config_: config): Promise<void> {
     const admin = kafka.admin();
 
     const requiredTopics = [
-        config_.easy_pubsub.get_worker_topic(),
-        config_.easy_pubsub.get_reply_to_topic(),
-        config_.timeout_publisher.get_timeout_topic(),
+        config_.easy_pubsub.get_tag_data(),
     ];
 
     try {
