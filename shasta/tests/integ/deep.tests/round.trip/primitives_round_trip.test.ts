@@ -93,7 +93,6 @@ describe(`pubsub`, () => {
                     },
                 }],
             });
-            //await delay(5000); // TODO, looks like we need to wait for the workers to join via heartbeat signal in app
             console.log(`publisher.send`, frame.toJsonString({prettySpaces}));
             await publisher_.send(topic_type.worker, frame);
 
