@@ -13,7 +13,7 @@ at-deps/make/cmake_helpers.make: at-deps/deps.make;
 .PHONY: always
 
 shasta-package-setup: release
-	cp -Rp shasta $(RELEASE_BUILD_DIR)/shasta
+	cp -Rp shasta $(RELEASE_BUILD_DIR)/shasta-worker
 
 test:
 	(cd shasta; npm run test; npm run lint)
