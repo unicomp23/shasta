@@ -59,7 +59,7 @@ def deployUrl
 def buildTimes = [:]
 
 // stash all important git variables
-baseVersionFile = 'ShastaVersion.txt'
+baseVersionFile = 'ShastaWorkerVersion.txt'
 helpers.stashImportantVars(baseVersionFile)
 
 if (branch.isPR()) {
