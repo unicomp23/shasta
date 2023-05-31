@@ -19,4 +19,4 @@ make shasta-package-setup
 make release-rpm release-config-rpm > rpm.log 2>&1
 
 # create version prop file for downstream job
-echo "VERSION_BASE=$(cat ShastaVersion.txt)" > version.prop
+echo "VERSION_BASE=$(cat ShastaWorkerVersion.txt)" > version.prop

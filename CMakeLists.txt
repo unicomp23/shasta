@@ -11,8 +11,8 @@ cmake_minimum_required(VERSION 3.15.3)
 # The epoch is part the rpm metadata. With yum, you can see it with:
 # yum info nodejs-16.16.0
 set(AIRTIME_NODE_VERSION "2:16.16.0")
-file(STRINGS "ShastaVersion.txt" SHASTA_BASE_VERSION)
-project(shasta)
+file(STRINGS "ShastaWorkerVersion.txt" SHASTA_WORKER_BASE_VERSION)
+project(shasta-worker)
 
 if(NOT ${at_deps_dir})
   set(${at_deps_dir} deps)
@@ -23,31 +23,31 @@ include("${at_deps_dir}/cmake/deps.cmake")
 if (vline_lib_install_dir)
   install(DIRECTORY ${PROJECT_BINARY_DIR}/shasta
     DESTINATION ${vline_lib_install_dir}
-    COMPONENT shasta
+    COMPONENT shasta-worker
   )
 
-  add_rpm_target(ASSOCIATED_PROJECT shasta
-      COMPONENT shasta
-      COMPONENT_VERSION "${SHASTA_BASE_VERSION}"
+  add_rpm_target(ASSOCIATED_PROJECT shasta-worker
+      COMPONENT shasta-worker
+      COMPONENT_VERSION "${SHASTA_WORKER_BASE_VERSION}"
       RPM_DEPENDS  "nodejs = ${AIRTIME_NODE_VERSION}"
-      DESCRIPTION "shasta"
+      DESCRIPTION "shasta-worker"
   )
 
-  add_rpm_target(ASSOCIATED_PROJECT shasta
-      COMPONENT shasta-config
-      COMPONENT_VERSION "${SHASTA_BASE_VERSION}"
-      DESCRIPTION "shasta config"
+  add_rpm_target(ASSOCIATED_PROJECT shasta-worker
+      COMPONENT shasta-worker-config
+      COMPONENT_VERSION "${SHASTA_WORKER_BASE_VERSION}"
+      DESCRIPTION "shasta-worker config"
   )
 
-  install_config_only(SCRIPT_NAME shasta
-    LOCAL_CONFIG_NAME shasta.json.j2
+  install_config_only(SCRIPT_NAME shasta-worker
+    LOCAL_CONFIG_NAME shasta-worker.json.j2
     EXE_PARAMS ""
-    COMPONENT shasta-config
+    COMPONENT shasta-worker-config
   )
 
-  install_config_only(SCRIPT_NAME shasta
+  install_config_only(SCRIPT_NAME shasta-worker
     LOCAL_CONFIG_NAME settings.js.j2
     EXE_PARAMS ""
-    COMPONENT shasta-config
+    COMPONENT shasta-worker-config
   )
 endif()
