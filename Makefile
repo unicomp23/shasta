@@ -1,4 +1,4 @@
-PROJECT=shasta
+PROJECT=shasta-worker
 
 include at-deps/deps.make
 include at-deps/make/cmake_helpers.make
