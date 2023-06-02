@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import {createKafka} from "../../tests/integ/common/createKafka";
+import {createKafka} from "./kafka/createKafka";
 import * as fs from "fs"; // Assuming the provided config class is in the same directory
 
 interface FileConfig {
