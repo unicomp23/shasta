@@ -5,14 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5eed3da9-ff16-4b2d-bbac-787a5ae8402c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/shasta/src/lib/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/shasta/src/lib/config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shasta/src/lib/kafka/consumer_group_worker.ts" beforeDir="false" afterPath="$PROJECT_DIR$/shasta/src/lib/kafka/consumer_group_worker.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shasta/src/lib/kafka/createKafka.ts" beforeDir="false" afterPath="$PROJECT_DIR$/shasta/src/lib/kafka/createKafka.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shasta/tests/integ/common/createKafka.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shasta/tests/integ/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/shasta/tests/integ/config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shasta/tests/integ/kafka/publisher.ts" beforeDir="false" afterPath="$PROJECT_DIR$/shasta/tests/integ/kafka/publisher.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shasta/tests/integ/kafka/reply_to_subscriber.ts" beforeDir="false" afterPath="$PROJECT_DIR$/shasta/tests/integ/kafka/reply_to_subscriber.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shasta/tests/integ/kafka/worker_subscriber.ts" beforeDir="false" afterPath="$PROJECT_DIR$/shasta/tests/integ/kafka/worker_subscriber.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

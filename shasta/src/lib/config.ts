@@ -4,19 +4,13 @@ import * as fs from "fs"; // Assuming the provided config class is in the same d
 
 interface FileConfig {
     bootstrapEndpoints: string;
-
     zkServers: string;
     zkTimeoutSec: number;
     zkStatsPath: string;
-
     statsUpdateIntervalSec: number;
-
     logFile: string;
-
     syslog: boolean;
-
     consoleLog: boolean;
-
     logLevel: string;
 }
 
@@ -30,18 +24,18 @@ export function configFileFactory(): FileConfig {
     // Read the content of the file
     const appConfigRaw = fs.readFileSync(appConfigPath, 'utf8');
 
-    const appConfig = JSON.parse(appConfigRaw);
-
+    // Directly map the JSON content into the interface FileConfig while parsing
+    const appConfigJson = JSON.parse(appConfigRaw);
     const config: FileConfig = {
-        bootstrapEndpoints: appConfig.bootstrapEndpoints,
-        zkServers: appConfig.zkServers,
-        zkTimeoutSec: appConfig.zkTimeoutSec,
-        zkStatsPath: appConfig.zkStatsPath,
-        statsUpdateIntervalSec: appConfig.statsUpdateIntervalSec,
-        logFile: appConfig.logFile,
-        syslog: appConfig.syslog,
-        consoleLog: appConfig.consoleLog,
-        logLevel: appConfig.logLevel,
+        bootstrapEndpoints: appConfigJson['bootstrap-endpoints'],
+        zkServers: appConfigJson['zk-servers'],
+        zkTimeoutSec: appConfigJson['zk-timeout-sec'],
+        zkStatsPath: appConfigJson['zk-stats-path'],
+        statsUpdateIntervalSec: appConfigJson['stats-update-interval-sec'],
+        logFile: appConfigJson['log-file'],
+        syslog: appConfigJson['syslog'],
+        consoleLog: appConfigJson['console-log'],
+        logLevel: appConfigJson['log-level'],
     };
 
     return config;
