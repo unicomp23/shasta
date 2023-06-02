@@ -1,5 +1,6 @@
 import crypto from "crypto";
-import {createKafka} from "../../tests/integ/common/createKafka"; // Assuming the provided config class is in the same directory
+import {createKafka} from "../../tests/integ/common/createKafka";
+import * as fs from "fs"; // Assuming the provided config class is in the same directory
 
 interface FileConfig {
     bootstrapEndpoints: string;
@@ -20,11 +21,14 @@ interface FileConfig {
 }
 
 export function configFileFactory(): FileConfig {
-    const appConfigRaw = process.env.APP_CONFIG;
+    const appConfigPath = process.env.APP_CONFIG;
 
-    if (!appConfigRaw) {
+    if (!appConfigPath) {
         throw new Error('APP_CONFIG environment variable is not set');
     }
+
+    // Read the content of the file
+    const appConfigRaw = fs.readFileSync(appConfigPath, 'utf8');
 
     const appConfig = JSON.parse(appConfigRaw);
 
