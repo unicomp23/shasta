@@ -6,7 +6,7 @@ import {configFileFactory} from "../config";
 
 export function createKafka(clientId: string, region: string = 'us-east-1'): Kafka {
     const configFile = configFileFactory();
-    console.log("createKafka: env.KAFKA_BROKERS: ", configFile.bootstrapEndpoints);
+    console.log("createKafka: ", configFile);
     return new Kafka({
         clientId,
         brokers: configFile.bootstrapEndpoints.split(",") || [],
