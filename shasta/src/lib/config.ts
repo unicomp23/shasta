@@ -1,8 +1,51 @@
 import crypto from "crypto";
 import {createKafka} from "../../tests/integ/common/createKafka"; // Assuming the provided config class is in the same directory
 
+interface FileConfig {
+    bootstrapEndpoints: string;
+
+    zkServers: string;
+    zkTimeoutSec: number;
+    zkStatsPath: string;
+
+    statsUpdateIntervalSec: number;
+
+    logFile: string;
+
+    syslog: boolean;
+
+    consoleLog: boolean;
+
+    logLevel: string;
+}
+
+export function configFileFactory(): FileConfig {
+    const appConfigRaw = process.env.APP_CONFIG;
+
+    if (!appConfigRaw) {
+        throw new Error('APP_CONFIG environment variable is not set');
+    }
+
+    const appConfig = JSON.parse(appConfigRaw);
+
+    const config: FileConfig = {
+        bootstrapEndpoints: appConfig.bootstrapEndpoints,
+        zkServers: appConfig.zkServers,
+        zkTimeoutSec: appConfig.zkTimeoutSec,
+        zkStatsPath: appConfig.zkStatsPath,
+        statsUpdateIntervalSec: appConfig.statsUpdateIntervalSec,
+        logFile: appConfig.logFile,
+        syslog: appConfig.syslog,
+        consoleLog: appConfig.consoleLog,
+        logLevel: appConfig.logLevel,
+    };
+
+    return config;
+}
+
 class config_easy_pubsub {
     private constructor(
+        private readonly config = configFileFactory(),
     ) {
     }
 
@@ -25,6 +68,8 @@ class config_easy_pubsub {
     }
 
     get_kafka_brokers() {
+        if(this.config.bootstrapEndpoints)
+            return this.config.bootstrapEndpoints.split(',');
         if (process.env.KAFKA_BROKERS)
             return process.env.KAFKA_BROKERS.split(',');
         return ['redpanda:9092'];
