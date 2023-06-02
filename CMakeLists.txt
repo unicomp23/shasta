@@ -23,8 +23,7 @@ include("${at_deps_dir}/cmake/deps.cmake")
 if (vline_lib_install_dir)
   install(DIRECTORY ${PROJECT_BINARY_DIR}/shasta
     DESTINATION ${vline_lib_install_dir}
-    PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ
-                WORLD_EXECUTE WORLD_READ
+    USE_SOURCE_PERMISSIONS
     COMPONENT shasta-worker
   )
 
