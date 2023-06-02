@@ -4,7 +4,7 @@ import {AirCoreFrame} from "../proto/gen/devinternal_pb";
 import {AsyncDisposable} from "@esfx/disposable";
 import {config} from "../config";
 import {partition_tracking} from "./partition_tracking";
-import {createKafka} from "../common/createKafka";
+import {createKafka} from "../../../src/lib/kafka/createKafka";
 
 export class reply_to_subscriber {
     public readonly partition_tracking_ = partition_tracking.create();

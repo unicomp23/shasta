@@ -4,7 +4,7 @@ import {AsyncQueue} from "@esfx/async";
 import {AsyncDisposable} from "@esfx/disposable";
 import {config} from "../config";
 import {partition_tracking} from "./partition_tracking";
-import {createKafka} from "../common/createKafka";
+import {createKafka} from "../../../src/lib/kafka/createKafka";
 
 export class worker_subscriber {
     public readonly partition_tracking_ = partition_tracking.create();

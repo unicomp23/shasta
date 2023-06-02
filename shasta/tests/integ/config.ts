@@ -1,5 +1,5 @@
 import {config as ConfigClass} from "./config";
-import {createKafka} from "./common/createKafka";
+import {createKafka} from "../../src/lib/kafka/createKafka";
 import crypto from "crypto"; // Assuming the provided config class is in the same directory
 
 class config_easy_pubsub {

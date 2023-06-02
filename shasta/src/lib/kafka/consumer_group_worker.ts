@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import {AsyncDisposable} from "@esfx/disposable";
 import {config} from "../config";
-import {createKafka} from "../../../tests/integ/common/createKafka";
+import {createKafka} from "./createKafka";
 
 export class consumer_group_worker {
     private readonly runner_ = (async () => {

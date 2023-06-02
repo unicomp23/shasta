@@ -3,7 +3,7 @@ import * as crypto from "crypto";
 import {AirCoreFrame} from "../proto/gen/devinternal_pb";
 import {AsyncDisposable} from "@esfx/disposable";
 import {config} from "../config";
-import {createKafka} from "../common/createKafka";
+import {createKafka} from "../../../src/lib/kafka/createKafka";
 
 export enum topic_type {
     unknown,

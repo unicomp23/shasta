@@ -1,13 +1,15 @@
 import {Kafka} from "kafkajs";
+import {kafkaLogLevel} from "./constants";
 import {env} from "process";
 import {createMechanism} from "@jm18457/kafkajs-msk-iam-authentication-mechanism";
-import {kafkaLogLevel} from "./constants";
+import {configFileFactory} from "../config";
 
 export function createKafka(clientId: string, region: string = 'us-east-1'): Kafka {
-    console.log("createKafka: env.KAFKA_BROKERS: ", env.KAFKA_BROKERS);
+    const configFile = configFileFactory();
+    console.log("createKafka: env.KAFKA_BROKERS: ", configFile.bootstrapEndpoints);
     return new Kafka({
         clientId,
-        brokers: env.KAFKA_BROKERS?.split(',') || [],
+        brokers: configFile.bootstrapEndpoints.split(",") || [],
         logLevel: kafkaLogLevel,
         ssl: true,
         sasl: createMechanism({region}),
