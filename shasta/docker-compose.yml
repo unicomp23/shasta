@@ -1,0 +1,72 @@
+version: '3.9'
+
+x-config: &x-config
+  ENVIRONMENT: 'dev'
+  KAFKA_BROKERS: 'PLAINTEXT://redpanda:9092'
+  REDIS_URI: 'redis://redis:6379'
+
+services:
+  redis:
+    image: bitnami/redis:6.2
+    environment:
+      ALLOW_EMPTY_PASSWORD: 'yes'
+    healthcheck:
+      test: 'redis-cli ping'
+      interval: '5s'
+      timeout: '1s'
+      retries: 20
+    ports:
+      - '6379'
+  redpanda:
+    image: vectorized/redpanda:latest
+    command:
+      - redpanda
+      - start
+      - --smp
+      - '1'
+      - --mode
+      - dev-container
+      - --node-id
+      - '0'
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:29092,OUTSIDE://redpanda:9092
+      - --pandaproxy-addr
+      - PLAINTEXT://0.0.0.0:28082,OUTSIDE://0.0.0.0:8082
+      - --advertise-pandaproxy-addr
+      - PLAINTEXT://redpanda:28082,OUTSIDE://redpanda:8082
+      - --set
+      - "redpanda.auto_create_topics_enabled=true"
+    ports:
+      - '8082' # http pandaproxy rest api
+      - '9092' # kafka wire protocol
+    healthcheck:
+      test: 'curl --fail --silent http://localhost:8082/topics || exit 1'
+      interval: '5s'
+      timeout: '1s'
+      retries: 20
+    volumes:
+      - '/var/lib/redpanda/data'
+  kafka_worker:
+    build:
+      context: docker
+      dockerfile: Dockerfile
+    command: ["sleep", "infinity"]
+    #command: sh -c "npm install && npm start"
+    healthcheck:
+      test: exit 0
+      interval: 10s
+    volumes:
+      - '.:/root/app' # will mount local source code into the container
+    depends_on:
+      redis:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    environment:
+      <<: *x-config
+    ports:
+      - '80'
+networks:
+  default: { }
