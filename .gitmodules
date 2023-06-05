@@ -1,0 +1,3 @@
+[submodule "at-deps"]
+	path = at-deps
+	url = git@github.com:yoinc/deps.git
