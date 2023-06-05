@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 set -e
 set -x
 export BUILD_NUMBER=${actual_build_number}
@@ -14,7 +13,7 @@ nvm install 16.16.0
 top=$(pwd)
 make init
 make update
-(cd ${top}/shasta;GIT_SSH_COMMAND=ssh npm install)
+(cd ${top}/shasta;GIT_SSH_COMMAND=ssh npm ci)
 make shasta-package-setup
 make release-rpm release-config-rpm > rpm.log 2>&1
 
