@@ -2,7 +2,7 @@ FROM ubuntu as dev
 
 # nvm requirements
 RUN apt-get update
-RUN apt-get install -y curl wget
+RUN apt-get install -y curl wget build-essential libssl-dev
 
 # nvm env vars
 RUN mkdir -p /usr/local/nvm
@@ -16,7 +16,11 @@ RUN /bin/bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && nvm use
 # add node and npm to the PATH
 ENV NODE_PATH $NVM_DIR/versions/node/$NODE_VERSION/bin
 ENV PATH $NODE_PATH:$PATH
-WORKDIR /root/app/omni
+WORKDIR /root/app
 COPY . /root/src
 RUN npm -v
 RUN node -v
+
+ENV GIT_SSH_COMMAND ssh
+ENV CC clang
+ENV CXX 'clang++ -stdlib=libc++'
