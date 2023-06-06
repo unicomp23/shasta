@@ -13,10 +13,11 @@ nvm install 16.16.0
 top=$(pwd)
 make init
 make update
-(cd ${top}/shasta;npm run lint)
 (cd ${top}/shasta;GIT_SSH_COMMAND=ssh npm ci)
 make shasta-package-setup
 make release-rpm release-config-rpm > rpm.log 2>&1
+
+(cd ${top}/shasta;npm run lint)
 
 # create version prop file for downstream job
 echo "VERSION_BASE=$(cat ShastaWorkerVersion.txt)" > version.prop
