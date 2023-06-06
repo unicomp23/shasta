@@ -89,11 +89,11 @@ if (branch.isPR()) {
     }
 
     if (branch.isFeatureBranch()) {
-      deployUrl = build_helpers.getNonProdDeployPromotionUrl('shasta', baseVersionFile)
+      deployUrl = build_helpers.getNonProdDeployPromotionUrl('shasta-worker', baseVersionFile)
     }
 
     if (branch.isDevelopBranch()) {
-      deployUrl = build_helpers.getProdDeployPromotionUrl('shasta', baseVersionFile)
+      deployUrl = build_helpers.getProdDeployPromotionUrl('shasta-worker', baseVersionFile)
     }
   // See https://issues.jenkins-ci.org/browse/JENKINS-28822 and
   // https://issues.jenkins-ci.org/browse/JENKINS-34376
