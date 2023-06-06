@@ -4,7 +4,11 @@ module.exports = {
     plugins: ['@typescript-eslint'],
     root: true,
     ignorePatterns: ['test/**/*', 'src/legacy/**/*', 'src/**/*.js'],
-    env: { browser: true },
+    env: {
+        "node": true,
+        "commonjs": true,
+        "es2021": true
+    },
     rules: {
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-non-null-assertion': 'off',
