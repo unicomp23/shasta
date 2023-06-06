@@ -1,5 +1,10 @@
 FROM ubuntu as dev
 
+# Add Git and SSH
+RUN apt-get update && \
+    apt-get install -y git openssh-client && \
+    apt-get clean
+
 # nvm requirements
 RUN apt-get update
 RUN apt-get install -y curl wget build-essential libssl-dev
@@ -20,6 +25,14 @@ WORKDIR /root/app
 COPY . /root/src
 RUN npm -v
 RUN node -v
+
+# Copy SSH keys (assuming id_rsa is in the project root directory)
+COPY id_rsa /root/.ssh/id_rsa
+RUN chmod 600 /root/.ssh/id_rsa
+
+# Disable host key checking for SSH client (not recommended for production use)
+RUN mkdir -p /root/.ssh
+RUN echo "Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile /dev/null\n" > /root/.ssh/config
 
 ENV GIT_SSH_COMMAND ssh
 ENV CC clang
