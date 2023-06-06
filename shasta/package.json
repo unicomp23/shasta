@@ -4,7 +4,8 @@
   "description": "HOPS - ho-rizontal pub/sub",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "lint": "npx eslint --ext .ts src"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,9 @@
     "@bufbuild/buf": "1.14.0",
     "@types/jest": "29.4.0",
     "@types/uuid": "9.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.56.0",
+    "@typescript-eslint/parser": "^5.56.0",
+    "eslint-config-build": "git+ssh://git@github.com/airtimemedia/js-build.git#2.1",
     "ts-jest": "29.0.5",
     "tsx": "3.12.3",
     "typescript": "4.9.5"
