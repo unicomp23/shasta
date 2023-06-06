@@ -17,5 +17,7 @@ make update
 make shasta-package-setup
 make release-rpm release-config-rpm > rpm.log 2>&1
 
+npm run lint
+
 # create version prop file for downstream job
 echo "VERSION_BASE=$(cat ShastaWorkerVersion.txt)" > version.prop
