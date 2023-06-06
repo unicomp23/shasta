@@ -26,7 +26,7 @@ COPY . /root/src
 RUN npm -v
 RUN node -v
 
-# Copy SSH keys (assuming id_rsa is in the project root directory)
+# Copy SSH keys (assuming id_rsa is in the project docker directory)
 COPY id_rsa /root/.ssh/id_rsa
 RUN chmod 600 /root/.ssh/id_rsa
 
