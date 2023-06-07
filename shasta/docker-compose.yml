@@ -50,8 +50,8 @@ services:
       - '/var/lib/redpanda/data'
   kafka_worker:
     build:
-      context: docker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile
     command: ["sleep", "infinity"]
     #command: sh -c "npm install && npm start"
     healthcheck:

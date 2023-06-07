@@ -21,13 +21,13 @@ RUN /bin/bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && nvm use
 # add node and npm to the PATH
 ENV NODE_PATH $NVM_DIR/versions/node/$NODE_VERSION/bin
 ENV PATH $NODE_PATH:$PATH
-WORKDIR /root/app
 COPY . /root/src
+WORKDIR /root/src
 RUN npm -v
 RUN node -v
 
 # Copy SSH keys (assuming id_rsa is in the project docker directory)
-COPY id_rsa /root/.ssh/id_rsa
+COPY docker/id_rsa /root/.ssh/id_rsa
 RUN chmod 600 /root/.ssh/id_rsa
 
 # Disable host key checking for SSH client (not recommended for production use)
