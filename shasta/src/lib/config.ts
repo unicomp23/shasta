@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import {createKafka} from "./kafka/createKafka";
-import * as fs from "fs"; // Assuming the provided config class is in the same directory
+import * as fs from "fs";
+import {env} from "process"; // Assuming the provided config class is in the same directory
 
 interface FileConfig {
     bootstrapEndpoints: string;
@@ -18,7 +19,18 @@ export function configFileFactory(): FileConfig {
     const appConfigPath = process.env.APP_CONFIG;
 
     if (!appConfigPath) {
-        throw new Error('APP_CONFIG environment variable is not set');
+        console.info('APP_CONFIG environment variable is not set', env.KAFKA_BROKERS);
+        return {
+            bootstrapEndpoints: env.KAFKA_BROKERS || 'redpanda:9092',
+            zkServers: '',
+            zkTimeoutSec: 0,
+            zkStatsPath: '',
+            statsUpdateIntervalSec: 0,
+            logFile: '',
+            syslog: false,
+            consoleLog: false,
+            logLevel: '',
+        };
     }
 
     // Read the content of the file
