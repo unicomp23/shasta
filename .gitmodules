@@ -1,3 +1,6 @@
 [submodule "at-deps"]
 	path = at-deps
 	url = git@github.com:yoinc/deps.git
+[submodule "shasta/submodules/shasta-proto"]
+	path = shasta/submodules/shasta-proto
+	url = git@github.com:airtimemedia/shasta-proto.git
