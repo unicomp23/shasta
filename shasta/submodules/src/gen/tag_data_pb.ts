@@ -132,3 +132,99 @@ export class TagData extends Message<TagData> {
   }
 }
 
+/**
+ * internal message used to wrap a TagData object with a sequence number
+ *
+ * @generated from message TagDataProto.TagDataEnvelope
+ */
+export class TagDataEnvelope extends Message<TagDataEnvelope> {
+  /**
+   * @generated from field: optional TagDataProto.TagData tag_data = 1;
+   */
+  tagData?: TagData;
+
+  /**
+   * sequence number of the tag data object
+   *
+   * @generated from field: optional string sequence_number = 2;
+   */
+  sequenceNumber?: string;
+
+  constructor(data?: PartialMessage<TagDataEnvelope>) {
+    super();
+    proto2.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto2 = proto2;
+  static readonly typeName = "TagDataProto.TagDataEnvelope";
+  static readonly fields: FieldList = proto2.util.newFieldList(() => [
+    { no: 1, name: "tag_data", kind: "message", T: TagData, opt: true },
+    { no: 2, name: "sequence_number", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TagDataEnvelope {
+    return new TagDataEnvelope().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TagDataEnvelope {
+    return new TagDataEnvelope().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TagDataEnvelope {
+    return new TagDataEnvelope().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: TagDataEnvelope | PlainMessage<TagDataEnvelope> | undefined, b: TagDataEnvelope | PlainMessage<TagDataEnvelope> | undefined): boolean {
+    return proto2.util.equals(TagDataEnvelope, a, b);
+  }
+}
+
+/**
+ * internal message used to wrap a map of TagDataEnvelope objects with a sequence number
+ *
+ * @generated from message TagDataProto.TagDataSnapshot
+ */
+export class TagDataSnapshot extends Message<TagDataSnapshot> {
+  /**
+   * map of tag data objects, keyed by name
+   *
+   * @generated from field: map<string, TagDataProto.TagDataEnvelope> snapshot = 1;
+   */
+  snapshot: { [key: string]: TagDataEnvelope } = {};
+
+  /**
+   * sequence number of the snapshot
+   *
+   * @generated from field: optional string sequence_number = 2;
+   */
+  sequenceNumber?: string;
+
+  constructor(data?: PartialMessage<TagDataSnapshot>) {
+    super();
+    proto2.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto2 = proto2;
+  static readonly typeName = "TagDataProto.TagDataSnapshot";
+  static readonly fields: FieldList = proto2.util.newFieldList(() => [
+    { no: 1, name: "snapshot", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: TagDataEnvelope} },
+    { no: 2, name: "sequence_number", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TagDataSnapshot {
+    return new TagDataSnapshot().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TagDataSnapshot {
+    return new TagDataSnapshot().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TagDataSnapshot {
+    return new TagDataSnapshot().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: TagDataSnapshot | PlainMessage<TagDataSnapshot> | undefined, b: TagDataSnapshot | PlainMessage<TagDataSnapshot> | undefined): boolean {
+    return proto2.util.equals(TagDataSnapshot, a, b);
+  }
+}
+
