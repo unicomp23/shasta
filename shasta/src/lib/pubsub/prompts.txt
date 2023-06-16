@@ -1,0 +1,13 @@
+in typescript, create a subscriber class
+constructor takes redisoptions and a tagdataobjectid
+subscriber consumes what is written by the worker class
+snapshotkey is derived from the tagdataobjectid
+
+in an atomic lua procedure, do the following:
+snapshotkey is used to get the snapshot from redis via hgetall
+snapshotkey is used to get the lastreadid from redis via get
+
+snapshotkey is used to look up the redis stream
+
+https://github.com/esfx/esfx/blob/main/packages/async-queue/README.md
+queue contains TagDataSnapshot followed by TagData
