@@ -31,12 +31,14 @@ class Publisher {
         }
     }
 
-    public async send(tagDataObjectIdentifier: TagDataObjectIdentifier, tagData: TagData): Promise<void> {
+    public async send(tagData: TagData): Promise<void> {
         try {
+            if(tagData.identifier === undefined) throw new Error("TagData identifier is undefined");
+
             // Prepare Kafka message
             const message = {
                 value: encode(tagData),
-                key: Buffer.from(tagDataObjectIdentifier.toBinary()),
+                key: Buffer.from(tagData.identifier.toBinary()),
             };
 
             // Send message

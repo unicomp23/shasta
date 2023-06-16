@@ -61,25 +61,28 @@ class Worker {
 
                 if (message.key && message.value) {
                     try {
-                        // Decode the incoming key as a TagDataObjectIdentifier
                         const tagDataObjIdentifier: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
-                        tagDataObjIdentifier.name = ""; // Clear out the 'name' field
+                        const redisDeltaKey = tagDataObjIdentifier.name;
+                        if(redisDeltaKey === undefined) return; // todo
+                        tagDataObjIdentifier.name = "";
                         const redisSnapshotKey = Buffer.from(tagDataObjIdentifier.toBinary());
 
-                        // Decode the incoming value as a TagData
                         const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
-                        const redisDeltaKey = message.key;
 
-                        // Add the tag data to the Redis stream and get the returned ID (sequence number of the snapshot)
-                        const snapshotSeqNo = await this.redisClient.xadd(redisSnapshotKey, "*", redisDeltaKey, Buffer.from(tagData.toBinary()));
+                        const luaScript = `
+                          local snapshotKey = ARGV[1]
+                          local snapshotData = ARGV[2]
+                          local deltaKey = ARGV[3]
+                          local deltaData = ARGV[4]
+                          local snapshotSeqNo = redis.call("XADD", snapshotKey, "*", snapshotData)
+                          redis.call("HSET", snapshotKey, deltaKey, deltaData)
+                          redis.call("SET", snapshotKey, snapshotSeqNo)
+                          return snapshotSeqNo
+                        `;
 
-                        // Save the delta (TagData) in the Redis hash identified by the snapshotKey
-                        await this.redisClient.hset(redisSnapshotKey.toString(), redisDeltaKey, tagData.data as string);
+                        const snapshotSeqNo = await this.redisClient.eval(luaScript, 0, redisSnapshotKey,
+                            Buffer.from(tagData.toBinary()),redisDeltaKey,Buffer.from(tagData.toBinary()));
 
-                        // Save the sequence number of the snapshot to Redis
-                        if (snapshotSeqNo !== null){
-                            await this.redisClient.set(redisSnapshotKey.toString(), snapshotSeqNo);
-                        }
                     } catch (e) {
                         console.error(`Error processing message ${message.key}: ${e}`);
                     }
