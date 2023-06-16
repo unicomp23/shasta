@@ -1,60 +1,68 @@
-import Redis, { RedisOptions } from "ioredis";
-import { TagData, TagDataObjectIdentifier, TagDataSnapshot } from "../../../submodules/src/gen/tag_data_pb";
+import { AsyncQueue } from '@esfx/async-queue';
+import Redis, { RedisOptions } from 'ioredis';
+import { TagData, TagDataSnapshot, TagDataObjectIdentifier, TagDataEnvelope } from '../../../submodules/src/gen/tag_data_pb';
 
-type Callback = (err: Error | null, snapshot?: TagDataSnapshot, delta?: TagData) => void;
+type Message = { snapshot?: TagDataSnapshot; delta?: TagDataEnvelope };
 
 class Subscriber {
-    private redisClient: Redis;
-    private tagDataObjIdentifier: TagDataObjectIdentifier;
+    private readonly redisClient: Redis;
+    private readonly tagDataObjIdentifier: TagDataObjectIdentifier;
+    private readonly redisSnapshotKey: Buffer;
 
-    constructor(
-        redisOptions: RedisOptions,
-        tagDataObjIdentifier: TagDataObjectIdentifier
-    ) {
+    constructor(redisOptions: RedisOptions, tagDataObjIdentifier: TagDataObjectIdentifier) {
         this.redisClient = new Redis(redisOptions);
         this.tagDataObjIdentifier = tagDataObjIdentifier;
+        this.tagDataObjIdentifier.name = "";
+        this.redisSnapshotKey = Buffer.from(this.tagDataObjIdentifier.toBinary());
 
-        this.redisClient.on("connect", async () => {
-            console.log("Connected to Redis server");
+        this.redisClient.on('connect', async () => {
+            console.log('Connected to Redis server');
         });
 
-        this.redisClient.on("error", async (error) => {
+        this.redisClient.on('error', async (error) => {
             console.error(`Redis error: ${error}`);
         });
     }
 
-    public async streamSnapshotAndDeltas(callback: Callback): Promise<void> {
-        try {
-            // Fetch the snapshot from Redis
-            const snapshotSerialized = await this.redisClient.hgetall(this.tagDataObjIdentifier.name);
+    public async stream(): Promise<AsyncQueue<Message>> {
+        const queue = new AsyncQueue<Message>();
 
-            // Deserialize the snapshot using TagDataSnapshot.fromBinary method
-            const snapshot = TagDataSnapshot.fromBinary(Buffer.from(snapshotSerialized));
-
-            // Call the callback with the fetched snapshot
-            callback(null, snapshot);
-
-            // Start streaming deltas in a loop using XREAD with BLOCK option
-            const readDeltas = async () => {
-                const streamKey = `delta:${this.tagDataObjIdentifier.name}`;
-                const deltas = await this.redisClient.xread("BLOCK", 0, "STREAMS", streamKey, "$");
-
-                // Deserialize the delta using TagData.fromBinary method
-                const delta = TagData.fromBinary(Buffer.from(deltas));
-
-                // Call the callback with the fetched delta
-                callback(null, undefined, delta);
-
-                // Keep reading deltas
-                readDeltas();
-            };
-
-            // Start reading deltas
-            readDeltas();
-
-        } catch (error) {
-            // Call the callback with the error
-            callback(error);
+        // Get the TagDataSnapshot by iterating hgetall() and the snapshotSeqNo via hget()
+        const redisSnapshotData = await this.redisClient.hgetall(this.redisSnapshotKey);
+        const snapshotSeqNo = await this.redisClient.get(this.redisSnapshotKey);
+        if(snapshotSeqNo === null) throw new Error("Snapshot sequence number is null");
+        const snapshot = new TagDataSnapshot({ sequenceNumber: snapshotSeqNo });
+        for (const [key, value] of Object.entries(redisSnapshotData)) {
+            snapshot.snapshot[key] = TagDataEnvelope.fromBinary(Buffer.from(value, 'binary'));
         }
+        queue.put({ snapshot });
+
+        // Set up the xread() loop to get the delta messages
+        const readStreamMessages = async (lastSeqNo: string) => {
+            const streamMessages = await this.redisClient.xread(
+                'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisSnapshotKey, lastSeqNo
+            );
+
+            if (streamMessages) {
+                for (const [, messages] of streamMessages) {
+                    for (const [seqNo, messageData] of messages) {
+                        const [, value] = messageData;
+                        const delta = TagDataEnvelope.fromBinary(Buffer.from(value, 'binary'));
+                        queue.put({ delta });
+
+                        // Update the last sequence number for the next xread() call
+                        lastSeqNo = seqNo;
+                    }
+                }
+            }
+
+            // Recursive call to keep reading from the stream
+            readStreamMessages(lastSeqNo);
+        };
+
+        // Call readStreamMessages with the snapshotSeqNo or '0-0' if it doesn't exist
+        readStreamMessages(snapshotSeqNo || '0-0');
+
+        return queue;
     }
 }
