@@ -1,41 +1,52 @@
-import { Kafka, EachMessagePayload } from 'kafkajs';
+import { Kafka, KafkaMessage, EachMessagePayload, Consumer } from 'kafkajs';
 import Redis, { RedisOptions } from 'ioredis';
-import {TagData, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
+import { TagData, TagDataObjectIdentifier } from "../../../submodules/src/gen/tag_data_pb";
 
 class Worker {
-    private consumer: any;
-    private redis: Redis;
+    private kafkaConsumer: Consumer;
+    private redisClient: Redis;
 
     constructor(kafka: Kafka, groupId: string, topic: string, redisOptions: RedisOptions) {
-        this.consumer = kafka.consumer({ groupId });
-        this.redis = new Redis(redisOptions);
+        this.kafkaConsumer = kafka.consumer({ groupId });
+        this.redisClient = new Redis(redisOptions);
+
+        // Initialize the Kafka consumer and Redis client
         this.init(topic).catch(console.error);
     }
 
     private async init(topic: string): Promise<void> {
-        await this.consumer.connect();
-        await this.consumer.subscribe({ topic, fromBeginning: true });
+        // Connect to Kafka
+        await this.kafkaConsumer.connect();
 
-        await this.consumer.run({
+        // Subscribe to a Kafka topic
+        await this.kafkaConsumer.subscribe({ topic, fromBeginning: true });
+
+        await this.kafkaConsumer.run({
             eachMessage: async (payload: EachMessagePayload) => {
-                if(payload.message.key && payload.message.value) {
-                    const tagDataObjectIdentifier: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(payload.message.key));
-                    tagDataObjectIdentifier.name = "";
-                    const snapshotKey = Buffer.from(tagDataObjectIdentifier.toBinary());
+                const message: KafkaMessage = payload.message;
 
-                    const tagData: TagData = TagData.fromBinary(Buffer.from(payload.message.value));
-                    const deltaKey = payload.message.key;
+                if(message.key && message.value) {
+                    // Decode the incoming key as a TagDataObjectIdentifier
+                    const tagDataObjIdentifier: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
+                    tagDataObjIdentifier.name = ""; // Clear out the 'name' field
+                    const redisSnapshotKey = Buffer.from(tagDataObjIdentifier.toBinary());
 
-                    // Adding to Redis Stream and saving returned ID from XADD operation
-                    const returnedId = await this.redis.xadd(snapshotKey, "*", Buffer.from(tagData.toBinary()));
+                    // Decode the incoming value as a TagData
+                    const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
+                    const redisDeltaKey = message.key;
 
-                    await this.redis.hset(snapshotKey, deltaKey, Buffer.from(tagData.toBinary()));
+                    // Add the tag data to the Redis stream and get the returned ID (sequence number of the snapshot)
+                    const snapshotSeqNo = await this.redisClient.xadd(redisSnapshotKey, "*", redisDeltaKey, Buffer.from(tagData.toBinary()));
 
-                    // Store returned ID from XADD operation (ie seqno of snapshot)
-                    if (returnedId !== null)
-                        await this.redis.set(snapshotKey, returnedId);
+                    // Save the delta (TagData) in the Redis hash identified by the snapshotKey
+                    await this.redisClient.hset(redisSnapshotKey.toString(), redisDeltaKey, tagData.data as string);
+
+                    // Save the sequence number of the snapshot to Redis
+                    if (snapshotSeqNo !== null){
+                        await this.redisClient.set(redisSnapshotKey.toString(), snapshotSeqNo);
+                    }
                 }
-            },
+            }
         });
     }
 }
