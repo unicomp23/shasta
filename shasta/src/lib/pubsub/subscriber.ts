@@ -1,16 +1,18 @@
-import Redis, {RedisOptions} from 'ioredis';
-import { TagData, TagDataObjectIdentifier, TagDataEnvelope, TagDataSnapshot } from '../../../submodules/src/gen/tag_data_pb';
+import Redis, { RedisOptions } from 'ioredis';
+import { TagData, TagDataEnvelope, TagDataSnapshot } from '../../../submodules/src/gen/tag_data_pb';
 import { AsyncQueue } from '@esfx/async-queue';
 
 class Subscriber {
     private redisClient: Redis;
     private asyncQueue: AsyncQueue<TagDataEnvelope | TagDataSnapshot>;
     private redisStreamName: string;
+    private lastReadId: string;
 
-    constructor(redisOptions: RedisOptions, redisStreamName: string) {
+    constructor(redisOptions: RedisOptions, redisStreamName: string, lastReadId?: string) {
         this.redisClient = new Redis(redisOptions);
         this.asyncQueue = new AsyncQueue<TagDataEnvelope | TagDataSnapshot>();
         this.redisStreamName = redisStreamName;
+        this.lastReadId = lastReadId || '0';
 
         this.redisClient.on('connect', async () => {
             console.log('Connected to Redis server');
@@ -21,28 +23,27 @@ class Subscriber {
         });
     }
 
-    async startSubscription() {
-        let lastReadId = '0'; // start reading the stream from the beginning
-        const count = 10; // read maximum 10 messages per call.
-        const blockTime = 5000; // blocking TIMEOUT in milliseconds.
-
-        // Read initial snapshot from redis hash
-        const initialSnapshot = await this.redisClient.hgetall(this.redisStreamName);
+    async startSubscription(): Promise<void> {
+        // Read initial snapshot from Redis hash
+        const initialSnapshot: Record<string, string> = await this.redisClient.hgetall(this.redisStreamName);
         const tagDataSnapshot = new TagDataSnapshot();
         Object.keys(initialSnapshot).forEach((key) => {
-            if (key !== 'seqno') {
-                const tagObj = TagDataObjectIdentifier.fromJsonString(key);
-                const tagEnvelope = TagDataEnvelope.fromJsonString(initialSnapshot[key]);
-                if(tagObj.name === undefined) return; // todo: handle this error
-                tagDataSnapshot.snapshot = { ...tagDataSnapshot.snapshot, [tagObj.name]: tagEnvelope };
-            } else {
-                tagDataSnapshot.sequenceNumber = initialSnapshot[key];
-            }
+            const tagEnvelope = TagDataEnvelope.fromJsonString(initialSnapshot[key]);
+            tagDataSnapshot.snapshot[key] = tagEnvelope;
         });
-        this.asyncQueue.put(tagDataSnapshot);  // Enqueue as TagDataSnapshot
+        tagDataSnapshot.sequenceNumber = initialSnapshot['seqno'] || '';
+        this.asyncQueue.put(tagDataSnapshot); // Enqueue as TagDataSnapshot
 
         while (true) {
-            const response = await this.redisClient.xread('COUNT', count, 'BLOCK', blockTime, 'STREAMS', this.redisStreamName, lastReadId);
+            const response = await this.redisClient.xread(
+                'COUNT',
+                10, // read maximum 10 messages per call
+                'BLOCK',
+                5000, // blocking TIMEOUT in milliseconds
+                'STREAMS',
+                this.redisStreamName,
+                this.lastReadId
+            );
             if (response) {
                 for (const message of response[0][1]) {
                     const [id, fields] = message;
@@ -53,8 +54,11 @@ class Subscriber {
                     const tagDataEnvelope = new TagDataEnvelope({ tagData, sequenceNumber: id });
 
                     this.asyncQueue.put(tagDataEnvelope);
+                    this.lastReadId = id; // save the ID for the next xread call
 
-                    lastReadId = id; // save the id for the next xread call
+                    // Store the sequence number in the Redis hash
+                    const redisSnapshotKey: string = this.redisStreamName;
+                    await this.redisClient.hset(redisSnapshotKey, 'seqno', id);
                 }
             }
         }
