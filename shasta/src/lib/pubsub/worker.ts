@@ -6,6 +6,7 @@ class Worker {
     private kafkaConsumer: Consumer;
     private redisClient: Redis;
     private readonly topic: string;
+    private groupJoined_: boolean = false;
 
     constructor(kafka: Kafka, groupId: string, topic: string, redisOptions: RedisOptions) {
         this.kafkaConsumer = kafka.consumer({ groupId });
@@ -41,6 +42,10 @@ class Worker {
                     this.init().catch(console.error);
                 }, 10000); // Reconnect after 10s
             });
+            this.kafkaConsumer.on("consumer.group_join", async () => {
+                console.error("Kafka consumer group join event");
+                this.groupJoined_ = true;
+            });
         } catch (error) {
             console.error(`Error while connecting to Kafka: ${error}`);
 
@@ -53,6 +58,13 @@ class Worker {
 
         // Subscribe to the Kafka topic and start consuming
         await this.subscribeToTopic();
+    }
+
+    public async groupJoined(): Promise<boolean> {
+        while (!this.groupJoined) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return true;
     }
 
     private async subscribeToTopic(): Promise<void> {

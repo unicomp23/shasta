@@ -6,6 +6,7 @@ import {Subscriber} from './subscriber';
 import {Worker} from './worker';
 import {createKafka} from "../kafka/createKafka";
 import crypto from "crypto";
+import {Deferred} from "@esfx/async";
 
 const REDIS_OPTIONS: RedisOptions = {
     host: process.env.REDIS_HOST || "localhost",
@@ -56,16 +57,14 @@ describe('End-to-End Test', () => {
         // Create the Worker
         const groupId = `test-group-id-${crypto.randomUUID()}`;
         worker = new Worker(kafka, groupId, kafkaTopic, redisOptions);
-
-        // Wait for the Worker to initialize and subscribe to the Kafka topic
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await worker.groupJoined();
     });
 
     afterAll(async () => {
         // Disconnect and cleanup resources
+        await worker.shutdown();
         await publisher.disconnect();
         await redisClient.disconnect();
-        await worker.shutdown();
         await subscriber.disconnect();
     });
 
