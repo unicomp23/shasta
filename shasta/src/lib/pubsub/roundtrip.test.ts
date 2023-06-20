@@ -1,9 +1,9 @@
-import { Kafka, KafkaMessage, Message, EachMessagePayload, Producer } from 'kafkajs';
-import Redis, { RedisOptions } from 'ioredis';
-import { TagData, TagDataObjectIdentifier } from "../../../submodules/src/gen/tag_data_pb";
-import { Publisher } from './publisher';
-import { Subscriber } from './subscriber';
-import { Worker } from './worker';
+import {ITopicConfig} from "kafkajs";
+import Redis, {RedisOptions} from 'ioredis';
+import {TagData, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
+import {Publisher} from './publisher';
+import {Subscriber} from './subscriber';
+import {Worker} from './worker';
 import {createKafka} from "../kafka/createKafka";
 import crypto from "crypto";
 
@@ -25,6 +25,21 @@ describe('End-to-End Test', () => {
         // Create the Kafka instance
         const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
 
+        // Create the Kafka admin interface
+        const admin = kafka.admin();
+        await admin.connect();
+
+        // Pre-create the Kafka topic
+        const topicConfig: ITopicConfig = {
+            topic: kafkaTopic,
+        };
+        await admin.createTopics({
+            topics: [topicConfig],
+        });
+
+        // Disconnect the admin interface
+        await admin.disconnect();
+
         // Create and connect the Publisher
         publisher = new Publisher(kafka, kafkaTopic);
         await publisher.connect();
@@ -35,11 +50,11 @@ describe('End-to-End Test', () => {
 
         // Create the Subscriber
         const tagDataObjIdentifier = new TagDataObjectIdentifier();
-        tagDataObjIdentifier.appId = 'some-id';
+        tagDataObjIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
         subscriber = new Subscriber(redisOptions, tagDataObjIdentifier);
 
         // Create the Worker
-        const groupId = 'test-group';
+        const groupId = `test-group-id-${crypto.randomUUID()}`;
         worker = new Worker(kafka, groupId, kafkaTopic, redisOptions);
 
         // Wait for the Worker to initialize and subscribe to the Kafka topic
