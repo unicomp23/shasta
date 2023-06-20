@@ -109,6 +109,7 @@ class Worker {
         console.log("Shutting down the worker gracefully");
 
         try {
+            await this.kafkaConsumer.stop();
             await this.kafkaConsumer.disconnect();
             console.log("Disconnected from Kafka consumer");
         } catch (error) {
