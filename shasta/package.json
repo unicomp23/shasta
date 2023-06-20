@@ -4,7 +4,7 @@
   "description": "HOPS - ho-rizontal pub/sub",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --detectOpenHandles"
   },
   "repository": {
     "type": "git",
