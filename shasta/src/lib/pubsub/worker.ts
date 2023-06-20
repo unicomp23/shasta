@@ -117,7 +117,7 @@ class Worker {
         }
 
         try {
-            await this.redisClient.quit();
+            await this.redisClient.disconnect();
             console.log("Disconnected from Redis server");
         } catch (error) {
             console.error("Error while disconnecting from Redis server", error);

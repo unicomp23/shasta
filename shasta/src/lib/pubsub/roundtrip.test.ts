@@ -64,8 +64,8 @@ describe('End-to-End Test', () => {
     afterAll(async () => {
         // Disconnect and cleanup resources
         await publisher.disconnect();
+        await redisClient.disconnect();
         await worker.shutdown();
-        await redisClient.quit();
         await subscriber.disconnect();
     });
 
