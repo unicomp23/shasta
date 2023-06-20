@@ -105,7 +105,7 @@ class Worker {
         });
     }
 
-    private async shutdown() {
+    public async shutdown() {
         console.log("Shutting down the worker gracefully");
 
         try {
