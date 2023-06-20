@@ -4,13 +4,16 @@ import { TagData, TagDataObjectIdentifier } from "../../../submodules/src/gen/ta
 import { Publisher } from './publisher';
 import { Subscriber } from './subscriber';
 import { Worker } from './worker';
+import {createKafka} from "../kafka/createKafka";
+import crypto from "crypto";
 
-// Docker Redis and Kafka host addresses
-const dockerRedisHost = 'docker-redis-host'; // Replace with actual Redis host in Docker Compose setup
-const dockerKafkaBrokers = ['docker-kafka1:9092', 'docker-kafka2:9092']; // Replace with actual Kafka broker addresses in Docker Compose setup
+const REDIS_OPTIONS: RedisOptions = {
+    host: process.env.REDIS_HOST || "localhost",
+    port: parseInt(process.env.REDIS_PORT || "6379"),
+};
 
 // Kafka topic for testing
-const kafkaTopic = 'test_topic';
+const kafkaTopic = `test_topic-${crypto.randomUUID()}`;
 
 describe('End-to-End Test', () => {
     let publisher: Publisher;
@@ -20,17 +23,14 @@ describe('End-to-End Test', () => {
 
     beforeAll(async () => {
         // Create the Kafka instance
-        const kafka = new Kafka({
-            clientId: 'test-client',
-            brokers: dockerKafkaBrokers,
-        });
+        const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
 
         // Create and connect the Publisher
         publisher = new Publisher(kafka, kafkaTopic);
         await publisher.connect();
 
         // Create the Redis client
-        const redisOptions: RedisOptions = { host: dockerRedisHost };
+        const redisOptions = REDIS_OPTIONS;
         redisClient = new Redis(redisOptions);
         await redisClient.connect();
 
