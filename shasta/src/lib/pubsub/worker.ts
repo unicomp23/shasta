@@ -43,7 +43,7 @@ class Worker {
                 }, 10000); // Reconnect after 10s
             });
             this.kafkaConsumer.on("consumer.group_join", async () => {
-                console.error("Kafka consumer group join event");
+                console.log("Kafka consumer group join event");
                 this.groupJoined_ = true;
             });
         } catch (error) {
