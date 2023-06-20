@@ -32,7 +32,6 @@ describe('End-to-End Test', () => {
         // Create the Redis client
         const redisOptions = REDIS_OPTIONS;
         redisClient = new Redis(redisOptions);
-        await redisClient.connect();
 
         // Create the Subscriber
         const tagDataObjIdentifier = new TagDataObjectIdentifier();
