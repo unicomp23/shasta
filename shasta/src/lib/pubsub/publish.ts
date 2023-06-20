@@ -1,7 +1,6 @@
 import { Kafka, Producer } from 'kafkajs';
-import {TagData, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
+import { TagData, TagDataObjectIdentifier } from "../../../submodules/src/gen/tag_data_pb";
 
-// Convert message to a buffer
 const encode = (message: TagData): Buffer => {
     return Buffer.from(message.toBinary());
 };
@@ -35,13 +34,11 @@ class Publisher {
         try {
             if(tagData.identifier === undefined) throw new Error("TagData identifier is undefined");
 
-            // Prepare Kafka message
             const message = {
                 value: encode(tagData),
                 key: Buffer.from(tagData.identifier.toBinary()),
             };
 
-            // Send message
             await this.producer.send({
                 topic: this.topic,
                 messages: [message],

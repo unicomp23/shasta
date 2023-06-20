@@ -20,35 +20,30 @@ class Worker {
             console.error(`Redis error: ${error}`);
         });
 
-        // Initialize the Kafka consumer and Redis client
         this.init().catch(console.error);
+
+        process.on("SIGINT", () => this.shutdown());
+        process.on("SIGTERM", () => this.shutdown());
     }
 
     private async init(): Promise<void> {
-        // Connect to Kafka
         try {
             await this.kafkaConsumer.connect();
-
-            // Kafka disconnection event
             this.kafkaConsumer.on("consumer.crash", async ({ type }) => {
                 console.error(`Kafka consumer fatal error: ${type}`);
-
-                // Reconnect logic.
                 setTimeout(() => {
                     this.init().catch(console.error);
-                }, 10000); // Reconnect after 10s
+                }, 10000);
             });
         } catch (error) {
             console.error(`Error while connecting to Kafka: ${error}`);
 
-            // Retry connection after 10 seconds
             setTimeout(() => {
                 this.init().catch(console.error);
             }, 10000);
             return;
         }
 
-        // Subscribe to the Kafka topic and start consuming
         await this.subscribeToTopic();
     }
 
@@ -90,4 +85,25 @@ class Worker {
             },
         });
     }
+
+    private async shutdown() {
+        console.log("Shutting down Worker gracefully");
+
+        try {
+            await this.kafkaConsumer.disconnect();
+            console.log("Kafka consumer disconnected");
+        } catch (error) {
+            console.error("Error while disconnecting Kafka consumer", error);
+        }
+
+        try {
+            await this.redisClient.quit();
+            console.log("Redis client disconnected");
+        } catch (error) {
+            console.error("Error while disconnecting Redis client", error);
+        }
+
+        process.exit(0);
+    }
+
 }
