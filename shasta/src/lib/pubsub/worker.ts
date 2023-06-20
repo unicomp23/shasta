@@ -61,7 +61,7 @@ class Worker {
     }
 
     public async groupJoined(): Promise<boolean> {
-        while (!this.groupJoined) {
+        while (!this.groupJoined_) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
         return true;
