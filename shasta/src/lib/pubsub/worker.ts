@@ -20,6 +20,7 @@ class Worker {
             console.error(`Redis error: ${error}`);
         });
 
+        // Initialize the Kafka consumer and Redis client
         this.init().catch(console.error);
 
         process.on("SIGINT", () => this.shutdown());
@@ -27,27 +28,35 @@ class Worker {
     }
 
     private async init(): Promise<void> {
+        // Connect to Kafka
         try {
             await this.kafkaConsumer.connect();
+
+            // Kafka disconnection event
             this.kafkaConsumer.on("consumer.crash", async ({ type }) => {
                 console.error(`Kafka consumer fatal error: ${type}`);
+
+                // Reconnect logic.
                 setTimeout(() => {
                     this.init().catch(console.error);
-                }, 10000);
+                }, 10000); // Reconnect after 10s
             });
         } catch (error) {
             console.error(`Error while connecting to Kafka: ${error}`);
 
+            // Retry connection after 10 seconds
             setTimeout(() => {
                 this.init().catch(console.error);
             }, 10000);
             return;
         }
 
+        // Subscribe to the Kafka topic and start consuming
         await this.subscribeToTopic();
     }
 
     private async subscribeToTopic(): Promise<void> {
+        // Subscribe to Kafka topic
         await this.kafkaConsumer.subscribe({ topic: this.topic, fromBeginning: true });
 
         await this.kafkaConsumer.run({
@@ -56,14 +65,21 @@ class Worker {
 
                 if (message.key && message.value) {
                     try {
+                        // Get the TagDataObjectIdentifier from the message key
                         const tagDataObjIdentifier: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
+
+                        // Extract the Redis delta key and snapshot key from the TagDataObjectIdentifier
                         const redisDeltaKey = tagDataObjIdentifier.name;
-                        if(redisDeltaKey === undefined) return; // todo
+                        if (redisDeltaKey === undefined) {
+                            return; // Skip processing if delta key is undefined
+                        }
                         tagDataObjIdentifier.name = "";
                         const redisSnapshotKey = Buffer.from(tagDataObjIdentifier.toBinary());
 
+                        // Parse the TagData message from the Kafka message value
                         const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
 
+                        // Prepare the Lua script to update Redis snapshot and delta
                         const luaScript = `
                           local snapshotKey = ARGV[1]
                           local snapshotData = ARGV[2]
@@ -75,8 +91,11 @@ class Worker {
                           return snapshotSeqNo
                         `;
 
-                        const snapshotSeqNo = await this.redisClient.eval(luaScript, 0, redisSnapshotKey,
-                            Buffer.from(tagData.toBinary()),redisDeltaKey,Buffer.from(tagData.toBinary()));
+                        // Execute the Lua script on Redis to update snapshot and delta
+                        const snapshotSeqNo = await this.redisClient.eval(luaScript, 0,
+                            redisSnapshotKey, Buffer.from(tagData.toBinary()), redisDeltaKey, Buffer.from(tagData.toBinary()));
+
+                        console.log(`Snapshot sequence number: ${snapshotSeqNo}`);
 
                     } catch (e) {
                         console.error(`Error processing message ${message.key}: ${e}`);
@@ -87,23 +106,25 @@ class Worker {
     }
 
     private async shutdown() {
-        console.log("Shutting down Worker gracefully");
+        console.log("Shutting down the worker gracefully");
 
         try {
             await this.kafkaConsumer.disconnect();
-            console.log("Kafka consumer disconnected");
+            console.log("Disconnected from Kafka consumer");
         } catch (error) {
-            console.error("Error while disconnecting Kafka consumer", error);
+            console.error("Error while disconnecting from Kafka consumer", error);
         }
 
         try {
             await this.redisClient.quit();
-            console.log("Redis client disconnected");
+            console.log("Disconnected from Redis server");
         } catch (error) {
-            console.error("Error while disconnecting Redis client", error);
+            console.error("Error while disconnecting from Redis server", error);
         }
 
         process.exit(0);
     }
 
 }
+
+export { Worker };

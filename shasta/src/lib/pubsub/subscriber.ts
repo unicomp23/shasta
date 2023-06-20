@@ -24,18 +24,23 @@ class Subscriber {
         });
     }
 
+    // Stream messages from Redis
     public async stream(): Promise<AsyncQueue<Message>> {
         const queue = new AsyncQueue<Message>();
 
+        // Get the TagDataSnapshot by iterating hgetall() and the snapshotSeqNo via get()
         const redisSnapshotData = await this.redisClient.hgetall(this.redisSnapshotKey);
         const snapshotSeqNo = await this.redisClient.get(this.redisSnapshotKey);
-        if(snapshotSeqNo === null) throw new Error("Snapshot sequence number is null");
+        if (snapshotSeqNo === null) {
+            throw new Error("Snapshot sequence number is null");
+        }
         const snapshot = new TagDataSnapshot({ sequenceNumber: snapshotSeqNo });
         for (const [key, value] of Object.entries(redisSnapshotData)) {
             snapshot.snapshot[key] = TagDataEnvelope.fromBinary(Buffer.from(value, 'binary'));
         }
         queue.put({ snapshot });
 
+        // Set up the XREAD() loop to get the delta messages
         const readStreamMessages = async (lastSeqNo: string) => {
             const streamMessages = await this.redisClient.xread(
                 'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisSnapshotKey, lastSeqNo
@@ -48,16 +53,21 @@ class Subscriber {
                         const delta = TagDataEnvelope.fromBinary(Buffer.from(value, 'binary'));
                         queue.put({ delta });
 
+                        // Update the last sequence number for the next XREAD() call
                         lastSeqNo = seqNo;
                     }
                 }
             }
 
+            // Recursive call to keep reading from the stream
             readStreamMessages(lastSeqNo);
         };
 
+        // Call readStreamMessages with the snapshotSeqNo or '0-0' if it doesn't exist
         readStreamMessages(snapshotSeqNo || '0-0');
 
         return queue;
     }
 }
+
+export { Subscriber };
