@@ -66,6 +66,7 @@ describe('End-to-End Test', () => {
         await publisher.disconnect();
         await worker.shutdown();
         await redisClient.quit();
+        await subscriber.disconnect();
     });
 
     it('should process messages from Publisher to Worker via Redis Subscriber', async () => {

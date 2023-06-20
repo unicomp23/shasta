@@ -68,6 +68,12 @@ class Subscriber {
 
         return queue;
     }
+
+    // Disconnect from Redis
+    public async disconnect(): Promise<void> {
+        await this.redisClient.quit();
+        console.log("Disconnected from Redis server successfully");
+    }
 }
 
 export { Subscriber };

@@ -121,8 +121,6 @@ class Worker {
         } catch (error) {
             console.error("Error while disconnecting from Redis server", error);
         }
-
-        process.exit(0);
     }
 
 }
