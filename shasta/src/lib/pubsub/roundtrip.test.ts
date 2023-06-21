@@ -1,96 +1,81 @@
-import {ITopicConfig} from "kafkajs";
-import Redis, {RedisOptions} from 'ioredis';
-import {TagData, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
-import {Publisher} from './publisher';
-import {Subscriber} from './subscriber';
-import {Worker} from './worker';
-import {createKafka} from "../kafka/createKafka";
-import crypto from "crypto";
-import {Deferred} from "@esfx/async";
+import { Kafka } from 'kafkajs';
+import Redis, { RedisOptions } from 'ioredis';
+import { Publisher } from './publisher';
+import { Subscriber } from './subscriber';
+import { Worker } from './worker';
+import { TagData, TagDataObjectIdentifier } from '../../../submodules/src/gen/tag_data_pb';
+import { createKafka } from '../kafka/createKafka';
+import { v4 as uuidv4 } from 'uuid';
 
-const REDIS_OPTIONS: RedisOptions = {
-    host: process.env.REDIS_HOST || "localhost",
-    port: parseInt(process.env.REDIS_PORT || "6379"),
+// Create a unique Kafka topic for testing
+const kafkaTopic = `test_topic-${uuidv4()}`;
+
+// Create Kafka and Redis clients
+const kafka = createKafka('test-consumer');
+const redisOptions: RedisOptions = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379'),
 };
+const redisClient = new Redis(redisOptions);
 
-// Kafka topic for testing
-const kafkaTopic = `test_topic-${crypto.randomUUID()}`;
+// Create and connect the Publisher, Subscriber, and Worker
+let publisher: Publisher;
+let subscriber: Subscriber;
+let worker: Worker;
 
-describe('End-to-End Test', () => {
-    let publisher: Publisher;
-    let subscriber: Subscriber;
-    let worker: Worker;
-    let redisClient: Redis;
-
-    beforeAll(async () => {
-        // Create the Kafka instance
-        const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
-
-        // Create the Kafka admin interface
-        const admin = kafka.admin();
-        await admin.connect();
-
-        // Pre-create the Kafka topic
-        const topicConfig: ITopicConfig = {
-            topic: kafkaTopic,
-        };
-        await admin.createTopics({
-            topics: [topicConfig],
-        });
-
-        // Disconnect the admin interface
-        await admin.disconnect();
-
-        // Create and connect the Publisher
-        publisher = new Publisher(kafka, kafkaTopic);
-        await publisher.connect();
-
-        // Create the Redis client
-        const redisOptions = REDIS_OPTIONS;
-        redisClient = new Redis(redisOptions);
-
-        // Create the Subscriber
-        const tagDataObjIdentifier = new TagDataObjectIdentifier();
-        tagDataObjIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
-        subscriber = new Subscriber(redisOptions, tagDataObjIdentifier);
-
-        // Create the Worker
-        const groupId = `test-group-id-${crypto.randomUUID()}`;
-        worker = new Worker(kafka, groupId, kafkaTopic, redisOptions);
-        await worker.groupJoined();
+beforeAll(async () => {
+    // Pre-create the Kafka topic
+    const admin = kafka.admin();
+    await admin.connect();
+    await admin.createTopics({
+        topics: [{ topic: kafkaTopic }],
     });
+    await admin.disconnect();
 
-    afterAll(async () => {
-        // Disconnect and cleanup resources
-        await worker.shutdown();
-        await publisher.disconnect();
-        await redisClient.disconnect();
-        await subscriber.disconnect();
-    });
+    // Create the Publisher
+    publisher = new Publisher(kafka, kafkaTopic);
+    await publisher.connect();
 
-    it('should process messages from Publisher to Worker via Redis Subscriber', async () => {
-        /***
+    // Create the Subscriber
+    const tagDataObjIdentifier = new TagDataObjectIdentifier();
+    tagDataObjIdentifier.appId = `some-app-id-${uuidv4()}`;
+    subscriber = new Subscriber(redisOptions, tagDataObjIdentifier);
+
+    // Create the Worker
+    const groupId = `test-group-id-${uuidv4()}`;
+    worker = new Worker(kafka, groupId, kafkaTopic, redisOptions);
+    await worker.groupJoined();
+});
+
+afterAll(async () => {
+    // Disconnect and clean up resources
+    await worker.shutdown();
+    await publisher.disconnect();
+    await subscriber.disconnect();
+    await redisClient.disconnect();
+});
+
+describe('Integration Tests', () => {
+    test('Publish message and verify processing and persistence', async () => {
+        // Create a TagData message to publish
         const tagData = new TagData();
         const identifier = new TagDataObjectIdentifier();
-        identifier.appId = `some-app-id-${crypto.randomUUID()}`
+        identifier.appId = `some-app-id-${uuidv4()}`;
         tagData.identifier = identifier;
         tagData.data = 'Test Value';
 
-        // Send TagData message from Publisher
+        // Publish the TagData message
         await publisher.send(tagData);
 
-        // Wait for the message to reach Redis Subscriber through Worker
+        // Wait for the message to be processed and persisted
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Use additional assertions and expectations to validate the processing and persistence of the message
-        // For example, check if the message is present in the Redis snapshot using Redis client API, or assert specific actions performed by the Worker or Subscriber
-        // You can also modify the Worker or Subscriber classes to expose additional methods or properties to aid in testing and assertions
-        // Use Redis client to retrieve data from Redis and assert on the expected state
+        // Retrieve the updated data from Redis
+        const redisSnapshotKey = Buffer.from(identifier.toBinary());
+        const redisSnapshotData = await redisClient.hgetall(redisSnapshotKey);
 
-        // Example assertion: Check if the message has been added to Redis snapshot
-        const redisSnapshotData = await redisClient.hgetall(Buffer.from(identifier.toBinary()));
+        // Assert that the message has been processed correctly and the data has been updated in Redis
         expect(redisSnapshotData).toBeDefined();
-        expect(redisSnapshotData['deltaKey']).toBeDefined();
-         ***/
+        expect(redisSnapshotData[tagData.identifier?.name || '']).toBeDefined();
     });
 });
