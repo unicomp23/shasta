@@ -94,7 +94,7 @@ local snapshotData = ARGV[2]
 local deltaHSetKey = ARGV[3]
 local deltaKey = ARGV[4]
 local deltaData = ARGV[5]
-local snapshotSeqNo = redis.call("XADD", snapshotXAddKey, "*", "f", snapshotData)
+local snapshotSeqNo = redis.call("XADD", snapshotXAddKey.."x", "*", "f", snapshotData)
 redis.call("HSET", deltaHSetKey, deltaKey, deltaData)
 redis.call("SET", snapshotXAddKey, snapshotSeqNo)
 return snapshotSeqNo
