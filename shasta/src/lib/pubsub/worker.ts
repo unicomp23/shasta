@@ -1,6 +1,7 @@
 import { Kafka, KafkaMessage, EachMessagePayload, Consumer } from 'kafkajs';
 import Redis, {ClusterNode, RedisOptions, Cluster} from 'ioredis';
 import { TagData, TagDataObjectIdentifier } from "../../../submodules/src/gen/tag_data_pb";
+import {env} from "process";
 
 class Worker {
     private kafkaConsumer: Consumer;
@@ -8,9 +9,9 @@ class Worker {
     private readonly topic: string;
     private groupJoined_: boolean = false;
 
-    constructor(kafka: Kafka, groupId: string, topic: string, redisOptions: RedisOptions, nodes: ClusterNode[]) {
+    constructor(kafka: Kafka, groupId: string, topic: string) {
         this.kafkaConsumer = kafka.consumer({ groupId });
-        this.redisClient = new Redis.Cluster(nodes, redisOptions);
+        this.redisClient = new Cluster ([ { host: env.REDIS_HOST, port: parseInt(env.REDIS_PORT || "6379") }], { dnsLookup: (address, callback) => callback (null, address), redisOptions: { tls: {}, }, });
         this.topic = topic;
 
         this.redisClient.on('connect', async () => {
@@ -139,7 +140,7 @@ class Worker {
         }
 
         try {
-            await this.redisClient.disconnect();
+            await this.redisClient.quit();
             console.log("Disconnected from Redis server");
         } catch (error) {
             console.error("Error while disconnecting from Redis server", error);

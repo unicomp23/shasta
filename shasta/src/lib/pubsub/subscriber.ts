@@ -1,6 +1,7 @@
 import { AsyncQueue } from '@esfx/async-queue';
 import Redis, { RedisOptions, Cluster, ClusterNode } from 'ioredis';
 import { TagData, TagDataSnapshot, TagDataObjectIdentifier, TagDataEnvelope } from '../../../submodules/src/gen/tag_data_pb';
+import {env} from "process";
 
 type Message = { snapshot?: TagDataSnapshot; delta?: TagDataEnvelope };
 
@@ -9,8 +10,8 @@ class Subscriber {
     private readonly tagDataObjIdentifier: TagDataObjectIdentifier;
     private readonly redisSnapshotKey: Buffer;
 
-    constructor(redisOptions: RedisOptions, nodes: ClusterNode[], tagDataObjIdentifier: TagDataObjectIdentifier) {
-        this.redisClient = new Redis.Cluster(nodes, redisOptions);
+    constructor(tagDataObjIdentifier: TagDataObjectIdentifier) {
+        this.redisClient = new Cluster ([ { host: env.REDIS_HOST, port: parseInt(env.REDIS_PORT || "6379") }], { dnsLookup: (address, callback) => callback (null, address), redisOptions: { tls: {}, }, });
         this.tagDataObjIdentifier = tagDataObjIdentifier;
         this.tagDataObjIdentifier.name = "";
         this.redisSnapshotKey = Buffer.from(this.tagDataObjIdentifier.toBinary());
@@ -72,7 +73,7 @@ class Subscriber {
     // Disconnect from Redis
     public async disconnect(): Promise<void> {
         try {
-            await this.redisClient.disconnect();
+            await this.redisClient.quit();
             console.log("Disconnected from Redis server successfully");
         } catch (error) {
             console.error('Subscriber, Failed to disconnect from Redis server', error);
