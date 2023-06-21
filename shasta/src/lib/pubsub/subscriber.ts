@@ -1,16 +1,16 @@
 import { AsyncQueue } from '@esfx/async-queue';
-import Redis, { RedisOptions } from 'ioredis';
+import Redis, { RedisOptions, Cluster, ClusterNode } from 'ioredis';
 import { TagData, TagDataSnapshot, TagDataObjectIdentifier, TagDataEnvelope } from '../../../submodules/src/gen/tag_data_pb';
 
 type Message = { snapshot?: TagDataSnapshot; delta?: TagDataEnvelope };
 
 class Subscriber {
-    private readonly redisClient: Redis;
+    private readonly redisClient: Cluster;
     private readonly tagDataObjIdentifier: TagDataObjectIdentifier;
     private readonly redisSnapshotKey: Buffer;
 
-    constructor(redisOptions: RedisOptions, tagDataObjIdentifier: TagDataObjectIdentifier) {
-        this.redisClient = new Redis(redisOptions);
+    constructor(redisOptions: RedisOptions, nodes: ClusterNode[], tagDataObjIdentifier: TagDataObjectIdentifier) {
+        this.redisClient = new Redis.Cluster(nodes, redisOptions);
         this.tagDataObjIdentifier = tagDataObjIdentifier;
         this.tagDataObjIdentifier.name = "";
         this.redisSnapshotKey = Buffer.from(this.tagDataObjIdentifier.toBinary());

@@ -1,16 +1,16 @@
 import { Kafka, KafkaMessage, EachMessagePayload, Consumer } from 'kafkajs';
-import Redis, { RedisOptions } from 'ioredis';
+import Redis, {ClusterNode, RedisOptions, Cluster} from 'ioredis';
 import { TagData, TagDataObjectIdentifier } from "../../../submodules/src/gen/tag_data_pb";
 
 class Worker {
     private kafkaConsumer: Consumer;
-    private redisClient: Redis;
+    private redisClient: Cluster;
     private readonly topic: string;
     private groupJoined_: boolean = false;
 
-    constructor(kafka: Kafka, groupId: string, topic: string, redisOptions: RedisOptions) {
+    constructor(kafka: Kafka, groupId: string, topic: string, redisOptions: RedisOptions, nodes: ClusterNode[]) {
         this.kafkaConsumer = kafka.consumer({ groupId });
-        this.redisClient = new Redis(redisOptions);
+        this.redisClient = new Redis.Cluster(nodes, redisOptions);
         this.topic = topic;
 
         this.redisClient.on('connect', async () => {
@@ -69,7 +69,7 @@ class Worker {
 
     private async subscribeToTopic(): Promise<void> {
         // Subscribe to Kafka topic
-        await this.kafkaConsumer.subscribe({ topic: this.topic, fromBeginning: true });
+        await this.kafkaConsumer.subscribe({topic: this.topic, fromBeginning: true});
 
         await this.kafkaConsumer.run({
             eachMessage: async (payload: EachMessagePayload) => {
@@ -93,22 +93,32 @@ class Worker {
 
                         // Prepare the Lua script to update Redis snapshot and delta
                         const luaScript = `
-                          local snapshotKey = ARGV[1]
-                          local snapshotData = ARGV[2]
-                          local deltaKey = ARGV[3]
-                          local deltaData = ARGV[4]
-                          local snapshotSeqNo = redis.call("XADD", snapshotKey, "*", snapshotData)
-                          redis.call("HSET", snapshotKey, deltaKey, deltaData)
-                          redis.call("SET", snapshotKey, snapshotSeqNo)
-                          return snapshotSeqNo
-                        `;
+  local snapshotXAddKey = ARGV[1]
+  local snapshotData = ARGV[2]
+  local deltaHSetKey = ARGV[3]
+  local deltaKey = ARGV[4]
+  local deltaData = ARGV[5]
+  local snapshotSeqNo = redis.call("XADD", snapshotXAddKey, "*", "f", snapshotData)
+  redis.call("HSET", deltaHSetKey, deltaKey, deltaData)
+  redis.call("SET", snapshotXAddKey, snapshotSeqNo)
+  return snapshotSeqNo
+`;
 
+                        console.log('redisClient.eval', await this.redisClient.time());
                         // Execute the Lua script on Redis to update snapshot and delta
-                        const snapshotSeqNo = await this.redisClient.eval(luaScript, 0,
-                            redisSnapshotKey, Buffer.from(tagData.toBinary()), redisDeltaKey, Buffer.from(tagData.toBinary()));
+                        if (redisSnapshotKey && redisDeltaKey && tagData) {
+                            const hashTag = "{some-app-id}"; // Choose a hash tag that suits your requirements
+                            const commonRedisSnapshotKey = `${hashTag}-${redisSnapshotKey}`;
+                            const commonDeltaHSetKey = `${hashTag}-hset-${redisSnapshotKey}`;
 
-                        console.log(`Snapshot sequence number: ${snapshotSeqNo}`);
+                            const snapshotSeqNo = await this.redisClient.eval(luaScript, 0,
+                                commonRedisSnapshotKey, Buffer.from(tagData.toBinary()), commonDeltaHSetKey, redisDeltaKey, Buffer.from(tagData.toBinary()));
 
+                            console.log(`Snapshot sequence number: ${snapshotSeqNo}`);
+                        } else {
+                            console.error("Error: One or more required values are undefined or null");
+                        }
+                        console.log('redisClient.eval.2');
                     } catch (e) {
                         console.error(`Error processing message ${message.key}: ${e}`);
                     }

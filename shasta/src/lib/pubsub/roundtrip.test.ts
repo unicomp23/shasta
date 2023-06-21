@@ -1,5 +1,5 @@
 import {ITopicConfig} from "kafkajs";
-import Redis, {RedisOptions} from 'ioredis';
+import Redis, {ClusterNode, RedisOptions} from 'ioredis';
 import {TagData, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
 import {Publisher} from './publisher';
 import {Subscriber} from './subscriber';
@@ -11,12 +11,13 @@ import {Deferred} from "@esfx/async";
 const REDIS_OPTIONS: RedisOptions = {
     host: process.env.REDIS_HOST || "localhost",
     port: parseInt(process.env.REDIS_PORT || "6379"),
+    tls:{},
 };
 
 // Kafka topic for testing
 const kafkaTopic = `test_topic-${crypto.randomUUID()}`;
 
-describe('End-to-End Test', () => {
+describe('End-to-End Test 2', () => {
     let publisher: Publisher;
     let subscriber: Subscriber;
     let worker: Worker;
@@ -48,15 +49,22 @@ describe('End-to-End Test', () => {
         // Create the Redis client
         const redisOptions = REDIS_OPTIONS;
         redisClient = new Redis(redisOptions);
+        console.log('redis: ', redisOptions);
+        const nodes: ClusterNode[] = [
+            {host: "shasta-redis-automation788-0001-001", port: 6379},
+            {host: "shasta-redis-automation788-0001-002", port: 6379},
+            {host: "shasta-redis-automation788-0002-001", port: 6379},
+            {host: "shasta-redis-automation788-0002-002", port: 6379},
+        ];
 
         // Create the Subscriber
         const tagDataObjIdentifier = new TagDataObjectIdentifier();
         tagDataObjIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
-        subscriber = new Subscriber(redisOptions, tagDataObjIdentifier);
+        subscriber = new Subscriber(redisOptions, nodes, tagDataObjIdentifier);
 
         // Create the Worker
         const groupId = `test-group-id-${crypto.randomUUID()}`;
-        worker = new Worker(kafka, groupId, kafkaTopic, redisOptions);
+        worker = new Worker(kafka, groupId, kafkaTopic, redisOptions, nodes);
         await worker.groupJoined();
     });
 
@@ -69,15 +77,16 @@ describe('End-to-End Test', () => {
     });
 
     it('should process messages from Publisher to Worker via Redis Subscriber', async () => {
-        /***
         const tagData = new TagData();
         const identifier = new TagDataObjectIdentifier();
-        identifier.appId = `some-app-id-${crypto.randomUUID()}`
+        identifier.appId = `some-app-id-${crypto.randomUUID()}`;
+        identifier.name = `name-${crypto.randomUUID()}`;
         tagData.identifier = identifier;
         tagData.data = 'Test Value';
 
         // Send TagData message from Publisher
         await publisher.send(tagData);
+        console.log('publisher.send')
 
         // Wait for the message to reach Redis Subscriber through Worker
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -88,9 +97,13 @@ describe('End-to-End Test', () => {
         // Use Redis client to retrieve data from Redis and assert on the expected state
 
         // Example assertion: Check if the message has been added to Redis snapshot
+        console.log('redisClient.hgetall')
+        identifier.name = "";
         const redisSnapshotData = await redisClient.hgetall(Buffer.from(identifier.toBinary()));
+        console.log('redisClient.hgetall.2')
+        console.log(redisSnapshotData);
+
         expect(redisSnapshotData).toBeDefined();
         expect(redisSnapshotData['deltaKey']).toBeDefined();
-         ***/
     });
 });
