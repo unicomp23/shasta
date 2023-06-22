@@ -39,6 +39,15 @@ describe('End-to-End Test 2', () => {
         await admin.createTopics({
             topics: [topicConfig],
         });
+        console.log({topicConfig})
+
+        const listTopics = await admin.listTopics();
+        console.log({listTopics})
+        if(!listTopics.includes(kafkaTopic))
+            console.error(`topic not confirmed: `, {kafkaTopic});
+        else
+            console.log(`topic confirmed: `, {kafkaTopic});
+
 
         // Disconnect the admin interface
         await admin.disconnect();

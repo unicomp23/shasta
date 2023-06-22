@@ -33,15 +33,11 @@ class Worker {
         // Connect to Kafka
         try {
             await this.kafkaConsumer.connect();
+            console.log('connected');
 
             // Kafka disconnection event
             this.kafkaConsumer.on("consumer.crash", async ({ type }) => {
                 console.error(`Kafka consumer fatal error: ${type}`);
-
-                // Reconnect logic.
-                setTimeout(() => {
-                    this.init().catch(console.error);
-                }, 10000); // Reconnect after 10s
             });
             this.kafkaConsumer.on("consumer.group_join", async () => {
                 console.log("Kafka consumer group join event");
@@ -49,11 +45,6 @@ class Worker {
             });
         } catch (error) {
             console.error(`Error while connecting to Kafka: ${error}`);
-
-            // Retry connection after 10 seconds
-            setTimeout(() => {
-                this.init().catch(console.error);
-            }, 10000);
             return;
         }
 
@@ -94,24 +85,28 @@ local snapshotData = ARGV[2]
 local deltaHSetKey = ARGV[3]
 local deltaKey = ARGV[4]
 local deltaData = ARGV[5]
-local snapshotSeqNo = redis.call("XADD", snapshotXAddKey.."x", "*", "f", snapshotData)
+local snapshotSeqNo = redis.call("XADD", snapshotXAddKey, "*", "f", snapshotData)
 redis.call("HSET", deltaHSetKey, deltaKey, deltaData)
 redis.call("SET", snapshotXAddKey, snapshotSeqNo)
 return snapshotSeqNo
 `;
 
                         if (redisSnapshotKey && redisDeltaKey && tagData) {
-                            const hashTag = "some-app-id";
-                            const commonRedisSnapshotKey = `{${hashTag}}:${redisSnapshotKey}`;
-                            const commonDeltaHSetKey = `{${hashTag}}:hset:{${hashTag}:${redisDeltaKey}}`;
+                            const hashTag = tagData.identifier?.appId;
+                            if(hashTag) {
+                                const commonRedisSnapshotKey = `{${hashTag}}:${redisSnapshotKey}`;
+                                const commonDeltaHSetKey = `{${hashTag}}:hset:${redisDeltaKey}}`;
 
-                            const snapshotSeqNo = await this.redisClient.eval(
-                                luaScript, 0,
-                                commonRedisSnapshotKey, Buffer.from(tagData.toBinary()),
-                                commonDeltaHSetKey, redisDeltaKey, Buffer.from(tagData.toBinary())
-                            );
+                                const snapshotSeqNo = await this.redisClient.eval(
+                                    luaScript, 0,
+                                    commonRedisSnapshotKey, Buffer.from(tagData.toBinary()),
+                                    commonDeltaHSetKey, redisDeltaKey, Buffer.from(tagData.toBinary())
+                                );
 
-                            console.log(`Snapshot sequence number: ${snapshotSeqNo}`);
+                                console.log(`Snapshot sequence number: `, {snapshotSeqNo, commonRedisSnapshotKey, commonDeltaHSetKey });
+                            } else {
+                                console.error(`missing appId: `, tagData);
+                            }
                         } else {
                             console.error("Error: One or more required values are undefined or null");
                         }
