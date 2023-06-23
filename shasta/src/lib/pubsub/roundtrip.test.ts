@@ -6,7 +6,7 @@ import {Subscriber} from './subscriber';
 import {Worker} from './worker';
 import {createKafka} from "../kafka/createKafka";
 import crypto from "crypto";
-import {Deferred} from "@esfx/async";
+import {Deferred, delay} from "@esfx/async";
 import {env} from "process";
 
 const REDIS_OPTIONS: RedisOptions = {
@@ -47,7 +47,6 @@ describe('End-to-End Test 2', () => {
             console.error(`topic not confirmed: `, {kafkaTopic});
         else
             console.log(`topic confirmed: `, {kafkaTopic});
-
 
         // Disconnect the admin interface
         await admin.disconnect();
