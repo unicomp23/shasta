@@ -1,5 +1,5 @@
 import { Kafka, KafkaMessage, EachMessagePayload, Consumer } from 'kafkajs';
-import Redis, {ClusterNode, RedisOptions, Cluster} from 'ioredis';
+import {Cluster} from 'ioredis';
 import { TagData, TagDataObjectIdentifier } from "../../../submodules/src/gen/tag_data_pb";
 import {env} from "process";
 
@@ -71,35 +71,32 @@ class Worker {
                         const tagDataObjIdentifier: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
 
                         const redisDeltaKey = tagDataObjIdentifier.name;
-                        if (redisDeltaKey === undefined) {
+                        if (redisDeltaKey === undefined || redisDeltaKey === "seqno") {
+                            console.error('invalid tagDataObjIdentifier.name: ', {tagDataObjIdentifier});
                             return;
                         }
                         tagDataObjIdentifier.name = "";
-                        const redisSnapshotKey = Buffer.from(tagDataObjIdentifier.toBinary());
+                        const redisSnapshotKey = Buffer.from(tagDataObjIdentifier.toBinary()).toString("base64");
 
                         const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
+                        const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
+                        const commonRedisStreamKey = `{${redisSnapshotKey}}:strm:`;
 
-                        const hashTag = tagData.identifier?.appId;
-                        if (hashTag) {
-                            const commonRedisSnapshotKey = `{${hashTag}}:snap:${redisSnapshotKey}`;
-                            const commonDeltaHSetKey = `{${hashTag}}:hset:${redisDeltaKey}}`;
-
-                            const snapshotSeqNo = await this.redisClient.xadd(commonRedisSnapshotKey, "*", "f", Buffer.from(tagData.toBinary()));
-                            await this.redisClient.hset(commonDeltaHSetKey,
-                                redisDeltaKey, Buffer.from(tagData.toBinary()));
-                            if (snapshotSeqNo !== null) {
-                                await this.redisClient.set(commonRedisSnapshotKey, snapshotSeqNo.toString());
-                            } else {
-                                console.error(`Failed to store the snapshot in Redis: snapshotSeqNo is null`);
-                            }
-
-                            console.log(`Snapshot sequence number: `, {snapshotSeqNo, commonRedisSnapshotKey, commonDeltaHSetKey });
+                        const snapshotSeqNo = await this.redisClient.xadd(commonRedisStreamKey, "*", "delta", Buffer.from(tagData.toBinary()));
+                        if (snapshotSeqNo && redisDeltaKey) {
+                            await this.redisClient.hset(commonRedisSnapshotKey,
+                                redisDeltaKey, Buffer.from(tagData.toBinary()),
+                                "seqno", snapshotSeqNo);
                         } else {
-                            console.error(`missing appId: `, tagData);
+                            console.error(`Failed to store the snapshot in Redis: `, {snapshotSeqNo, tagData});
                         }
+
+                        console.log(`Worker: `, {snapshotSeqNo, commonRedisSnapshotKey, commonRedisStreamKey, tagData});
                     } catch (e) {
                         console.error(`Error processing message ${message.key}: ${e}`);
                     }
+                } else {
+                    console.error('bad message: ', {message});
                 }
             },
         });

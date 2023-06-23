@@ -6,7 +6,7 @@ import {Subscriber} from './subscriber';
 import {Worker} from './worker';
 import {createKafka} from "../kafka/createKafka";
 import crypto from "crypto";
-import {Deferred} from "@esfx/async";
+import {Deferred, delay} from "@esfx/async";
 import {env} from "process";
 
 const REDIS_OPTIONS: RedisOptions = {
@@ -83,13 +83,16 @@ describe('End-to-End Test 2', () => {
         const tagData = new TagData();
         const identifier = new TagDataObjectIdentifier();
         identifier.appId = `some-app-id-${crypto.randomUUID()}`;
+        identifier.tag = `tag-id-${crypto.randomUUID()}`;
+        identifier.scope = `scope-id-${crypto.randomUUID()}`
+
         identifier.name = `name-${crypto.randomUUID()}`;
         tagData.identifier = identifier;
         tagData.data = 'Test Value';
 
         // Send TagData message from Publisher
         await publisher.send(tagData);
-        console.log('publisher.send')
+        console.log('publisher.send', {tagData})
 
         // Wait for the message to reach Redis Subscriber through Worker
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -100,12 +103,12 @@ describe('End-to-End Test 2', () => {
         // Use Redis client to retrieve data from Redis and assert on the expected state
 
         // Example assertion: Check if the message has been added to Redis snapshot
-        console.log('redisClient.hgetall')
         identifier.name = "";
+        const redisSnapshotKey = Buffer.from(tagData.identifier.toBinary()).toString("base64");
+        const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
 
-        const redisSnapshotData = await redisClient.hgetall(Buffer.from(identifier.toBinary()));
-        console.log('redisClient.hgetall.2')
-        console.log(redisSnapshotData);
+        const redisSnapshotData = await redisClient.hgetall(commonRedisSnapshotKey);
+        console.log('redisClient.hgetall.2', {commonRedisSnapshotKey, redisSnapshotData});
 /*
         expect(redisSnapshotData).toBeDefined();
         expect(redisSnapshotData['deltaKey']).toBeDefined();
