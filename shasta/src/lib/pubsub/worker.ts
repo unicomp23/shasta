@@ -79,36 +79,23 @@ class Worker {
 
                         const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
 
-                        const luaScript = `
-local snapshotXAddKey = ARGV[1]
-local snapshotData = ARGV[2]
-local deltaHSetKey = ARGV[3]
-local deltaKey = ARGV[4]
-local deltaData = ARGV[5]
-local snapshotSeqNo = redis.call("XADD", snapshotXAddKey, "*", "f", snapshotData)
-redis.call("HSET", deltaHSetKey, deltaKey, deltaData)
-redis.call("SET", snapshotXAddKey, snapshotSeqNo)
-return snapshotSeqNo
-`;
+                        const hashTag = tagData.identifier?.appId;
+                        if (hashTag) {
+                            const commonRedisSnapshotKey = `{${hashTag}}:snap:${redisSnapshotKey}`;
+                            const commonDeltaHSetKey = `{${hashTag}}:hset:${redisDeltaKey}}`;
 
-                        if (redisSnapshotKey && redisDeltaKey && tagData) {
-                            const hashTag = tagData.identifier?.appId;
-                            if(hashTag) {
-                                const commonRedisSnapshotKey = `{${hashTag}}:${redisSnapshotKey}`;
-                                const commonDeltaHSetKey = `{${hashTag}}:hset:${redisDeltaKey}}`;
-
-                                const snapshotSeqNo = await this.redisClient.eval(
-                                    luaScript, 0,
-                                    commonRedisSnapshotKey, Buffer.from(tagData.toBinary()),
-                                    commonDeltaHSetKey, redisDeltaKey, Buffer.from(tagData.toBinary())
-                                );
-
-                                console.log(`Snapshot sequence number: `, {snapshotSeqNo, commonRedisSnapshotKey, commonDeltaHSetKey });
+                            const snapshotSeqNo = await this.redisClient.xadd(commonRedisSnapshotKey, "*", "f", Buffer.from(tagData.toBinary()));
+                            await this.redisClient.hset(commonDeltaHSetKey,
+                                redisDeltaKey, Buffer.from(tagData.toBinary()));
+                            if (snapshotSeqNo !== null) {
+                                await this.redisClient.set(commonRedisSnapshotKey, snapshotSeqNo.toString());
                             } else {
-                                console.error(`missing appId: `, tagData);
+                                console.error(`Failed to store the snapshot in Redis: snapshotSeqNo is null`);
                             }
+
+                            console.log(`Snapshot sequence number: `, {snapshotSeqNo, commonRedisSnapshotKey, commonDeltaHSetKey });
                         } else {
-                            console.error("Error: One or more required values are undefined or null");
+                            console.error(`missing appId: `, tagData);
                         }
                     } catch (e) {
                         console.error(`Error processing message ${message.key}: ${e}`);
