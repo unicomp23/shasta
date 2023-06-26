@@ -23,8 +23,15 @@ describe('End-to-End Test 2', () => {
     let subscriber: Subscriber;
     let worker: Worker;
     let redisClient: Cluster;
+    const identifier = new TagDataObjectIdentifier();
+
 
     beforeAll(async () => {
+        identifier.appId = `some-app-id-${crypto.randomUUID()}`;
+        identifier.tag = `tag-id-${crypto.randomUUID()}`;
+        identifier.scope = `scope-id-${crypto.randomUUID()}`
+        identifier.name = `name-${crypto.randomUUID()}`;
+
         // Create the Kafka instance
         const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
 
@@ -81,12 +88,6 @@ describe('End-to-End Test 2', () => {
 
     it('should process messages from Publisher to Worker via Redis Subscriber', async () => {
         const tagData = new TagData();
-        const identifier = new TagDataObjectIdentifier();
-        identifier.appId = `some-app-id-${crypto.randomUUID()}`;
-        identifier.tag = `tag-id-${crypto.randomUUID()}`;
-        identifier.scope = `scope-id-${crypto.randomUUID()}`
-
-        identifier.name = `name-${crypto.randomUUID()}`;
         tagData.identifier = identifier;
         tagData.data = 'Test Value';
 
@@ -103,8 +104,9 @@ describe('End-to-End Test 2', () => {
         // Use Redis client to retrieve data from Redis and assert on the expected state
 
         // Example assertion: Check if the message has been added to Redis snapshot
-        identifier.name = "";
-        const redisSnapshotKey = Buffer.from(tagData.identifier.toBinary()).toString("base64");
+        const snapIdentifier = identifier.clone();
+        snapIdentifier.name = "";
+        const redisSnapshotKey = Buffer.from(snapIdentifier.toBinary()).toString("base64");
         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
 
         const redisSnapshotData = await redisClient.hgetall(commonRedisSnapshotKey);
