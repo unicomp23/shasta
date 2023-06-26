@@ -1,6 +1,6 @@
 import { Kafka, KafkaMessage, EachMessagePayload, Consumer } from 'kafkajs';
 import {Cluster} from 'ioredis';
-import { TagData, TagDataObjectIdentifier } from "../../../submodules/src/gen/tag_data_pb";
+import {TagData, TagDataEnvelope, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
 import {env} from "process";
 
 class Worker {
@@ -83,13 +83,18 @@ class Worker {
                         const commonRedisStreamKey = `{${redisSnapshotKey}}:strm:`;
 
                         const snapshotSeqNo = await this.redisClient.xadd(commonRedisStreamKey, "*", "delta", Buffer.from(tagData.toBinary()));
-                        if (snapshotSeqNo && redisDeltaKey) {
-                            await this.redisClient.hset(commonRedisSnapshotKey,
-                                redisDeltaKey, Buffer.from(tagData.toBinary()),
-                                "seqno", snapshotSeqNo);
-                        } else {
-                            console.error(`Failed to store the snapshot in Redis: `, {snapshotSeqNo, tagData});
+                        if(snapshotSeqNo === null) {
+                            console.error(`Missing redis seqno: `, {snapshotSeqNo});
+                            return;
                         }
+                        const tagDataEnvelope = new TagDataEnvelope({tagData, sequenceNumber: snapshotSeqNo});
+                        if (!(snapshotSeqNo && redisDeltaKey)) {
+                            console.error(`Failed to store the snapshot in Redis: `, {snapshotSeqNo, tagData});
+                            return;
+                        }
+                        await this.redisClient.hset(commonRedisSnapshotKey,
+                            redisDeltaKey, Buffer.from(tagDataEnvelope.toBinary()).toString("base64"),
+                            "seqno", snapshotSeqNo);
 
                         console.log(`Worker: `, {snapshotSeqNo, commonRedisSnapshotKey, commonRedisStreamKey, tagData});
                     } catch (e) {

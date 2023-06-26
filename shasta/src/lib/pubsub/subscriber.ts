@@ -8,13 +8,19 @@ type Message = { snapshot?: TagDataSnapshot; delta?: TagDataEnvelope };
 class Subscriber {
     private readonly redisClient: Cluster;
     private readonly tagDataObjIdentifier: TagDataObjectIdentifier;
-    private readonly redisSnapshotKey: Buffer;
+    private readonly redisSnapshotKey: string;
+    private readonly redisStreamKey: string;
 
     constructor(tagDataObjIdentifier: TagDataObjectIdentifier) {
         this.redisClient = new Cluster ([ { host: env.REDIS_HOST, port: parseInt(env.REDIS_PORT || "6379") }], { dnsLookup: (address, callback) => callback (null, address), redisOptions: { tls: {}, }, });
-        this.tagDataObjIdentifier = tagDataObjIdentifier;
+        this.tagDataObjIdentifier = tagDataObjIdentifier.clone();
         this.tagDataObjIdentifier.name = "";
-        this.redisSnapshotKey = Buffer.from(this.tagDataObjIdentifier.toBinary());
+
+        const redisSnapshotKey = Buffer.from(this.tagDataObjIdentifier.toBinary()).toString("base64");
+        const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
+        this.redisSnapshotKey = commonRedisSnapshotKey;
+        const commonRedisStreamKey = `{${redisSnapshotKey}}:strm:`;
+        this.redisStreamKey = commonRedisStreamKey;
 
         this.redisClient.on('connect', async () => {
             console.log('Connected to Redis server');
@@ -31,20 +37,22 @@ class Subscriber {
 
         // Get the TagDataSnapshot by iterating hgetall() and the snapshotSeqNo via get()
         const redisSnapshotData = await this.redisClient.hgetall(this.redisSnapshotKey);
-        const snapshotSeqNo = await this.redisClient.get(this.redisSnapshotKey);
+        const snapshotSeqNo = redisSnapshotData['seqno'];
+        delete redisSnapshotData['seqno'];
         if (snapshotSeqNo === null) {
             throw new Error("Snapshot sequence number is null");
         }
         const snapshot = new TagDataSnapshot({ sequenceNumber: snapshotSeqNo });
         for (const [key, value] of Object.entries(redisSnapshotData)) {
-            snapshot.snapshot[key] = TagDataEnvelope.fromBinary(Buffer.from(value, 'binary'));
+            console.log('subscriber.stream.snapshot: ', {key, value});
+            snapshot.snapshot[key] = TagDataEnvelope.fromBinary(Buffer.from(value, "base64"));
         }
         queue.put({ snapshot });
 
         // Set up the XREAD() loop to get the delta messages
         const readStreamMessages = async (lastSeqNo: string) => {
             const streamMessages = await this.redisClient.xread(
-                'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisSnapshotKey, lastSeqNo
+                'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisStreamKey, lastSeqNo
             );
 
             if (streamMessages) {

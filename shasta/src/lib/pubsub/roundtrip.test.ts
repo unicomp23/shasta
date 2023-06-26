@@ -68,9 +68,7 @@ describe('End-to-End Test 2', () => {
         console.log('redis: ', env.REDIS_HOST);
 
         // Create the Subscriber
-        const tagDataObjIdentifier = new TagDataObjectIdentifier();
-        tagDataObjIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
-        subscriber = new Subscriber(tagDataObjIdentifier);
+        subscriber = new Subscriber(identifier);
 
         // Create the Worker
         const groupId = `test-group-id-${crypto.randomUUID()}`;
@@ -111,9 +109,20 @@ describe('End-to-End Test 2', () => {
 
         const redisSnapshotData = await redisClient.hgetall(commonRedisSnapshotKey);
         console.log('redisClient.hgetall.2', {commonRedisSnapshotKey, redisSnapshotData});
-/*
-        expect(redisSnapshotData).toBeDefined();
-        expect(redisSnapshotData['deltaKey']).toBeDefined();
-         */
+
+// Retrieve snapshots from Subscriber
+        const snapshotsQueue = await subscriber.stream();
+
+// Dequeue snapshots until queue is empty
+        const message = await snapshotsQueue.get();
+
+// Check the specifics of the message, ensuring that the properties are present
+        const snapshot = message.snapshot;
+        console.log('redisClient.hgetall.snap', {snapshot});
+
+        /*
+                expect(redisSnapshotData).toBeDefined();
+                expect(redisSnapshotData['deltaKey']).toBeDefined();
+                 */
     });
 });
