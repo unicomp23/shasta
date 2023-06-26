@@ -3,7 +3,7 @@ import Redis, { RedisOptions, Cluster, ClusterNode } from 'ioredis';
 import { TagData, TagDataSnapshot, TagDataObjectIdentifier, TagDataEnvelope } from '../../../submodules/src/gen/tag_data_pb';
 import {env} from "process";
 
-type Message = { snapshot?: TagDataSnapshot; delta?: TagDataEnvelope };
+type Message = { snapshot?: TagDataSnapshot; delta?: TagData };
 
 class Subscriber {
     private readonly redisClient: Cluster;
@@ -54,12 +54,14 @@ class Subscriber {
             const streamMessages = await this.redisClient.xread(
                 'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisStreamKey, lastSeqNo
             );
+            console.log('xread: ', {streamMessages});
 
             if (streamMessages) {
                 for (const [, messages] of streamMessages) {
                     for (const [seqNo, messageData] of messages) {
+                        console.log('xread.2: ', {seqNo, messageData});
                         const [, value] = messageData;
-                        const delta = TagDataEnvelope.fromBinary(Buffer.from(value, 'binary'));
+                        const delta = TagData.fromBinary(Buffer.from(value, 'base64'));
                         queue.put({ delta });
 
                         // Update the last sequence number for the next XREAD() call

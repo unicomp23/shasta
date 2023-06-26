@@ -86,7 +86,7 @@ describe('End-to-End Test 2', () => {
 
     it('should process messages from Publisher to Worker via Redis Subscriber', async () => {
         const tagData = new TagData();
-        tagData.identifier = identifier;
+        tagData.identifier = identifier.clone();
         tagData.data = 'Test Value';
 
         // Send TagData message from Publisher
@@ -120,9 +120,24 @@ describe('End-to-End Test 2', () => {
         const snapshot = message.snapshot;
         console.log('redisClient.hgetall.snap', {snapshot});
 
-        /*
-                expect(redisSnapshotData).toBeDefined();
-                expect(redisSnapshotData['deltaKey']).toBeDefined();
-                 */
+        // Publish another TagData delta
+        const tagDataDelta = new TagData();
+        tagDataDelta.identifier = identifier.clone();
+        tagDataDelta.data = 'Test Delta Value';
+        await publisher.send(tagDataDelta);
+        console.log('publisher.send', {tagData: tagDataDelta})
+
+        // Wait for the delta message to reach Redis Subscriber through Worker
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Dequeue deltas until queue is empty
+        const deltaMessage = await snapshotsQueue.get();
+
+        // Check the specifics of the delta message
+        const delta = deltaMessage.delta;
+        console.log('delta message received', {delta});
+
+        // Assert the field in the delta
+        expect(delta?.data).toEqual(tagDataDelta.data);
     });
 });
