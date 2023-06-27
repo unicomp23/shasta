@@ -83,7 +83,7 @@ class Subscriber {
     // Disconnect from Redis
     public async disconnect(): Promise<void> {
         try {
-            await this.redisClient.quit();
+            this.redisClient.disconnect();
             console.log("Disconnected from Redis server successfully");
         } catch (error) {
             console.error('Subscriber, Failed to disconnect from Redis server', error);

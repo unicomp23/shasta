@@ -127,6 +127,8 @@ describe("End-to-End Test 2", () => {
             count++;
             console.log(tagDataDelta.data);
         }
+
+        await delay(1000);
     });
 
     function getRedisSnapshotKey(identifier: TagDataObjectIdentifier): string {
