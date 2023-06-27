@@ -18,6 +18,9 @@ const REDIS_OPTIONS: RedisOptions = {
 // Kafka topic for testing
 const kafkaTopic = `test_topic-${crypto.randomUUID()}`;
 
+const snapCount = 1;
+const deltaCount = 3;
+
 async function waitFor(durationInMs: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, durationInMs));
 }
@@ -54,10 +57,9 @@ async function setup() {
     return { publisher, subscriber, worker, redisClient, identifier };
 }
 
-async function teardown(publisher: Publisher, subscriber: Subscriber, worker: Worker, redisClient: Cluster) {
+async function teardown(publisher: Publisher, subscriber: Subscriber, worker: Worker) {
     await worker.shutdown();
     await publisher.disconnect();
-    await redisClient.quit();
     await subscriber.disconnect();
 }
 
@@ -65,26 +67,26 @@ describe("End-to-End Test 2", () => {
     let publisher: Publisher;
     let subscriber: Subscriber;
     let worker: Worker;
-    let redisClient: Cluster;
     let identifier: TagDataObjectIdentifier;
+    let count = 0;
 
     beforeAll(async () => {
         const resources = await setup();
         publisher = resources.publisher;
         subscriber = resources.subscriber;
         worker = resources.worker;
-        redisClient = resources.redisClient;
         identifier = resources.identifier;
     });
 
     afterAll(async () => {
-        await teardown(publisher, subscriber, worker, redisClient);
+        await teardown(publisher, subscriber, worker);
+        expect(count).toEqual(snapCount + deltaCount);
     });
 
     it("should process messages from Publisher to Worker via Redis Subscriber", async () => {
         const tagData = new TagData();
         tagData.identifier = identifier.clone();
-        tagData.data = "Test Value";
+        tagData.data = "Test Value snapshot";
 
         // Send TagData message from Publisher
         await publisher.send(tagData);
@@ -93,7 +95,6 @@ describe("End-to-End Test 2", () => {
         await waitFor(2000);
 
         const redisSnapshotKey = getRedisSnapshotKey(identifier);
-        const redisSnapshotData = await redisClient.hgetall(redisSnapshotKey);
 
         // Retrieve snapshots from Subscriber
         const snapshotsQueue = await subscriber.stream();
@@ -104,25 +105,28 @@ describe("End-to-End Test 2", () => {
         // Check the specifics of the message, ensuring that the properties are present
         const snapshot = message.snapshot;
         expect(snapshot).toBeDefined();
+        expect(snapshot!.snapshot[identifier.name!].tagData!.data).toEqual(tagData.data);
+        count++;
 
-        // Publish another TagData delta
-        const tagDataDelta = new TagData();
-        tagDataDelta.identifier = identifier.clone();
-        tagDataDelta.data = "Test Delta Value";
-        await publisher.send(tagDataDelta);
+        for(let i = 0; i < deltaCount; i++) {
+            // Publish another TagData delta
+            const tagDataDelta = new TagData();
+            tagDataDelta.identifier = identifier.clone();
+            tagDataDelta.data = `Test Delta Value: ${i}`;
+            await publisher.send(tagDataDelta);
 
-        // Wait for the delta message to reach Redis Subscriber through Worker
-        await waitFor(2000);
+            // Dequeue deltas until the queue is empty
+            const deltaMessage = await snapshotsQueue.get();
 
-        // Dequeue deltas until the queue is empty
-        const deltaMessage = await snapshotsQueue.get();
+            // Check the specifics of the delta message
+            const delta = deltaMessage.delta;
+            expect(delta).toBeDefined();
 
-        // Check the specifics of the delta message
-        const delta = deltaMessage.delta;
-        expect(delta).toBeDefined();
-
-        // Assert the field in the delta
-        expect(delta?.data).toEqual(tagDataDelta.data);
+            // Assert the field in the delta
+            expect(delta?.data).toEqual(tagDataDelta.data);
+            count++;
+            console.log(tagDataDelta.data);
+        }
     });
 
     function getRedisSnapshotKey(identifier: TagDataObjectIdentifier): string {
