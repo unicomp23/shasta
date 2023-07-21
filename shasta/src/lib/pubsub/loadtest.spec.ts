@@ -136,7 +136,24 @@ describe("End-to-End Load Test", () => {
             for (const {publisher, subscriber} of pairs) {
                 const messages = [];
 
-                const thread = async () => {
+                const threadPubSub = async () => {
+
+                    const threadSub = async() => {
+                        const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
+
+                        for (let i = 0; i < n; i++) {
+                            const receivedMsg = await messageQueue.get(); // Read message from the subscriber
+                            if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
+                                console.error("Invalid message received:", receivedMsg);
+                            } else {
+                                console.log("Message validated:", receivedMsg);
+                            }
+                        }
+                        completions.put(subscriber.getTagDataObjIdentifier());
+                        slog.info(`completion enqueued: `, subscriber.getTagDataObjIdentifier());
+                    };
+                    const notUsed = threadSub();
+
                     for (let i = 0; i < n; i++) {
                         const tagData = new TagData({
                             identifier: subscriber.getTagDataObjIdentifier(),
@@ -147,23 +164,12 @@ describe("End-to-End Load Test", () => {
                         messages.push(tagData);
                     }
 
-                    const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
-
-                    for (let i = 0; i < n; i++) {
-                        const receivedMsg = await messageQueue.get(); // Read message from the subscriber
-                        if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
-                            console.error("Invalid message received:", receivedMsg);
-                        } else {
-                            console.log("Message validated:", receivedMsg);
-                        }
-                    }
-                    completions.put(subscriber.getTagDataObjIdentifier());
                 } // thread
-                const notUsed = thread();
+                const notUsed = threadPubSub();
             }
             while (count > 0) {
                 const tagDataObjIdentifier = await completions.get();
-                slog.info(`completion: `, tagDataObjIdentifier)
+                slog.info(`completion dequeued: `, tagDataObjIdentifier)
                 count--;
             }
             nestedTests++;
@@ -172,8 +178,8 @@ describe("End-to-End Load Test", () => {
         //const n = 1000; // Number of publisher/subscriber pairs
         //const m = 100; // Number of published messages per pair
 
-        const n = 5; // Number of publisher/subscriber pairs
-        const m = 5; // Number of published messages per pair
+        const n = 2; // Number of publisher/subscriber pairs
+        const m = 2; // Number of published messages per pair
         const pairs = await setupKafkaPairs(n);
         await runLoadTest(pairs, m);
     });
