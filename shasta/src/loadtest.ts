@@ -3,6 +3,8 @@ import crypto from "crypto";
 import { Publisher } from "./lib/pubsub/publisher";
 import { Subscriber } from "./lib/pubsub/subscriber";
 import {TagData, TagDataObjectIdentifier} from "../submodules/src/gen/tag_data_pb";
+import {AsyncQueue} from "@esfx/async-queue";
+import {slog} from "./lib/logger/slog";
 
 async function createTopic(topic: string, numPartitions: number, kafka: Kafka) {
     const admin = kafka.admin();
@@ -20,7 +22,7 @@ async function createTopic(topic: string, numPartitions: number, kafka: Kafka) {
 
 async function setupKafkaPairs(n: number): Promise<Array<{ publisher: Publisher; subscriber: Subscriber }>> {
     const kafka = new Kafka({
-        clientId: "load-test-client",
+        clientId: `load-test-client-${crypto.randomUUID()}`,
         brokers: ["localhost:9092"], // Update this with your broker's address.
     });
 
@@ -51,30 +53,41 @@ async function setupKafkaPairs(n: number): Promise<Array<{ publisher: Publisher;
 }
 
 async function runLoadTest(pairs: { publisher: Publisher; subscriber: Subscriber }[], n: number) {
+    const completions = new AsyncQueue<TagDataObjectIdentifier>();
+    let count = pairs.length;
+
     for (const { publisher, subscriber } of pairs) {
         const messages = [];
 
-        for (let i = 0; i < n; i++) {
-            const tagData = new TagData({
-                identifier: subscriber.getTagDataObjIdentifier(),
-                data: `Test Value: ${i}`,
-            });
+        const thread = async () => {
+            for (let i = 0; i < n; i++) {
+                const tagData = new TagData({
+                    identifier: subscriber.getTagDataObjIdentifier(),
+                    data: `Test Value: ${i}`,
+                });
 
-            await publisher.send(tagData); // Send the payload using the publisher
-            messages.push(tagData);
-        }
-
-        const receivedMessages = [];
-        const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
-
-        for (let i = 0; i < n; i++) {
-            const receivedMsg = await messageQueue.get(); // Read message from the subscriber
-            if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
-                console.error("Invalid message received:", receivedMsg);
-            } else {
-                console.log("Message validated:", receivedMsg);
+                await publisher.send(tagData); // Send the payload using the publisher
+                messages.push(tagData);
             }
-        }
+
+            const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
+
+            for (let i = 0; i < n; i++) {
+                const receivedMsg = await messageQueue.get(); // Read message from the subscriber
+                if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
+                    console.error("Invalid message received:", receivedMsg);
+                } else {
+                    console.log("Message validated:", receivedMsg);
+                }
+            }
+            completions.put(subscriber.getTagDataObjIdentifier());
+        } // thread
+        const notUsed = thread();
+    }
+    while(count > 0) {
+        const tagDataObjIdentifier = await completions.get();
+        slog.info(`completion: `, tagDataObjIdentifier)
+        count--;
     }
 }
 
