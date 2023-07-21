@@ -45,8 +45,51 @@ def buildOnNode(nodeName, platform) {
       // Tell GitHub that the build succeeded
       external.reportGitHubStatus("${platform}", commit, "success", "Successfully built")
 
-      // DEVOPS-933: clean up workspace directory since it won't be deleted
-      // automatically when the job is deleted
+      if (branch.isFeatureBranch()) {
+        deleteDir()
+      }
+    } }
+  }
+}
+
+def buildAutomation(nodeName, baseVersionFile, testSuite = "@small") {
+  node("${nodeName}") {
+
+    timestamps { timeout(80) {
+      deleteDir()           // make sure working directory is clean
+
+      def commit = helpers.getGitCommit()
+
+      external.reportGitHubStatus("automation", commit, "pending", "Running")
+
+      checkout([
+          $class: 'GitSCM',
+          branches: scm.branches,
+          doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+          extensions: scm.extensions + [[$class: 'CloneOption', depth: 0, noTags: false, reference: env.HOME + '/git-cache', shallow: false]],
+          userRemoteConfigs: scm.userRemoteConfigs
+      ])
+
+      try {
+        def actual_build_number = build_helpers.getActualBuildNumber()
+        def base_version = build_helpers.getBaseVersion(baseVersionFile)
+
+        sshagent(['b1214ac2-1a8e-4fae-8b0b-4d00327ccaa0']) {
+          withEnv(["VERSION_BASE=${base_version}","ACTUAL_BUILD_NUMBER=${actual_build_number}","TEST_SUITE=${testSuite}"]) {
+            sh "./automation-test.sh"
+          }
+        }
+
+      } catch (java.lang.Exception e) {
+        external.reportGitHubStatus("automation", commit, "failure", "Tests failed")
+        throw e
+      }
+
+      //step([$class: 'ArtifactArchiver', artifacts: "automation-test/xunit-reports/*xml", excludes: null, fingerprint: true])
+      //step([$class: 'JUnitResultArchiver', testResults: 'automation-test/xunit-reports/*.xml'])
+
+      external.reportGitHubStatus("automation", commit, "success", "Tests passed")
+
       if (branch.isFeatureBranch()) {
         deleteDir()
       }
@@ -86,6 +129,10 @@ if (branch.isPR()) {
     stage('Build') {
       linuxReleaseBuildTime = timers.codeTimer({ buildOnNode('linux.clang11', 'linux') }, 60000)
       buildTimes.put('linux-release', linuxReleaseBuildTime)
+    }
+
+    stage ('Test') {
+      buildAutomation('automation', baseVersionFile, '')
     }
 
     if (branch.isFeatureBranch()) {
