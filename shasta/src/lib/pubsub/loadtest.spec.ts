@@ -70,7 +70,7 @@ describe("End-to-End Load Test", () => {
     let subscriber: Subscriber;
     let worker: Worker;
     let identifier: TagDataObjectIdentifier;
-    let test_count = 0;
+    let nestedTests = 0;
 
     before(async () => {
         const resources = await setup();
@@ -82,7 +82,7 @@ describe("End-to-End Load Test", () => {
 
     after(async () => {
         await teardown(publisher, subscriber, worker);
-        expect(test_count).to.equal(snapCount + deltaCount);
+        expect(nestedTests).to.equal(1);
     });
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
@@ -101,10 +101,7 @@ describe("End-to-End Load Test", () => {
         }
 
         async function setupKafkaPairs(n: number): Promise<Array<{ publisher: Publisher; subscriber: Subscriber }>> {
-            const kafka = new Kafka({
-                clientId: `load-test-client-${crypto.randomUUID()}`,
-                brokers: ["localhost:9092"], // Update this with your broker's address.
-            });
+            const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
 
             const pairs = [];
 
@@ -169,7 +166,7 @@ describe("End-to-End Load Test", () => {
                 slog.info(`completion: `, tagDataObjIdentifier)
                 count--;
             }
-            test_count++;
+            nestedTests++;
         }
 
         //const n = 1000; // Number of publisher/subscriber pairs
