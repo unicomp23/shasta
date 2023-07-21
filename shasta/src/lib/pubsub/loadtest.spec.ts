@@ -11,6 +11,7 @@ import {after, before, describe, it} from "mocha";
 import {Kafka} from "kafkajs";
 import {AsyncQueue} from "@esfx/async-queue";
 import {slog} from "../logger/slog";
+import {Deferred} from "@esfx/async";
 
 
 envVarsSync();
@@ -137,9 +138,13 @@ describe("End-to-End Load Test", () => {
                 const messages = [];
 
                 const threadPubSub = async () => {
+                    slog.info('threadPubSub');
 
+                    const wait = new Deferred<boolean>();
                     const threadSub = async() => {
+                        slog.info('threadSub');
                         const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
+                        wait.resolve(true);
 
                         for (let i = 0; i < n; i++) {
                             const receivedMsg = await messageQueue.get(); // Read message from the subscriber
@@ -153,6 +158,7 @@ describe("End-to-End Load Test", () => {
                         slog.info(`completion enqueued: `, subscriber.getTagDataObjIdentifier());
                     };
                     const notUsed = threadSub();
+                    await wait.promise;
 
                     for (let i = 0; i < n; i++) {
                         const tagData = new TagData({
@@ -181,6 +187,7 @@ describe("End-to-End Load Test", () => {
         const n = 2; // Number of publisher/subscriber pairs
         const m = 2; // Number of published messages per pair
         const pairs = await setupKafkaPairs(n);
+        slog.info('runLoadTest');
         await runLoadTest(pairs, m);
     });
 });
