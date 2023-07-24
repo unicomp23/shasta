@@ -11,7 +11,7 @@ import {after, before, describe, it} from "mocha";
 import {Kafka} from "kafkajs";
 import {AsyncQueue} from "@esfx/async-queue";
 import {slog} from "../logger/slog";
-import {Deferred} from "@esfx/async";
+import {Deferred, delay} from "@esfx/async";
 
 
 envVarsSync();
@@ -144,6 +144,8 @@ describe("End-to-End Load Test", () => {
                     const threadSub = async() => {
                         slog.info('threadSub');
                         const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
+
+                        await delay(2000);
 
                         for (let i = 0; i < n; i++) {
                             const receivedMsg = await messageQueue.get(); // Read message from the subscriber
