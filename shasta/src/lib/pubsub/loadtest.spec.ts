@@ -140,9 +140,19 @@ describe("End-to-End Load Test", () => {
                 const threadPubSub = async () => {
                     slog.info('threadPubSub');
 
-                    const wait = new Deferred<boolean>();
                     const threadSub = async() => {
                         slog.info('threadSub');
+
+                        for (let i = 0; i < n; i++) {
+                            const tagData = new TagData({
+                                identifier: subscriber.getTagDataObjIdentifier(),
+                                data: `Test Value: ${i}`,
+                            });
+
+                            slog.info(`sending: `, tagData);
+                            await publisher.send(tagData); // Send the payload using the publisher
+                        }
+
                         await delay(2000);
                         const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
 
@@ -156,22 +166,9 @@ describe("End-to-End Load Test", () => {
                         }
                         completions.put(subscriber.getTagDataObjIdentifier());
                         slog.info(`completion enqueued: `, subscriber.getTagDataObjIdentifier());
-
-                        wait.resolve(true);
                     };
                     const notUsed = threadSub();
 
-                    for (let i = 0; i < n; i++) {
-                        const tagData = new TagData({
-                            identifier: subscriber.getTagDataObjIdentifier(),
-                            data: `Test Value: ${i}`,
-                        });
-
-                        slog.info(`sending: `, tagData);
-                        await publisher.send(tagData); // Send the payload using the publisher
-                    }
-
-                    await wait.promise;
                 } // thread
                 const notUsed = threadPubSub();
             }
