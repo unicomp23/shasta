@@ -144,7 +144,6 @@ describe("End-to-End Load Test", () => {
                     const threadSub = async() => {
                         slog.info('threadSub');
                         const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
-                        wait.resolve(true);
 
                         for (let i = 0; i < n; i++) {
                             const receivedMsg = await messageQueue.get(); // Read message from the subscriber
@@ -156,9 +155,10 @@ describe("End-to-End Load Test", () => {
                         }
                         completions.put(subscriber.getTagDataObjIdentifier());
                         slog.info(`completion enqueued: `, subscriber.getTagDataObjIdentifier());
+
+                        wait.resolve(true);
                     };
                     const notUsed = threadSub();
-                    await wait.promise;
 
                     for (let i = 0; i < n; i++) {
                         const tagData = new TagData({
@@ -170,6 +170,7 @@ describe("End-to-End Load Test", () => {
                         messages.push(tagData);
                     }
 
+                    await wait.promise;
                 } // thread
                 const notUsed = threadPubSub();
             }
