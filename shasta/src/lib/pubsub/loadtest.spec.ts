@@ -143,9 +143,8 @@ describe("End-to-End Load Test", () => {
                     const wait = new Deferred<boolean>();
                     const threadSub = async() => {
                         slog.info('threadSub');
-                        const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
-
                         await delay(2000);
+                        const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
 
                         for (let i = 0; i < n; i++) {
                             const receivedMsg = await messageQueue.get(); // Read message from the subscriber
