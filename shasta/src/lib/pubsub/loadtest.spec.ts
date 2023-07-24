@@ -121,6 +121,7 @@ describe("End-to-End Load Test", () => {
 
                 const publisher = new Publisher(kafka, topic);
                 const subscriber = new Subscriber(identifier);
+                slog.info('new Subscriber', identifier);
 
                 await publisher.connect(); // Connect publisher to Kafka
 
@@ -135,7 +136,6 @@ describe("End-to-End Load Test", () => {
             let count = pairs.length;
 
             for (const {publisher, subscriber} of pairs) {
-                const messages = [];
 
                 const threadPubSub = async () => {
                     slog.info('threadPubSub');
@@ -166,8 +166,8 @@ describe("End-to-End Load Test", () => {
                             data: `Test Value: ${i}`,
                         });
 
+                        slog.info(`sending: `, tagData);
                         await publisher.send(tagData); // Send the payload using the publisher
-                        messages.push(tagData);
                     }
 
                     await wait.promise;
