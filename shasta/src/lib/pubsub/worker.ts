@@ -102,7 +102,7 @@ class Worker {
                         const tagDataObjIdentifier: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
 
                         const redisDeltaKey = tagDataObjIdentifier.name;
-                        if (redisDeltaKey === undefined || redisDeltaKey === "seqno") {
+                        if (redisDeltaKey === undefined || redisDeltaKey === "seqno" || redisDeltaKey === "") {
                             slog.error('invalid tagDataObjIdentifier.name: ', {tagDataObjIdentifier});
                             return;
                         }
