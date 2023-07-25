@@ -66,9 +66,10 @@ async function teardown(publisher: Publisher, subscriber: Subscriber, worker: Wo
     await subscriber.disconnect();
 }
 
-interface Pairs {
+interface TestRefs {
     publisher: Publisher,
     subscriber: Subscriber,
+    worker: Worker,
     tagDataObjectIdentifier: TagDataObjectIdentifier
 }
 
@@ -94,10 +95,10 @@ describe("End-to-End Load Test", () => {
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
 
-        async function setupKafkaPairs(n: number): Promise<Array<Pairs>> {
+        async function setupKafkaPairs(n: number): Promise<Array<TestRefs>> {
             const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
 
-            const pairs: Array<Pairs> = [];
+            const pairs: Array<TestRefs> = [];
 
             for (let i = 0; i < n; i++) {
                 const tagDataObjectIdentifier = new TagDataObjectIdentifier({
@@ -113,13 +114,13 @@ describe("End-to-End Load Test", () => {
 
                 await publisher.connect(); // Connect publisher to Kafka
 
-                pairs.push({publisher, subscriber, tagDataObjectIdentifier});
+                pairs.push({publisher, subscriber, worker, tagDataObjectIdentifier});
             }
 
             return pairs;
         }
 
-        async function runLoadTest(pairs: Pairs[], n: number) {
+        async function runLoadTest(pairs: TestRefs[], n: number) {
             const completions = new AsyncQueue<TagDataObjectIdentifier>();
             let count = pairs.length;
 
@@ -143,6 +144,9 @@ describe("End-to-End Load Test", () => {
 
                         await delay(2000);
                         const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
+
+                        const receivedMsg = await messageQueue.get(); // Read message from the subscriber
+                        expect(receivedMsg.snapshot).to.not.be.undefined;
 
                         for (let i = 0; i < n; i++) {
                             const receivedMsg = await messageQueue.get(); // Read message from the subscriber
