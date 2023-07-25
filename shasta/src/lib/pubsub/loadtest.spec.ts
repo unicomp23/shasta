@@ -66,7 +66,7 @@ async function teardown(publisher: Publisher, subscriber: Subscriber, worker: Wo
     await subscriber.disconnect();
 }
 
-interface TestRefs {
+interface TestRef {
     publisher: Publisher,
     subscriber: Subscriber,
     worker: Worker,
@@ -74,31 +74,24 @@ interface TestRefs {
 }
 
 describe("End-to-End Load Test", () => {
-    let publisher: Publisher;
-    let subscriber: Subscriber;
-    let worker: Worker;
-    let identifier: TagDataObjectIdentifier;
     let sanityCount = 0;
+    const testRefs: Array<TestRef> = [];
 
     before(async () => {
-        const resources = await setup();
-        publisher = resources.publisher;
-        subscriber = resources.subscriber;
-        worker = resources.worker;
-        identifier = resources.identifier;
+        expect(sanityCount).to.equal(0);
     });
 
     after(async () => {
-        await teardown(publisher, subscriber, worker);
+        for(const testRef of testRefs) {
+            await teardown(testRef.publisher, testRef.subscriber, testRef.worker);
+        }
         expect(sanityCount).to.equal(1);
     });
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
 
-        async function setupKafkaPairs(n: number): Promise<Array<TestRefs>> {
+        async function setupTestRefs(n: number): Promise<void> {
             const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
-
-            const pairs: Array<TestRefs> = [];
 
             for (let i = 0; i < n; i++) {
                 const tagDataObjectIdentifier = new TagDataObjectIdentifier({
@@ -111,20 +104,19 @@ describe("End-to-End Load Test", () => {
                 const publisher = new Publisher(kafka, kafkaTopic);
                 const subscriber = new Subscriber(tagDataObjectIdentifier);
                 slog.info('new Subscriber', tagDataObjectIdentifier);
+                const worker = new Worker(kafka, `test-group-id-${crypto.randomUUID()}`, kafkaTopic);
 
                 await publisher.connect(); // Connect publisher to Kafka
 
-                pairs.push({publisher, subscriber, worker, tagDataObjectIdentifier});
+                testRefs.push({publisher, subscriber, worker, tagDataObjectIdentifier});
             }
-
-            return pairs;
         }
 
-        async function runLoadTest(pairs: TestRefs[], n: number) {
+        async function runLoadTest(n: number) {
             const completions = new AsyncQueue<TagDataObjectIdentifier>();
-            let count = pairs.length;
+            let count = testRefs.length;
 
-            for (const {publisher, subscriber, tagDataObjectIdentifier} of pairs) {
+            for (const {publisher, subscriber, tagDataObjectIdentifier} of testRefs) {
 
                 const threadPubSub = async () => {
                     slog.info('threadPubSub');
@@ -181,8 +173,9 @@ describe("End-to-End Load Test", () => {
 
         const n = 2; // Number of publisher/subscriber pairs
         const m = 2; // Number of published messages per pair
-        const pairs = await setupKafkaPairs(n);
+        await setupTestRefs(n);
+
         slog.info('runLoadTest');
-        await runLoadTest(pairs, m);
+        await runLoadTest(m);
     });
 });
