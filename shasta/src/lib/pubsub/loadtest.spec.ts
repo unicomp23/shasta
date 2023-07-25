@@ -146,6 +146,7 @@ describe("End-to-End Load Test", () => {
                         const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
 
                         const receivedMsg = await messageQueue.get(); // Read message from the subscriber
+                        slog.info("snapshot received:", receivedMsg);
                         expect(receivedMsg.snapshot).to.not.be.undefined;
 
                         for (let i = 0; i < n; i++) {
