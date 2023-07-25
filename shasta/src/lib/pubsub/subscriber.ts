@@ -46,10 +46,6 @@ class Subscriber {
         });
     }
 
-    public getTagDataObjIdentifier() {
-        return this.tagDataObjIdentifier.clone();
-    }
-
     // Stream messages from Redis
     public async stream(): Promise<AsyncQueue<Message>> {
         const queue = new AsyncQueue<Message>();

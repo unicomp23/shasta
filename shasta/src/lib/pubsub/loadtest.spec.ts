@@ -66,6 +66,12 @@ async function teardown(publisher: Publisher, subscriber: Subscriber, worker: Wo
     await subscriber.disconnect();
 }
 
+interface Pairs {
+    publisher: Publisher,
+    subscriber: Subscriber,
+    tagDataObjectIdentifier: TagDataObjectIdentifier
+}
+
 describe("End-to-End Load Test", () => {
     let publisher: Publisher;
     let subscriber: Subscriber;
@@ -88,14 +94,10 @@ describe("End-to-End Load Test", () => {
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
 
-        async function setupKafkaPairs(n: number): Promise<Array<{ publisher: Publisher; subscriber: Subscriber }>> {
+        async function setupKafkaPairs(n: number): Promise<Array<Pairs>> {
             const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
 
-            const pairs: Array<{
-                publisher: Publisher,
-                subscriber: Subscriber,
-                tagDataObjectIdentifier: TagDataObjectIdentifier
-            }> = [];
+            const pairs: Array<Pairs> = [];
 
             for (let i = 0; i < n; i++) {
                 const tagDataObjectIdentifier = new TagDataObjectIdentifier({
@@ -117,11 +119,11 @@ describe("End-to-End Load Test", () => {
             return pairs;
         }
 
-        async function runLoadTest(pairs: { publisher: Publisher; subscriber: Subscriber }[], n: number) {
+        async function runLoadTest(pairs: Pairs[], n: number) {
             const completions = new AsyncQueue<TagDataObjectIdentifier>();
             let count = pairs.length;
 
-            for (const {publisher, subscriber} of pairs) {
+            for (const {publisher, subscriber, tagDataObjectIdentifier} of pairs) {
 
                 const threadPubSub = async () => {
                     slog.info('threadPubSub');
@@ -131,7 +133,7 @@ describe("End-to-End Load Test", () => {
 
                         for (let i = 0; i < n; i++) {
                             const tagData = new TagData({
-                                identifier: subscriber.getTagDataObjIdentifier(),
+                                identifier: tagDataObjectIdentifier,
                                 data: `Test Value: ${i}`,
                             });
 
@@ -150,8 +152,8 @@ describe("End-to-End Load Test", () => {
                                 console.log("Message validated:", receivedMsg);
                             }
                         }
-                        completions.put(subscriber.getTagDataObjIdentifier());
-                        slog.info(`completion enqueued: `, subscriber.getTagDataObjIdentifier());
+                        completions.put(tagDataObjectIdentifier);
+                        slog.info(`completion enqueued: `, tagDataObjectIdentifier);
                     };
                     const notUsed = threadSub();
 
