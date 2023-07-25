@@ -122,7 +122,7 @@ class Worker {
                             tagData,
                             sequenceNumber: snapshotSeqNo
                         });
-                        if (!(snapshotSeqNo && redisDeltaKey)) {
+                        if (snapshotSeqNo === null) {
                             slog.error(`Failed to store the snapshot in Redis: `, {
                                 snapshotSeqNo,
                                 tagData
