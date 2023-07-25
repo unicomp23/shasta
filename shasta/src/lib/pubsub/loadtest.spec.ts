@@ -91,10 +91,14 @@ describe("End-to-End Load Test", () => {
         async function setupKafkaPairs(n: number): Promise<Array<{ publisher: Publisher; subscriber: Subscriber }>> {
             const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
 
-            const pairs = [];
+            const pairs: Array<{
+                publisher: Publisher,
+                subscriber: Subscriber,
+                tagDataObjectIdentifier: TagDataObjectIdentifier
+            }> = [];
 
             for (let i = 0; i < n; i++) {
-                const identifier = new TagDataObjectIdentifier({
+                const tagDataObjectIdentifier = new TagDataObjectIdentifier({
                     appId: `app-id-${crypto.randomUUID()}`,
                     tag: `tag-id-${crypto.randomUUID()}`,
                     scope: `scope-id-${crypto.randomUUID()}`,
@@ -102,12 +106,12 @@ describe("End-to-End Load Test", () => {
                 });
 
                 const publisher = new Publisher(kafka, kafkaTopic);
-                const subscriber = new Subscriber(identifier);
-                slog.info('new Subscriber', identifier);
+                const subscriber = new Subscriber(tagDataObjectIdentifier);
+                slog.info('new Subscriber', tagDataObjectIdentifier);
 
                 await publisher.connect(); // Connect publisher to Kafka
 
-                pairs.push({publisher, subscriber});
+                pairs.push({publisher, subscriber, tagDataObjectIdentifier});
             }
 
             return pairs;
