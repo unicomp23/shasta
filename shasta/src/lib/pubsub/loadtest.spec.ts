@@ -78,7 +78,7 @@ describe("End-to-End Load Test", () => {
     let subscriber: Subscriber;
     let worker: Worker;
     let identifier: TagDataObjectIdentifier;
-    let nestedTests = 0;
+    let sanityCount = 0;
 
     before(async () => {
         const resources = await setup();
@@ -90,7 +90,7 @@ describe("End-to-End Load Test", () => {
 
     after(async () => {
         await teardown(publisher, subscriber, worker);
-        expect(nestedTests).to.equal(1);
+        expect(sanityCount).to.equal(1);
     });
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
@@ -147,6 +147,8 @@ describe("End-to-End Load Test", () => {
                             await publisher.send(tagData); // Send the payload using the publisher
                         }
 
+                        // empty snapshot, then deltas
+
                         // Validate messages from Redis
                         for (let i = 0; i < n; i++) {
                             const receivedMsg = await messageQueue.get(); // Read message from the subscriber
@@ -171,7 +173,7 @@ describe("End-to-End Load Test", () => {
                 slog.info(`completion dequeued: `, tagDataObjIdentifier)
                 count--;
             }
-            nestedTests++;
+            sanityCount++;
         }
 
         //const n = 1000; // Number of publisher/subscriber pairs
