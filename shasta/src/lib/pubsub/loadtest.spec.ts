@@ -87,19 +87,6 @@ describe("End-to-End Load Test", () => {
     });
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
-        async function createTopic(topic: string, numPartitions: number, kafka: Kafka) {
-            const admin = kafka.admin();
-            await admin.connect();
-            await admin.createTopics({
-                topics: [
-                    {
-                        topic: topic,
-                        numPartitions: numPartitions,
-                    },
-                ],
-            });
-            await admin.disconnect();
-        }
 
         async function setupKafkaPairs(n: number): Promise<Array<{ publisher: Publisher; subscriber: Subscriber }>> {
             const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
@@ -108,10 +95,6 @@ describe("End-to-End Load Test", () => {
 
             for (let i = 0; i < n; i++) {
                 const uuid = crypto.randomUUID();
-                const topic = `test-topic-${uuid}`;
-
-                await createTopic(topic, 100, kafka);
-
                 const identifier = new TagDataObjectIdentifier({
                     appId: `app-id-${uuid}`,
                     tag: `tag-id-${uuid}`,
@@ -119,7 +102,7 @@ describe("End-to-End Load Test", () => {
                     name: `name-${uuid}`,
                 });
 
-                const publisher = new Publisher(kafka, topic);
+                const publisher = new Publisher(kafka, kafkaTopic);
                 const subscriber = new Subscriber(identifier);
                 slog.info('new Subscriber', identifier);
 
