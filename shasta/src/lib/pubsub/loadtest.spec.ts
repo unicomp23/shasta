@@ -25,12 +25,12 @@ async function waitFor(durationInMs: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, durationInMs));
 }
 
-async function setup() {
-    const identifier = new TagDataObjectIdentifier();
-    identifier.appId = `some-app-id-${crypto.randomUUID()}`;
-    identifier.tag = `tag-id-${crypto.randomUUID()}`;
-    identifier.scope = `scope-id-${crypto.randomUUID()}`;
-    identifier.name = `name-${crypto.randomUUID()}`;
+async function setup(): Promise<TestRef> {
+    const tagDataObjectIdentifier = new TagDataObjectIdentifier();
+    tagDataObjectIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
+    tagDataObjectIdentifier.tag = `tag-id-${crypto.randomUUID()}`;
+    tagDataObjectIdentifier.scope = `scope-id-${crypto.randomUUID()}`;
+    tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
 
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
     const admin = kafka.admin();
@@ -46,7 +46,7 @@ async function setup() {
     const publisher = new Publisher(kafka, kafkaTopic);
     await publisher.connect();
 
-    const subscriber = new Subscriber(identifier);
+    const subscriber = new Subscriber(tagDataObjectIdentifier);
 
     const groupId = `test-group-id-${crypto.randomUUID()}`;
     const worker = new Worker(kafka, groupId, kafkaTopic);
@@ -56,17 +56,11 @@ async function setup() {
         publisher,
         subscriber,
         worker,
-        identifier
+        tagDataObjectIdentifier
     };
 }
 
-async function teardown(publisher: Publisher, subscriber: Subscriber, worker: Worker) {
-    await worker.shutdown();
-    await publisher.disconnect();
-    await subscriber.disconnect();
-}
-
-interface TestRefs {
+interface TestRef {
     publisher: Publisher,
     subscriber: Subscriber,
     worker: Worker,
@@ -74,53 +68,38 @@ interface TestRefs {
 }
 
 describe("End-to-End Load Test", () => {
-    let publisher: Publisher;
-    let subscriber: Subscriber;
-    let worker: Worker;
-    let identifier: TagDataObjectIdentifier;
     let sanityCount = 0;
+    const pairs = new Array<TestRef>();
 
     before(async () => {
-        const resources = await setup();
-        publisher = resources.publisher;
-        subscriber = resources.subscriber;
-        worker = resources.worker;
-        identifier = resources.identifier;
+        expect(sanityCount).to.equal(0);
     });
 
+    async function teardown() {
+        for(const testRef of pairs) {
+            await testRef.worker.shutdown();
+            await testRef.publisher.disconnect();
+            await testRef.subscriber.disconnect();
+        }
+    }
+
     after(async () => {
-        await teardown(publisher, subscriber, worker);
+        await teardown();
         expect(sanityCount).to.equal(1);
     });
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
 
-        async function setupKafkaPairs(n: number): Promise<Array<TestRefs>> {
+        async function setupKafkaPairs(n: number): Promise<void> {
             const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
 
-            const pairs: Array<TestRefs> = [];
-
             for (let i = 0; i < n; i++) {
-                const tagDataObjectIdentifier = new TagDataObjectIdentifier({
-                    appId: `app-id-${crypto.randomUUID()}`,
-                    tag: `tag-id-${crypto.randomUUID()}`,
-                    scope: `scope-id-${crypto.randomUUID()}`,
-                    name: `name-${crypto.randomUUID()}`,
-                });
-
-                const publisher = new Publisher(kafka, kafkaTopic);
-                const subscriber = new Subscriber(tagDataObjectIdentifier);
-                slog.info('new Subscriber', tagDataObjectIdentifier);
-
-                await publisher.connect(); // Connect publisher to Kafka
-
-                pairs.push({publisher, subscriber, worker, tagDataObjectIdentifier});
+                const testRef = await setup();
+                pairs.push(testRef);
             }
-
-            return pairs;
         }
 
-        async function runLoadTest(pairs: TestRefs[], n: number) {
+        async function runLoadTest(pairs: TestRef[], n: number) {
             const completions = new AsyncQueue<TagDataObjectIdentifier>();
             let count = pairs.length;
 
@@ -182,7 +161,7 @@ describe("End-to-End Load Test", () => {
 
         const n = 2; // Number of publisher/subscriber pairs
         const m = 2; // Number of published messages per pair
-        const pairs = await setupKafkaPairs(n);
+        await setupKafkaPairs(n);
         slog.info('runLoadTest');
         await runLoadTest(pairs, m);
     });
