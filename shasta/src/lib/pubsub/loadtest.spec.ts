@@ -147,9 +147,9 @@ describe("End-to-End Load Test", () => {
                         for (let i = 0; i < n; i++) {
                             const receivedMsg = await messageQueue.get(); // Read message from the subscriber
                             if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
-                                console.error("Invalid message received:", receivedMsg);
+                                slog.info("Invalid message received:", receivedMsg);
                             } else {
-                                console.log("Message validated:", receivedMsg);
+                                slog.info("Message validated:", receivedMsg);
                             }
                         }
                         completions.put(tagDataObjectIdentifier);
