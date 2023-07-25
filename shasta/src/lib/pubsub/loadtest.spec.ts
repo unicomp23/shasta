@@ -166,6 +166,7 @@ describe("End-to-End Load Test", () => {
                 count--;
             }
             sanityCount++;
+            slog.info(`sanityCount: `, sanityCount);
         }
 
         //const n = 1000; // Number of publisher/subscriber pairs
