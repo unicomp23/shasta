@@ -94,12 +94,11 @@ describe("End-to-End Load Test", () => {
             const pairs = [];
 
             for (let i = 0; i < n; i++) {
-                const uuid = crypto.randomUUID();
                 const identifier = new TagDataObjectIdentifier({
-                    appId: `app-id-${uuid}`,
-                    tag: `tag-id-${uuid}`,
-                    scope: `scope-id-${uuid}`,
-                    name: `name-${uuid}`,
+                    appId: `app-id-${crypto.randomUUID()}`,
+                    tag: `tag-id-${crypto.randomUUID()}`,
+                    scope: `scope-id-${crypto.randomUUID()}`,
+                    name: `name-${crypto.randomUUID()}`,
                 });
 
                 const publisher = new Publisher(kafka, kafkaTopic);
