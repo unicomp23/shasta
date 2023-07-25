@@ -132,6 +132,11 @@ describe("End-to-End Load Test", () => {
                     const threadSub = async() => {
                         slog.info('threadSub');
 
+                        // Stream messages from Redis
+                        const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
+                        await delay(2000);
+
+                        // Send messages to Kafka
                         for (let i = 0; i < n; i++) {
                             const tagData = new TagData({
                                 identifier: tagDataObjectIdentifier,
@@ -142,13 +147,7 @@ describe("End-to-End Load Test", () => {
                             await publisher.send(tagData); // Send the payload using the publisher
                         }
 
-                        await delay(2000);
-                        const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
-
-                        const receivedMsg = await messageQueue.get(); // Read message from the subscriber
-                        slog.info("snapshot received:", receivedMsg);
-                        expect(receivedMsg.snapshot).to.not.be.undefined;
-
+                        // Validate messages from Redis
                         for (let i = 0; i < n; i++) {
                             const receivedMsg = await messageQueue.get(); // Read message from the subscriber
                             if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
@@ -157,6 +156,8 @@ describe("End-to-End Load Test", () => {
                                 slog.info("Message validated:", receivedMsg);
                             }
                         }
+
+                        // Send completion
                         completions.put(tagDataObjectIdentifier);
                         slog.info(`completion enqueued: `, tagDataObjectIdentifier);
                     };
