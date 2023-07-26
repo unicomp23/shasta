@@ -127,7 +127,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         for (let i = 0; i < m; i++) {
             const receivedMsg = await messageQueue.get();
             expect(receivedMsg.delta).to.not.be.undefined;
-            expect(receivedMsg.delta?.data).to.equal(testVal(i));
+            expect(testVal(i)).to.equal(receivedMsg.delta?.data);
             sanityCount++;
         }
 
