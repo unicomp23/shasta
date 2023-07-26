@@ -3,10 +3,6 @@ import {TagData} from "../../../submodules/src/gen/tag_data_pb";
 import {slog} from "../logger/slog";
 
 // Convert message to a buffer
-const encode = (message: TagData): Buffer => {
-    return Buffer.from(message.toBinary());
-};
-
 class Publisher {
     private producer: Producer;
 
@@ -46,7 +42,7 @@ class Publisher {
             const tagDataIdentifierPartition = tagData.identifier.clone();
             tagDataIdentifierPartition.name = "";
             const message = {
-                value: encode(tagData),
+                value: Buffer.from(tagData.toBinary()),
                 key: Buffer.from(tagDataIdentifierPartition.toBinary()),
             };
 

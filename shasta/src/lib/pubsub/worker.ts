@@ -112,7 +112,7 @@ class Worker {
                             slog.error('invalid tagDataObjIdentifier.name: ', {tagDataObjIdentifier: tagDataObjIdentifierPartition});
                             return;
                         }
-                        
+
                         tagDataObjIdentifierPartition.name = "";
                         const redisSnapshotKey = Buffer.from(tagDataObjIdentifierPartition.toBinary()).toString("base64");
 
