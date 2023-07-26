@@ -99,17 +99,23 @@ class Worker {
 
                 if (message.key && message.value) {
                     try {
-                        const tagDataObjIdentifier: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
+                        const tagDataObjIdentifierPartition: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
+                        const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
 
-                        const redisDeltaKey = tagDataObjIdentifier.name;
-                        if (redisDeltaKey === undefined || redisDeltaKey === "seqno" || redisDeltaKey === "") {
-                            slog.error('invalid tagDataObjIdentifier.name: ', {tagDataObjIdentifier});
+                        if(tagData.identifier === undefined) {
+                            slog.error('invalid tagData: ', {tagData});
                             return;
                         }
-                        tagDataObjIdentifier.name = "";
-                        const redisSnapshotKey = Buffer.from(tagDataObjIdentifier.toBinary()).toString("base64");
 
-                        const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
+                        const redisDeltaKey = tagData.identifier.name;
+                        if (redisDeltaKey === undefined || redisDeltaKey === "seqno" || redisDeltaKey === "") {
+                            slog.error('invalid tagDataObjIdentifier.name: ', {tagDataObjIdentifier: tagDataObjIdentifierPartition});
+                            return;
+                        }
+                        
+                        tagDataObjIdentifierPartition.name = "";
+                        const redisSnapshotKey = Buffer.from(tagDataObjIdentifierPartition.toBinary()).toString("base64");
+
                         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
                         const commonRedisStreamKey = `{${redisSnapshotKey}}:strm:`;
 
