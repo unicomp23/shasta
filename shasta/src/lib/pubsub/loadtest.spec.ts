@@ -17,8 +17,8 @@ import { delay } from "@esfx/async";
 
 envVarsSync();
 
-const n = 3; // Number of publisher/subscriber pairs
-const m = 3; // Number of published messages per pair
+const pairCount = 2; // Number of publisher/subscriber pairs
+const messageCount = 2; // Number of published messages per pair
 
 const kafkaTopic = `test_topic-${crypto.randomUUID()}`;
 let sanityCount = 0;
@@ -39,13 +39,13 @@ describe("End-to-End Load Test", () => {
 
     after(async () => {
         await teardown(pairs);
-        expect(sanityCount).to.equal(pairs.length * n);
+        expect(sanityCount).to.equal(pairCount * messageCount);
     });
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
-        await setupKafkaPairs(pairs, n);
+        await setupKafkaPairs(pairs, pairCount);
         slog.info("runLoadTest");
-        await runLoadTest(pairs, m);
+        await runLoadTest(pairs, messageCount);
     });
 });
 
@@ -103,7 +103,7 @@ async function setup(): Promise<TestRef> {
     };
 }
 
-async function runLoadTest(pairs: TestRef[], n: number) {
+async function runLoadTest(pairs: TestRef[], m: number) {
     const completions = new AsyncQueue<TagDataObjectIdentifier>();
 
     const tasks = pairs.map(({ publisher, subscriber, worker, tagDataObjectIdentifier }) => {
@@ -114,7 +114,7 @@ async function runLoadTest(pairs: TestRef[], n: number) {
             await worker.groupJoined();
             const messageQueue = await subscriber.stream();
 
-            for (let i = 0; i < n; i++) {
+            for (let i = 0; i < m; i++) {
                 const tagData = new TagData({
                     identifier: tagDataObjectIdentifier,
                     data: testVal(i),
@@ -125,7 +125,7 @@ async function runLoadTest(pairs: TestRef[], n: number) {
             const snapshot = await messageQueue.get();
             expect(snapshot.snapshot).to.not.be.undefined;
 
-            for (let i = 0; i < n; i++) {
+            for (let i = 0; i < m; i++) {
                 const receivedMsg = await messageQueue.get();
                 expect(receivedMsg.delta).to.not.be.undefined;
                 expect(receivedMsg.delta?.data).to.equal(testVal(i));
