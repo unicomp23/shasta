@@ -104,13 +104,13 @@ async function teardown(pairs: TestRef[]) {
 async function runLoadTest(pairs: TestRef[], n: number) {
     const completions = new AsyncQueue<TagDataObjectIdentifier>();
 
-    const tasks = pairs.map(({ publisher, subscriber, tagDataObjectIdentifier }) => {
+    const tasks = pairs.map(({ publisher, subscriber, worker, tagDataObjectIdentifier }) => {
         return (async () => {
             const uuid = crypto.randomUUID();
             const testVal = (counter: number) => `Test Value: ${uuid}, ${counter}`;
 
+            await worker.groupJoined();
             const messageQueue = await subscriber.stream();
-            await delay(2000);
 
             for (let i = 0; i < n; i++) {
                 const tagData = new TagData({
