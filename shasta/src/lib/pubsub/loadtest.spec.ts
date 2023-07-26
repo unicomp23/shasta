@@ -17,6 +17,9 @@ import { delay } from "@esfx/async";
 
 envVarsSync();
 
+const n = 2; // Number of publisher/subscriber pairs
+const m = 2; // Number of published messages per pair
+
 const kafkaTopic = `test_topic-${crypto.randomUUID()}`;
 let sanityCount = 0;
 
@@ -36,12 +39,10 @@ describe("End-to-End Load Test", () => {
 
     after(async () => {
         await teardown(pairs);
-        expect(sanityCount).to.equal(1);
+        expect(sanityCount).to.equal(pairs.length * n);
     });
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
-        const n = 2; // Number of publisher/subscriber pairs
-        const m = 2; // Number of published messages per pair
         await setupKafkaPairs(pairs, n);
         slog.info("runLoadTest");
         await runLoadTest(pairs, m);
@@ -122,6 +123,7 @@ async function runLoadTest(pairs: TestRef[], n: number) {
                     slog.info("Invalid message received:", receivedMsg);
                 } else {
                     slog.info("Message validated:", receivedMsg);
+                    sanityCount++;
                 }
             }
 
@@ -130,5 +132,4 @@ async function runLoadTest(pairs: TestRef[], n: number) {
     });
 
     await Promise.all(tasks);
-    sanityCount++;
 }
