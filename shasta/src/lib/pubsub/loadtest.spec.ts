@@ -106,35 +106,31 @@ async function setup(): Promise<TestRef> {
 async function runLoadTest(pairs: TestRef[], m: number) {
     const completions = new AsyncQueue<TagDataObjectIdentifier>();
 
-    const tasks = pairs.map(({ publisher, subscriber, worker, tagDataObjectIdentifier }) => {
-        return (async () => {
-            const uuid = crypto.randomUUID();
-            const testVal = (counter: number) => `Test Value: ${uuid}, ${counter}`;
+    for(const testRef of pairs) {
+        const uuid = crypto.randomUUID();
+        const testVal = (counter: number) => `Test Value: ${uuid}, ${counter}`;
 
-            await worker.groupJoined();
-            const messageQueue = await subscriber.stream();
+        await testRef.worker.groupJoined();
+        const messageQueue = await testRef.subscriber.stream();
 
-            for (let i = 0; i < m; i++) {
-                const tagData = new TagData({
-                    identifier: tagDataObjectIdentifier,
-                    data: testVal(i),
-                });
-                await publisher.send(tagData);
-            }
+        for (let i = 0; i < m; i++) {
+            const tagData = new TagData({
+                identifier: testRef.tagDataObjectIdentifier,
+                data: testVal(i),
+            });
+            await testRef.publisher.send(tagData);
+        }
 
-            const snapshot = await messageQueue.get();
-            expect(snapshot.snapshot).to.not.be.undefined;
+        const snapshot = await messageQueue.get();
+        expect(snapshot.snapshot).to.not.be.undefined;
 
-            for (let i = 0; i < m; i++) {
-                const receivedMsg = await messageQueue.get();
-                expect(receivedMsg.delta).to.not.be.undefined;
-                expect(receivedMsg.delta?.data).to.equal(testVal(i));
-                sanityCount++;
-            }
+        for (let i = 0; i < m; i++) {
+            const receivedMsg = await messageQueue.get();
+            expect(receivedMsg.delta).to.not.be.undefined;
+            expect(receivedMsg.delta?.data).to.equal(testVal(i));
+            sanityCount++;
+        }
 
-            completions.put(tagDataObjectIdentifier);
-        })();
-    });
-
-    await Promise.all(tasks);
+        completions.put(testRef.tagDataObjectIdentifier);
+    }
 }
