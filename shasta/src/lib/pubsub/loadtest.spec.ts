@@ -50,12 +50,22 @@ describe("End-to-End Load Test", () => {
 });
 
 async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
-    const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
-
-    for (let i = 0; i < n; i++) {
+    const tasks = Array.from({ length: n }, async () => {
         const testRef = await setup();
         pairs.push(testRef);
-    }
+    });
+
+    await Promise.all(tasks);
+}
+
+async function teardown(pairs: TestRef[]) {
+    const tasks = pairs.map(async ({ worker, publisher, subscriber }) => {
+        await worker.shutdown();
+        await publisher.disconnect();
+        await subscriber.disconnect();
+    });
+
+    await Promise.all(tasks);
 }
 
 async function setup(): Promise<TestRef> {
@@ -92,14 +102,6 @@ async function setup(): Promise<TestRef> {
         worker,
         tagDataObjectIdentifier,
     };
-}
-
-async function teardown(pairs: TestRef[]) {
-    for (const testRef of pairs) {
-        await testRef.worker.shutdown();
-        await testRef.publisher.disconnect();
-        await testRef.subscriber.disconnect();
-    }
 }
 
 async function runLoadTest(pairs: TestRef[], n: number) {
