@@ -106,13 +106,16 @@ async function runLoadTest(pairs: TestRef[], n: number) {
 
     const tasks = pairs.map(({ publisher, subscriber, tagDataObjectIdentifier }) => {
         return (async () => {
+            const uuid = crypto.randomUUID();
+            const testVal = (counter: number) => `Test Value: ${uuid}, ${counter}`;
+
             const messageQueue = await subscriber.stream();
             await delay(2000);
 
             for (let i = 0; i < n; i++) {
                 const tagData = new TagData({
                     identifier: tagDataObjectIdentifier,
-                    data: `Test Value: ${i}`,
+                    data: testVal(i),
                 });
                 await publisher.send(tagData);
             }
@@ -122,12 +125,9 @@ async function runLoadTest(pairs: TestRef[], n: number) {
 
             for (let i = 0; i < n; i++) {
                 const receivedMsg = await messageQueue.get();
-                if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
-                    slog.info("Invalid message received:", receivedMsg);
-                } else {
-                    slog.info("Message validated:", receivedMsg);
-                    sanityCount++;
-                }
+                expect(receivedMsg.delta).to.not.be.undefined;
+                expect(receivedMsg.delta?.data).to.equal(testVal(i));
+                sanityCount++;
             }
 
             completions.put(tagDataObjectIdentifier);
