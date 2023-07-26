@@ -117,6 +117,9 @@ async function runLoadTest(pairs: TestRef[], n: number) {
                 await publisher.send(tagData);
             }
 
+            const snapshot = await messageQueue.get();
+            expect(snapshot.snapshot).to.not.be.undefined;
+
             for (let i = 0; i < n; i++) {
                 const receivedMsg = await messageQueue.get();
                 if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
