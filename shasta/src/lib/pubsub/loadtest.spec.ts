@@ -50,10 +50,15 @@ describe("End-to-End Load Test", () => {
 });
 
 async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
-    for (let i = 0; i < n; i++) {
-        const testRef = await setup();
-        pairs.push(testRef);
-    }
+    // Create an array of tasks for setting up each pair
+    const setupTasks = Array.from({ length: n }, () => setup());
+
+    // Use Promise.all to wait for all the pairs to be set up in parallel
+    const setupResults = await Promise.all(setupTasks);
+
+    // Add the results to the "pairs" array
+    pairs.push(...setupResults);
+
     slog.info("setupKafkaPairs", { pairs: pairs.length });
 }
 
@@ -106,31 +111,38 @@ async function setup(): Promise<TestRef> {
 async function runLoadTest(pairs: TestRef[], m: number) {
     const completions = new AsyncQueue<TagDataObjectIdentifier>();
 
-    for(const testRef of pairs) {
+    // Create an array of tasks for each pair
+    const tasks = pairs.map(async (testRef) => {
         const uuidSubStream = crypto.randomUUID();
         const testVal = (uuid: string, counter: number) => `Test Value: ${uuid}, ${counter}`;
 
         await testRef.worker.groupJoined();
         const messageQueue = await testRef.subscriber.stream();
 
-        for (let i = 0; i < m; i++) {
+        // Sending messages
+        const sendTasks = Array.from({ length: m }, (_, i) => {
             const tagData = new TagData({
                 identifier: testRef.tagDataObjectIdentifier,
                 data: testVal(uuidSubStream, i),
             });
-            await testRef.publisher.send(tagData);
-        }
+            return testRef.publisher.send(tagData);
+        });
+        await Promise.all(sendTasks);
 
         const snapshot = await messageQueue.get();
         expect(snapshot.snapshot).to.not.be.undefined;
 
-        for (let i = 0; i < m; i++) {
+        // Receiving and checking messages
+        const receiveTasks = Array.from({ length: m }, async (_, i) => {
             const receivedMsg = await messageQueue.get();
             expect(receivedMsg.delta).to.not.be.undefined;
             expect(testVal(uuidSubStream, i)).to.equal(receivedMsg.delta?.data);
             sanityCount++;
-        }
+        });
+        await Promise.all(receiveTasks);
 
         completions.put(testRef.tagDataObjectIdentifier);
-    }
+    });
+
+    await Promise.all(tasks);
 }
