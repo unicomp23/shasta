@@ -70,7 +70,7 @@ async function setup(): Promise<TestRef> {
     await admin.connect();
     const topicConfig: ITopicConfig = {
         topic: kafkaTopic,
-        numPartitions: 128,
+        numPartitions: 3,
     };
     await admin.createTopics({
         topics: [topicConfig],
