@@ -1,28 +1,60 @@
-import {ITopicConfig} from "kafkajs";
-import {TagData, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
-import {Publisher} from "./publisher";
-import {Subscriber} from "./subscriber";
-import {Worker} from "./worker";
-import {createKafka} from "../kafka/createKafka";
+import { ITopicConfig } from "kafkajs";
+import {
+    TagData,
+    TagDataObjectIdentifier,
+} from "../../../submodules/src/gen/tag_data_pb";
+import { Publisher } from "./publisher";
+import { Subscriber } from "./subscriber";
+import { Worker } from "./worker";
+import { createKafka } from "../kafka/createKafka";
 import crypto from "crypto";
-import {envVarsSync} from "../../automation";
-import {expect} from "chai";
-import {after, before, describe, it} from "mocha";
-import {Kafka} from "kafkajs";
-import {AsyncQueue} from "@esfx/async-queue";
-import {slog} from "../logger/slog";
-import {Deferred, delay} from "@esfx/async";
-
+import { envVarsSync } from "../../automation";
+import { expect } from "chai";
+import { after, before, describe, it } from "mocha";
+import { AsyncQueue } from "@esfx/async-queue";
+import { slog } from "../logger/slog";
+import { delay } from "@esfx/async";
 
 envVarsSync();
 
 const kafkaTopic = `test_topic-${crypto.randomUUID()}`;
+let sanityCount = 0;
 
-const snapCount = 1;
-const deltaCount = 3;
+interface TestRef {
+    publisher: Publisher;
+    subscriber: Subscriber;
+    worker: Worker;
+    tagDataObjectIdentifier: TagDataObjectIdentifier;
+}
 
-async function waitFor(durationInMs: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, durationInMs));
+describe("End-to-End Load Test", () => {
+    const pairs = new Array<TestRef>();
+
+    before(async () => {
+        expect(sanityCount).to.equal(0);
+    });
+
+    after(async () => {
+        await teardown(pairs);
+        expect(sanityCount).to.equal(1);
+    });
+
+    it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
+        const n = 2; // Number of publisher/subscriber pairs
+        const m = 2; // Number of published messages per pair
+        await setupKafkaPairs(pairs, n);
+        slog.info("runLoadTest");
+        await runLoadTest(pairs, m);
+    });
+});
+
+async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
+    const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
+
+    for (let i = 0; i < n; i++) {
+        const testRef = await setup();
+        pairs.push(testRef);
+    }
 }
 
 async function setup(): Promise<TestRef> {
@@ -56,113 +88,47 @@ async function setup(): Promise<TestRef> {
         publisher,
         subscriber,
         worker,
-        tagDataObjectIdentifier
+        tagDataObjectIdentifier,
     };
 }
 
-interface TestRef {
-    publisher: Publisher,
-    subscriber: Subscriber,
-    worker: Worker,
-    tagDataObjectIdentifier: TagDataObjectIdentifier
+async function teardown(pairs: TestRef[]) {
+    for (const testRef of pairs) {
+        await testRef.worker.shutdown();
+        await testRef.publisher.disconnect();
+        await testRef.subscriber.disconnect();
+    }
 }
 
-describe("End-to-End Load Test", () => {
-    let sanityCount = 0;
-    const pairs = new Array<TestRef>();
+async function runLoadTest(pairs: TestRef[], n: number) {
+    const completions = new AsyncQueue<TagDataObjectIdentifier>();
 
-    before(async () => {
-        expect(sanityCount).to.equal(0);
-    });
-
-    async function teardown() {
-        for(const testRef of pairs) {
-            await testRef.worker.shutdown();
-            await testRef.publisher.disconnect();
-            await testRef.subscriber.disconnect();
-        }
-    }
-
-    after(async () => {
-        await teardown();
-        expect(sanityCount).to.equal(1);
-    });
-
-    it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
-
-        async function setupKafkaPairs(n: number): Promise<void> {
-            const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
+    const tasks = pairs.map(({ publisher, subscriber, tagDataObjectIdentifier }) => {
+        return (async () => {
+            const messageQueue = await subscriber.stream();
+            await delay(2000);
 
             for (let i = 0; i < n; i++) {
-                const testRef = await setup();
-                pairs.push(testRef);
+                const tagData = new TagData({
+                    identifier: tagDataObjectIdentifier,
+                    data: `Test Value: ${i}`,
+                });
+                await publisher.send(tagData);
             }
-        }
 
-        async function runLoadTest(pairs: TestRef[], n: number) {
-            const completions = new AsyncQueue<TagDataObjectIdentifier>();
-            let count = pairs.length;
-
-            for (const {publisher, subscriber, tagDataObjectIdentifier} of pairs) {
-
-                const threadPubSub = async () => {
-                    slog.info('threadPubSub');
-
-                    const threadSub = async() => {
-                        slog.info('threadSub');
-
-                        // Stream messages from Redis
-                        const messageQueue = await subscriber.stream(); // Subscribe to the stream of messages
-                        await delay(2000);
-
-                        // Send messages to Kafka
-                        for (let i = 0; i < n; i++) {
-                            const tagData = new TagData({
-                                identifier: tagDataObjectIdentifier,
-                                data: `Test Value: ${i}`,
-                            });
-
-                            slog.info(`sending: `, tagData);
-                            await publisher.send(tagData); // Send the payload using the publisher
-                        }
-
-                        // empty snapshot, then deltas
-
-                        // Validate messages from Redis
-                        for (let i = 0; i < n; i++) {
-                            const receivedMsg = await messageQueue.get(); // Read message from the subscriber
-                            if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
-                                slog.info("Invalid message received:", receivedMsg);
-                            } else {
-                                slog.info("Message validated:", receivedMsg);
-                            }
-                        }
-
-                        // Send completion
-                        completions.put(tagDataObjectIdentifier);
-                        slog.info(`completion enqueued: `, tagDataObjectIdentifier);
-                    };
-                    const notUsed = threadSub();
-
-                } // thread
-                const notUsed = threadPubSub();
+            for (let i = 0; i < n; i++) {
+                const receivedMsg = await messageQueue.get();
+                if (receivedMsg.delta === undefined || receivedMsg.delta.data !== `Test Value: ${i}`) {
+                    slog.info("Invalid message received:", receivedMsg);
+                } else {
+                    slog.info("Message validated:", receivedMsg);
+                }
             }
-            while (count > 0) {
-                const tagDataObjIdentifier = await completions.get();
-                slog.info(`completion dequeued: `, tagDataObjIdentifier)
-                count--;
-            }
-            sanityCount++;
-            slog.info(`sanityCount: `, sanityCount);
-        }
 
-        //const n = 1000; // Number of publisher/subscriber pairs
-        //const m = 100; // Number of published messages per pair
-
-        const n = 2; // Number of publisher/subscriber pairs
-        const m = 2; // Number of published messages per pair
-        await setupKafkaPairs(n);
-        slog.info('runLoadTest');
-        await runLoadTest(pairs, m);
+            completions.put(tagDataObjectIdentifier);
+        })();
     });
-});
+
+    await Promise.all(tasks);
+    sanityCount++;
+}
