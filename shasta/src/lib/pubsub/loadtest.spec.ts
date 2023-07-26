@@ -50,10 +50,14 @@ describe("End-to-End Load Test", () => {
 });
 
 async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
-    const tasks = Array.from({ length: n }, async () => {
-        const testRef = await setup();
-        pairs.push(testRef);
-    });
+    const tasks = new Array<Promise<void>>();
+    for(let i = 0; i < n; i++) {
+        const task = async () => {
+            const testRef = await setup();
+            pairs.push(testRef);
+        };
+        tasks.push(task());
+    }
 
     await Promise.all(tasks);
 }
