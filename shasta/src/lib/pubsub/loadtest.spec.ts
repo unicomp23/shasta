@@ -17,8 +17,8 @@ import { delay } from "@esfx/async";
 
 envVarsSync();
 
-const n = 2; // Number of publisher/subscriber pairs
-const m = 2; // Number of published messages per pair
+const n = 16; // Number of publisher/subscriber pairs
+const m = 16; // Number of published messages per pair
 
 const kafkaTopic = `test_topic-${crypto.randomUUID()}`;
 let sanityCount = 0;
@@ -70,6 +70,7 @@ async function setup(): Promise<TestRef> {
     await admin.connect();
     const topicConfig: ITopicConfig = {
         topic: kafkaTopic,
+        numPartitions: 128,
     };
     await admin.createTopics({
         topics: [topicConfig],
