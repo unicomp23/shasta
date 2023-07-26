@@ -107,8 +107,8 @@ async function runLoadTest(pairs: TestRef[], m: number) {
     const completions = new AsyncQueue<TagDataObjectIdentifier>();
 
     for(const testRef of pairs) {
-        const uuid = crypto.randomUUID();
-        const testVal = (counter: number) => `Test Value: ${uuid}, ${counter}`;
+        const uuidSubStream = crypto.randomUUID();
+        const testVal = (uuid: string, counter: number) => `Test Value: ${uuid}, ${counter}`;
 
         await testRef.worker.groupJoined();
         const messageQueue = await testRef.subscriber.stream();
@@ -116,7 +116,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         for (let i = 0; i < m; i++) {
             const tagData = new TagData({
                 identifier: testRef.tagDataObjectIdentifier,
-                data: testVal(i),
+                data: testVal(uuidSubStream, i),
             });
             await testRef.publisher.send(tagData);
         }
@@ -127,7 +127,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         for (let i = 0; i < m; i++) {
             const receivedMsg = await messageQueue.get();
             expect(receivedMsg.delta).to.not.be.undefined;
-            expect(testVal(i)).to.equal(receivedMsg.delta?.data);
+            expect(testVal(uuidSubStream, i)).to.equal(receivedMsg.delta?.data);
             sanityCount++;
         }
 
