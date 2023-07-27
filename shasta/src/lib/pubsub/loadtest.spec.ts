@@ -110,8 +110,8 @@ async function runLoadTest(pairs: TestRef[], m: number) {
             throw new Error("TagDataObjectIdentifier name is empty");
         }
 
-        const uuidSubStream = testRef.tagDataObjectIdentifier.name;
-        const testVal = (uuid: string, counter: number) => `Test Value: ${uuid}, ${counter}`;
+        const uuidSubStream = crypto.randomUUID();
+        const testVal = (uuid: string, counter: number) => `Load test Value: ${uuid}, ${counter}`;
 
         await testRef.worker.groupJoined();
         const messageQueue = await testRef.subscriber.stream();
