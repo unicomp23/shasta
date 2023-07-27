@@ -133,8 +133,10 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         for (;;) {
             const receivedMsg = await messageQueue.get();
             expect(receivedMsg.delta).to.not.be.undefined;
-            if(receivedMsg.delta?.data) testValTracker.delete(receivedMsg.delta?.data);
-            sanityCount++;
+            if(receivedMsg.delta?.data) {
+                testValTracker.delete(receivedMsg.delta?.data);
+                sanityCount++;
+            }
             if (testValTracker.size === 0) break;
         }
 
