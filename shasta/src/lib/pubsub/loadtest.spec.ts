@@ -1,19 +1,15 @@
-import { ITopicConfig } from "kafkajs";
-import {
-    TagData,
-    TagDataObjectIdentifier,
-} from "../../../submodules/src/gen/tag_data_pb";
-import { Publisher } from "./publisher";
-import { Subscriber } from "./subscriber";
-import { Worker } from "./worker";
-import { createKafka } from "../kafka/createKafka";
+import {ITopicConfig, ITopicMetadata, Kafka} from "kafkajs";
+import {TagData, TagDataObjectIdentifier,} from "../../../submodules/src/gen/tag_data_pb";
+import {Publisher} from "./publisher";
+import {Subscriber} from "./subscriber";
+import {Worker} from "./worker";
+import {createKafka} from "../kafka/createKafka";
 import crypto from "crypto";
-import { envVarsSync } from "../../automation";
-import { expect } from "chai";
-import { after, before, describe, it } from "mocha";
-import { AsyncQueue } from "@esfx/async-queue";
-import { slog } from "../logger/slog";
-import { delay } from "@esfx/async";
+import {envVarsSync} from "../../automation";
+import {expect} from "chai";
+import {after, before, describe, it} from "mocha";
+import {AsyncQueue} from "@esfx/async-queue";
+import {slog} from "../logger/slog";
 
 envVarsSync();
 
@@ -30,10 +26,31 @@ interface TestRef {
     tagDataObjectIdentifier: TagDataObjectIdentifier;
 }
 
+const isTestTopic = (metadata: ITopicMetadata): boolean => {
+    return metadata.name.toLowerCase().includes("test");
+}
+
+async function deleteTestTopics(kafka: Kafka): Promise<void> {
+    const admin = kafka.admin();
+    await admin.connect();
+
+    const metadata = await admin.fetchTopicMetadata({ topics: [] });
+    const topicsToDelete = metadata.topics.filter(isTestTopic).map((t) => t.name);
+
+    if (topicsToDelete.length > 0) {
+        await admin.deleteTopics({ topics: topicsToDelete, timeout: 10000 });
+        slog.info("Deleted test topics", { topics: topicsToDelete });
+    }
+
+    await admin.disconnect();
+}
+
 describe("End-to-End Load Test", () => {
     const pairs = new Array<TestRef>();
 
     before(async () => {
+        const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
+        await deleteTestTopics(kafka);
         expect(sanityCount).to.equal(0);
     });
 
