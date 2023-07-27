@@ -13,8 +13,7 @@ import { expect } from "chai";
 import { after, before, describe, it } from "mocha";
 import { AsyncQueue } from "@esfx/async-queue";
 import { slog } from "../logger/slog";
-import { Kafka } from "kafkajs";
-import {delay} from "@esfx/async";
+import { delay } from "@esfx/async";
 
 envVarsSync();
 
@@ -31,32 +30,10 @@ interface TestRef {
     tagDataObjectIdentifier: TagDataObjectIdentifier;
 }
 
-async function deleteTestTopics(kafka: Kafka) {
-    const admin = kafka.admin();
-    await admin.connect();
-
-    // List all topics in the Kafka cluster
-    const topicMetadata = await admin.fetchTopicMetadata();
-    const topics = topicMetadata.topics.map((topicInfo) => topicInfo.name);
-
-    // Filter the topics that contain "test" (case-insensitive)
-    const testTopics = topics.filter((topic) => /test/i.test(topic));
-    slog.info("deleteTestTopics", { testTopics });
-
-    // Delete the filtered topics
-    await admin.deleteTopics({ topics: testTopics });
-
-    await admin.disconnect();
-
-    await delay(3000);
-}
-
 describe("End-to-End Load Test", () => {
     const pairs = new Array<TestRef>();
 
     before(async () => {
-        const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
-        await deleteTestTopics(kafka);
         expect(sanityCount).to.equal(0);
     });
 
