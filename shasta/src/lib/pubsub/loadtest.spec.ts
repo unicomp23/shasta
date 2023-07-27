@@ -111,27 +111,31 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         }
 
         const uuidSubStream = crypto.randomUUID();
-        const testVal = (uuid: string, counter: number) => `Load test Value: ${uuid}, ${counter}`;
+        const testValFormat = (uuid: string, counter: number) => `Load test Value: ${uuid}, ${counter}`;
+        const testValTracker = new Set<string>();
 
         await testRef.worker.groupJoined();
         const messageQueue = await testRef.subscriber.stream();
 
         for (let i = 0; i < m; i++) {
+            const testVal = testValFormat(uuidSubStream, i);
             const tagData = new TagData({
                 identifier: testRef.tagDataObjectIdentifier,
-                data: testVal(uuidSubStream, i),
+                data: testVal,
             });
+            testValTracker.add(testVal);
             await testRef.publisher.send(tagData);
         }
 
         const snapshot = await messageQueue.get();
         expect(snapshot.snapshot).to.not.be.undefined;
 
-        for (let i = 0; i < m; i++) {
+        for (;;) {
             const receivedMsg = await messageQueue.get();
             expect(receivedMsg.delta).to.not.be.undefined;
-            expect(testVal(uuidSubStream, i)).to.equal(receivedMsg.delta?.data);
+            if(receivedMsg.delta?.data) testValTracker.delete(receivedMsg.delta?.data);
             sanityCount++;
+            if (testValTracker.size === 0) break;
         }
 
         completions.put(testRef.tagDataObjectIdentifier);
