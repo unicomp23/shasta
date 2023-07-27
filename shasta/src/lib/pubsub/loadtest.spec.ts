@@ -17,8 +17,8 @@ import { delay } from "@esfx/async";
 
 envVarsSync();
 
-const pairCount = 2; // Number of publisher/subscriber pairs
-const messageCount = 2; // Number of published messages per pair
+const pairCount = 17; // Number of publisher/subscriber pairs
+const messageCount = 23; // Number of published messages per pair
 
 const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCount = 0;
