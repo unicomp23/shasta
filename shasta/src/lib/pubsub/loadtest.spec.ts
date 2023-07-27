@@ -20,7 +20,7 @@ envVarsSync();
 const pairCount = 2; // Number of publisher/subscriber pairs
 const messageCount = 2; // Number of published messages per pair
 
-const kafkaTopic = `test_topic-${crypto.randomUUID()}`;
+const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCount = 0;
 
 interface TestRef {
@@ -78,21 +78,20 @@ async function setup(): Promise<TestRef> {
     const admin = kafka.admin();
     await admin.connect();
     const topicConfig: ITopicConfig = {
-        topic: kafkaTopic,
-        numPartitions: 3,
+        topic: kafkaTopicLoad,
     };
     await admin.createTopics({
         topics: [topicConfig],
     });
     await admin.disconnect();
 
-    const publisher = new Publisher(kafka, kafkaTopic);
+    const publisher = new Publisher(kafka, kafkaTopicLoad);
     await publisher.connect();
 
     const subscriber = new Subscriber(tagDataObjectIdentifier);
 
     const groupId = `test-group-id-${crypto.randomUUID()}`;
-    const worker = new Worker(kafka, groupId, kafkaTopic);
+    const worker = new Worker(kafka, groupId, kafkaTopicLoad);
     await worker.groupJoined();
 
     return {
@@ -110,7 +109,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         if(testRef.tagDataObjectIdentifier.name === "" || testRef.tagDataObjectIdentifier.name === undefined) {
             throw new Error("TagDataObjectIdentifier name is empty");
         }
-        
+
         const uuidSubStream = testRef.tagDataObjectIdentifier.name;
         const testVal = (uuid: string, counter: number) => `Test Value: ${uuid}, ${counter}`;
 
