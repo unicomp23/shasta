@@ -50,10 +50,9 @@ describe("End-to-End Load Test", () => {
 });
 
 async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
-    for (let i = 0; i < n; i++) {
-        const testRef = await setup();
-        pairs.push(testRef);
-    }
+    const tasks = Array.from({ length: n }, setup);
+    const setupResults = await Promise.all(tasks);
+    pairs.push(...setupResults);
     slog.info("setupKafkaPairs", { pairs: pairs.length });
 }
 
@@ -105,8 +104,8 @@ async function setup(): Promise<TestRef> {
 async function runLoadTest(pairs: TestRef[], m: number) {
     const completions = new AsyncQueue<TagDataObjectIdentifier>();
 
-    for(const testRef of pairs) {
-        if(testRef.tagDataObjectIdentifier.name === "" || testRef.tagDataObjectIdentifier.name === undefined) {
+    const runTestTasks = pairs.map(async (testRef) => {
+        if (testRef.tagDataObjectIdentifier.name === "" || testRef.tagDataObjectIdentifier.name === undefined) {
             throw new Error("TagDataObjectIdentifier name is empty");
         }
 
@@ -133,7 +132,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         for (;;) {
             const receivedMsg = await messageQueue.get();
             expect(receivedMsg.delta).to.not.be.undefined;
-            if(receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
+            if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
                 testValTracker.delete(receivedMsg.delta?.data);
                 sanityCount++;
             }
@@ -141,5 +140,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         }
 
         completions.put(testRef.tagDataObjectIdentifier);
-    }
+    });
+
+    await Promise.all(runTestTasks);
 }
