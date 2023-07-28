@@ -50,10 +50,30 @@ describe("End-to-End Load Test", () => {
 });
 
 async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
+    const maxPending = 16;
+    let pendingCount = 0;
+
+    function setupWithLimit(): Promise<TestRef> {
+        if (pendingCount >= maxPending) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(setupWithLimit());
+                }, 1000); // Retry after 1 second
+            });
+        }
+
+        pendingCount++;
+        return setup()
+            .finally(() => {
+                pendingCount--;
+            });
+    }
+
     for (let i = 0; i < n; i++) {
-        const setupResult = await setup();
+        const setupResult = await setupWithLimit();
         pairs.push(setupResult);
     }
+
     slog.info("setupKafkaPairs", { pairs: pairs.length });
 }
 
