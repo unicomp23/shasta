@@ -17,8 +17,8 @@ import { slog } from "../logger/slog";
 
 envVarsSync();
 
-const pairCount = 17; // Number of publisher/subscriber pairs
-const messageCount = 23; // Number of published messages per pair
+const pairCount = 31; // Number of publisher/subscriber pairs
+const messageCount = 256; // Number of published messages per pair
 
 const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCount = 0;
@@ -78,7 +78,7 @@ async function setup(): Promise<TestRef> {
     await admin.connect();
     const topicConfig: ITopicConfig = {
         topic: kafkaTopicLoad,
-        numPartitions: 100,
+        //numPartitions: 100,
     };
     await admin.createTopics({
         topics: [topicConfig],

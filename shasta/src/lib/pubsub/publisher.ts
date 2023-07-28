@@ -52,7 +52,7 @@ class Publisher {
                 messages: [message],
             });
 
-            slog.info("Message published successfully");
+            //slog.info("Message published successfully");
         } catch (error) {
             slog.error(`Failed to publish the message: : `, error);
         }

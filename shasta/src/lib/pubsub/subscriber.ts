@@ -74,15 +74,15 @@ class Subscriber {
                     const streamMessages = await this.redisClient.xread(
                         'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisStreamKey, lastSeqNo
                     );
-                    slog.info('xread: ', {streamMessages});
+                    //slog.info('xread: ', {streamMessages});
 
                     if (streamMessages) {
                         for (const [, messages] of streamMessages) {
                             for (const [seqNo, messageData] of messages) {
-                                slog.info('xread.2: ', {
+                                /*slog.info('xread.2: ', {
                                     seqNo,
                                     messageData
-                                });
+                                });*/
                                 const [, value] = messageData;
                                 const delta = TagData.fromBinary(Buffer.from(value, 'base64'));
                                 queue.put({delta});
