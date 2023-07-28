@@ -1,4 +1,4 @@
-import { ITopicConfig } from "kafkajs";
+import {ITopicConfig, ITopicMetadata} from "kafkajs";
 import {
     TagData,
     TagDataObjectIdentifier,
@@ -10,10 +10,10 @@ import { createKafka } from "../kafka/createKafka";
 import crypto from "crypto";
 import { envVarsSync } from "../../automation";
 import { expect } from "chai";
-import { after, before, describe, it } from "mocha";
+import { describe, it } from "mocha";
 import { AsyncQueue } from "@esfx/async-queue";
+import { Kafka } from "kafkajs";
 import { slog } from "../logger/slog";
-import { delay } from "@esfx/async";
 
 envVarsSync();
 
@@ -83,6 +83,25 @@ async function setup(): Promise<TestRef> {
     await admin.createTopics({
         topics: [topicConfig],
     });
+
+    // Repeatedly check if the topic has been created.
+    let topicExists = false;
+    const timeoutMs = 5000;
+    const startTime = Date.now();
+
+    while (!topicExists) {
+        const metadata = await admin.fetchTopicMetadata({ topics: [kafkaTopicLoad] });
+        if (findTopicInMetadata(kafkaTopicLoad, metadata.topics)) {
+            topicExists = true;
+        } else {
+            // If the timeout is hit, throw an error.
+            if (Date.now() - startTime > timeoutMs) {
+                throw new Error(`Timed out waiting for topic '${kafkaTopicLoad}' to be created.`);
+            }
+            // Otherwise, wait 500 ms before the next check.
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    }
     await admin.disconnect();
 
     const publisher = new Publisher(kafka, kafkaTopicLoad);
@@ -100,6 +119,11 @@ async function setup(): Promise<TestRef> {
         worker,
         tagDataObjectIdentifier,
     };
+}
+
+// Helper function to find the topic in the topic metadata object.
+function findTopicInMetadata(topic: string, metadata: ITopicMetadata[]): boolean {
+    return metadata.some((topicMetadata: ITopicMetadata) => topicMetadata.name === topic);
 }
 
 async function runLoadTest(pairs: TestRef[], m: number) {
