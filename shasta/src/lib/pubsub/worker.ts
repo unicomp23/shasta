@@ -140,12 +140,12 @@ class Worker {
                             redisDeltaKey, Buffer.from(tagDataEnvelope.toBinary()).toString("base64"),
                             "seqno", snapshotSeqNo);
 
-                        slog.info(`Worker: `, {
+                        /*slog.info(`Worker: `, {
                             snapshotSeqNo,
                             commonRedisSnapshotKey,
                             commonRedisStreamKey,
                             tagData
-                        });
+                        });*/
                     } catch (e) {
                         slog.error(`Error processing message ${message.key}: ${e}`);
                     }
