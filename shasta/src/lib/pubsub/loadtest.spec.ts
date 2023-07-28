@@ -14,6 +14,7 @@ import { describe, it } from "mocha";
 import { AsyncQueue } from "@esfx/async-queue";
 import { Kafka } from "kafkajs";
 import { slog } from "../logger/slog";
+import {Flusher} from "./flusher";
 
 envVarsSync();
 
@@ -43,6 +44,8 @@ describe("End-to-End Load Test", () => {
     });
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
+        const flusher = new Flusher();
+        await flusher.flushAll();
         await setupKafkaPairs(pairs, pairCount);
         slog.info("runLoadTest");
         await runLoadTest(pairs, messageCount);
