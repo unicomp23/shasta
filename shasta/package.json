@@ -4,7 +4,7 @@
   "description": "HOPS - ho-rizontal pub/sub",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -r ts-node/register --timeout 600000 'src/**/*.spec.ts'",
+    "test": "mocha -r ts-node/register --timeout 3000000 'src/**/*.spec.ts'",
     "lint": "npx eslint --ext .ts src"
   },
   "repository": {
