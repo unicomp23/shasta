@@ -44,7 +44,7 @@ async function setup() {
     const subscriber = new Subscriber(identifier);
 
     const groupId = `test-group-id-${crypto.randomUUID()}`;
-    const worker = new Worker(kafka, groupId, kafkaTopic);
+    const worker = await Worker.create(kafka, groupId, kafkaTopic);
     await worker.groupJoined();
 
     return {

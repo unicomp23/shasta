@@ -110,7 +110,7 @@ async function setup(): Promise<TestRef> {
     const subscriber = new Subscriber(tagDataObjectIdentifier);
 
     const groupId = `test-group-id-${crypto.randomUUID()}`;
-    const worker = new Worker(kafka, groupId, kafkaTopicLoad);
+    const worker = await Worker.create(kafka, groupId, kafkaTopicLoad);
     await worker.groupJoined();
 
     return {

@@ -10,7 +10,7 @@ class Worker {
     private readonly topic: string;
     private groupJoined_: boolean = false;
 
-    constructor(kafka: Kafka, groupId: string, topic: string) {
+    private constructor(kafka: Kafka, groupId: string, topic: string) {
         this.kafkaConsumer = kafka.consumer({groupId});
         this.redisClient = new Cluster([{
             host: env.REDIS_HOST,
@@ -29,13 +29,14 @@ class Worker {
             slog.error(`Redis error: ${error}`);
         });
 
-        // Initialize the Kafka consumer and Redis client
-        this.init().catch(e => {
-            slog.error("init error: ", {e});
-        });
-
         process.on("SIGINT", () => this.shutdown());
         process.on("SIGTERM", () => this.shutdown());
+    }
+
+    public static async create(kafka: Kafka, groupId: string, topic: string) {
+        const worker = new Worker(kafka, groupId, topic);
+        await worker.init();
+        return worker;
     }
 
     public async groupJoined(): Promise<boolean> {
