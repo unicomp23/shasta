@@ -27,6 +27,7 @@ let sanityCount = 0;
 interface TestRef {
     publisher: Publisher;
     subscriber: Subscriber;
+    worker: Worker;
     tagDataObjectIdentifier: TagDataObjectIdentifier;
 }
 
@@ -62,13 +63,8 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
     const maxConcurrent = 16;
     const setupPromises: Promise<TestRef>[] = [];
 
-    const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
-    const groupId = `test-group-id-${crypto.randomUUID()}`;
-    const worker = await Worker.create(kafka, groupId, kafkaTopicLoad);
-    await worker.groupJoined();
-
     for (let i = 0; i < n; i++) {
-        const setupPromise = setup(kafka);
+        const setupPromise = setup();
         setupPromises.push(setupPromise);
 
         if (setupPromises.length === maxConcurrent || i === n - 1) {
@@ -85,7 +81,8 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
 }
 
 async function teardown(pairs: TestRef[]) {
-    const tasks = pairs.map(async ({ publisher, subscriber }) => {
+    const tasks = pairs.map(async ({ worker, publisher, subscriber }) => {
+        await worker.shutdown();
         await publisher.disconnect();
         await subscriber.disconnect();
     });
@@ -93,13 +90,14 @@ async function teardown(pairs: TestRef[]) {
     await Promise.all(tasks);
 }
 
-async function setup(kafka: Kafka): Promise<TestRef> {
+async function setup(): Promise<TestRef> {
     const tagDataObjectIdentifier = new TagDataObjectIdentifier();
     tagDataObjectIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
     tagDataObjectIdentifier.tag = `tag-id-${crypto.randomUUID()}`;
     tagDataObjectIdentifier.scope = `scope-id-${crypto.randomUUID()}`;
     tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
 
+    const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
     const admin = kafka.admin();
     await admin.connect();
     const topicConfig: ITopicConfig = {
@@ -136,10 +134,13 @@ async function setup(kafka: Kafka): Promise<TestRef> {
     const subscriber = new Subscriber(tagDataObjectIdentifier);
 
     const groupId = `test-group-id-${crypto.randomUUID()}`;
+    const worker = await Worker.create(kafka, groupId, kafkaTopicLoad);
+    await worker.groupJoined();
 
     return {
         publisher,
         subscriber,
+        worker,
         tagDataObjectIdentifier,
     };
 }
@@ -161,6 +162,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         const testValFormat = (uuid: string, counter: number) => `Load test Value: ${uuid}, ${counter}`;
         const testValTracker = new Set<string>();
 
+        await testRef.worker.groupJoined();
         const messageQueue = await testRef.subscriber.stream();
 
         for (let i = 0; i < m; i++) {
