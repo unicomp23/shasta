@@ -135,6 +135,7 @@ async function setup(i: number): Promise<TestRef> {
 
     const groupId = `test-group-id-${crypto.randomUUID()}`;
     const worker = (i % 32 == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
+    if(worker !== null) slog.info("setup worker", { i, groupId, kafkaTopicLoad });
 
     return {
         publisher,
@@ -183,6 +184,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
             if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
                 testValTracker.delete(receivedMsg.delta?.data);
                 sanityCount++;
+                if(sanityCount % 1000 === 0) slog.info("sanityCount", { sanityCount });
             }
             if (testValTracker.size === 0) break;
         }
