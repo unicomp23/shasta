@@ -187,6 +187,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
             if (testValTracker.size === 0) break;
         }
 
+        slog.info("runLoadTest", { iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0) });
         completions.put(testRef.tagDataObjectIdentifier);
     });
 
