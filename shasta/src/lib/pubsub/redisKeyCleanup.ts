@@ -32,7 +32,8 @@ class RedisKeyCleanup {
             const keys = res[1];
 
             if (keys.length > 0) {
-                await this.redisClient.del(...keys);
+                // Using Promise.all to delete keys concurrently
+                await Promise.all(keys.map(key => this.redisClient.del(key)));
             }
         } while (cursor !== '0');
 
