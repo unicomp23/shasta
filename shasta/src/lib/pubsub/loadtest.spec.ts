@@ -55,7 +55,7 @@ describe("End-to-End Load Test", () => {
         await runLoadTest(pairs, messageCount);
         const elapsed = Date.now() - start;
         const total = pairs.length * messageCount;
-        slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate: elapsed / total });
+        slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate_per_ms: elapsed / total });
     });
 });
 
