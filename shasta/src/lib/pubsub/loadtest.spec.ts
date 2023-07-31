@@ -27,7 +27,7 @@ let sanityCount = 0;
 interface TestRef {
     publisher: Publisher;
     subscriber: Subscriber;
-    worker: Worker;
+    worker: Worker | null;
     tagDataObjectIdentifier: TagDataObjectIdentifier;
 }
 
@@ -64,7 +64,7 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
     const setupPromises: Promise<TestRef>[] = [];
 
     for (let i = 0; i < n; i++) {
-        const setupPromise = setup();
+        const setupPromise = setup(i);
         setupPromises.push(setupPromise);
 
         if (setupPromises.length === maxConcurrent || i === n - 1) {
@@ -82,7 +82,7 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
 
 async function teardown(pairs: TestRef[]) {
     const tasks = pairs.map(async ({ worker, publisher, subscriber }) => {
-        await worker.shutdown();
+        await worker?.shutdown();
         await publisher.disconnect();
         await subscriber.disconnect();
     });
@@ -90,7 +90,7 @@ async function teardown(pairs: TestRef[]) {
     await Promise.all(tasks);
 }
 
-async function setup(): Promise<TestRef> {
+async function setup(i: number): Promise<TestRef> {
     const tagDataObjectIdentifier = new TagDataObjectIdentifier();
     tagDataObjectIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
     tagDataObjectIdentifier.tag = `tag-id-${crypto.randomUUID()}`;
@@ -134,8 +134,7 @@ async function setup(): Promise<TestRef> {
     const subscriber = new Subscriber(tagDataObjectIdentifier);
 
     const groupId = `test-group-id-${crypto.randomUUID()}`;
-    const worker = await Worker.create(kafka, groupId, kafkaTopicLoad);
-    await worker.groupJoined();
+    const worker = (i % 32 == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
 
     return {
         publisher,
@@ -162,7 +161,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         const testValFormat = (uuid: string, counter: number) => `Load test Value: ${uuid}, ${counter}`;
         const testValTracker = new Set<string>();
 
-        await testRef.worker.groupJoined();
+        if(testRef.worker) await testRef.worker.groupJoined();
         const messageQueue = await testRef.subscriber.stream();
 
         for (let i = 0; i < m; i++) {
