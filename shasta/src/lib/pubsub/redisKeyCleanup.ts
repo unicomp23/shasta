@@ -2,7 +2,7 @@ import { Cluster } from 'ioredis';
 import { env } from "process";
 import { slog } from "../logger/slog";
 
-class Flusher {
+class RedisKeyCleanup {
     private readonly redisClient: Cluster;
 
     constructor() {
@@ -23,26 +23,30 @@ class Flusher {
         });
     }
 
-    public async flushAll(): Promise<void> {
-        try {
-            const nodes = this.redisClient.nodes('master'); // get all master nodes
-            const flushPromises = nodes.map(node => node.flushall()); // flush all data from each node
-            await Promise.all(flushPromises); // wait for all promises to resolve
-            slog.info('Flushed all data from all nodes in the Redis cluster');
-        } catch (error) {
-            slog.error(`Failed to flush data from Redis cluster: ${error}`);
-        }
+    public async deleteAllKeys(): Promise<void> {
+        let cursor = '0';
+
+        do {
+            const res = await this.redisClient.scan(cursor, 'MATCH', '*');
+            cursor = res[0];
+            const keys = res[1];
+
+            if (keys.length > 0) {
+                await this.redisClient.del(...keys);
+            }
+        } while (cursor !== '0');
+
+        slog.info("Deleted all keys from Redis server");
     }
 
-    // Disconnect from Redis
     public async disconnect(): Promise<void> {
         try {
             this.redisClient.disconnect();
             slog.info("Disconnected from Redis server successfully");
         } catch (error) {
-            slog.error('Flusher, Failed to disconnect from Redis server', error);
+            slog.error('Failed to disconnect from Redis server', error);
         }
     }
 }
 
-export { Flusher };
+export { RedisKeyCleanup };
