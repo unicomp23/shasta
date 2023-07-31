@@ -51,7 +51,11 @@ describe("End-to-End Load Test", () => {
 
         await setupKafkaPairs(pairs, pairCount);
         slog.info("runLoadTest");
+        const start = Date.now();
         await runLoadTest(pairs, messageCount);
+        const elapsed = Date.now() - start;
+        const total = pairs.length * messageCount;
+        slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate: elapsed / total });
     });
 });
 
