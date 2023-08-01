@@ -120,7 +120,7 @@ async function setup(i: number): Promise<TestRef> {
     tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
 
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
-    await deleteTestTopics(kafka);
+    //await deleteTestTopics(kafka);
 
     const admin = kafka.admin();
     await admin.connect();
@@ -158,7 +158,7 @@ async function setup(i: number): Promise<TestRef> {
     const subscriber = new Subscriber(tagDataObjectIdentifier);
 
     const groupId = `test-group-id-${crypto.randomUUID()}`;
-    const worker = (i % 8 == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
+    const worker = (i % 32 == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
     if(worker !== null) slog.info("setup worker", { i, groupId, kafkaTopicLoad });
 
     return {
