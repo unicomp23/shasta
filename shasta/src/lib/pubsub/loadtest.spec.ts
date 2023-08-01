@@ -15,6 +15,7 @@ import { AsyncQueue } from "@esfx/async-queue";
 import { Kafka } from "kafkajs";
 import { slog } from "../logger/slog";
 import {RedisKeyCleanup} from "./redisKeyCleanup";
+import {delay} from "@esfx/async";
 
 envVarsSync();
 
@@ -24,6 +25,26 @@ const messageCount = 1024; // Number of published messages per pair
 const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCountSub = 0;
 let sanityCountPub = 0;
+
+async function deleteTestTopics(kafka: Kafka) {
+    const admin = kafka.admin();
+    await admin.connect();
+
+    // List all topics in the Kafka cluster
+    const topicMetadata = await admin.fetchTopicMetadata();
+    const topics = topicMetadata.topics.map((topicInfo) => topicInfo.name);
+
+    // Filter the topics that contain "test" (case-insensitive)
+    const testTopics = topics.filter((topic) => /test/i.test(topic));
+    slog.info("deleteTestTopics", { testTopics });
+
+    // Delete the filtered topics
+    await admin.deleteTopics({ topics: testTopics });
+
+    await admin.disconnect();
+
+    await delay(3000);
+}
 
 interface TestRef {
     publisher: Publisher;
@@ -99,6 +120,8 @@ async function setup(i: number): Promise<TestRef> {
     tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
 
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
+    await deleteTestTopics(kafka);
+
     const admin = kafka.admin();
     await admin.connect();
     const topicConfig: ITopicConfig = {
