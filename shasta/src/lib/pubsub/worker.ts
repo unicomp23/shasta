@@ -3,6 +3,7 @@ import {Cluster} from 'ioredis';
 import {TagData, TagDataEnvelope, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
 import {env} from "process";
 import {slog} from "../logger/slog";
+import {AsyncQueue} from "@esfx/async-queue";
 
 class Worker {
     private kafkaConsumer: Consumer;
@@ -79,6 +80,8 @@ class Worker {
                 slog.info("Kafka consumer group join event");
                 this.groupJoined_ = true;
             });
+
+            this.batcherTask = this.unbatcher();
         } catch (error) {
             slog.error(`Error while connecting to Kafka: ${error}`);
             return;
@@ -88,22 +91,23 @@ class Worker {
         await this.subscribeToTopic();
     }
 
-    private async subscribeToTopic(): Promise<void> {
-        await this.kafkaConsumer.subscribe({
-            topic: this.topic,
-            fromBeginning: true
-        });
+    private readonly batcher = new AsyncQueue<KafkaMessage>();
+    private batcherTask: Promise<void> | null = null;
 
-        await this.kafkaConsumer.run({
-            eachMessage: async (payload: EachMessagePayload) => {
-                const message: KafkaMessage = payload.message;
-
-                if (message.key && message.value) {
-                    try {
+    private async unbatcher() {
+        for(;;) {
+            const messages = new Array<KafkaMessage>();
+            while(this.batcher.size > 0)
+                messages.push(await this.batcher.get());
+            // todo, batching in ephemeral memory is not a good idea
+            this.redisClient.pipeline();
+            try {
+                for (const message of messages) {
+                    if (message.key !== null && message.value !== null) try {
                         const tagDataObjIdentifierPartition: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
                         const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
 
-                        if(tagData.identifier === undefined) {
+                        if (tagData.identifier === undefined) {
                             slog.error('invalid tagData: ', {tagData});
                             return;
                         }
@@ -150,6 +154,26 @@ class Worker {
                     } catch (e) {
                         slog.error(`Error processing message ${message.key}: ${e}`);
                     }
+
+                }
+            } finally {
+                await this.redisClient.exec();
+            }
+        }
+    }
+
+    private async subscribeToTopic(): Promise<void> {
+        await this.kafkaConsumer.subscribe({
+            topic: this.topic,
+            fromBeginning: true
+        });
+
+        await this.kafkaConsumer.run({
+            eachMessage: async (payload: EachMessagePayload) => {
+                const message: KafkaMessage = payload.message;
+
+                if (message.key && message.value) {
+                    this.batcher.put(message);
                 } else {
                     slog.error('bad message: ', {message});
                 }
