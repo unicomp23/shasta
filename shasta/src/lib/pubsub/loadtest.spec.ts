@@ -22,7 +22,8 @@ const pairCount = 128; // Number of publisher/subscriber pairs
 const messageCount = 1024; // Number of published messages per pair
 
 const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
-let sanityCount = 0;
+let sanityCountSub = 0;
+let sanityCountPub = 0;
 
 interface TestRef {
     publisher: Publisher;
@@ -35,12 +36,12 @@ describe("End-to-End Load Test", () => {
     const pairs = new Array<TestRef>();
 
     before(async () => {
-        expect(sanityCount).to.equal(0);
+        expect(sanityCountSub).to.equal(0);
     });
 
     after(async () => {
         await teardown(pairs);
-        expect(sanityCount).to.equal(pairCount * messageCount);
+        expect(sanityCountSub).to.equal(pairCount * messageCount);
     });
 
     it("should load test messages from Publisher to Worker via Redis Subscriber", async () => {
@@ -173,6 +174,10 @@ async function runLoadTest(pairs: TestRef[], m: number) {
             });
             testValTracker.add(testVal);
             await testRef.publisher.send(tagData);
+
+            sanityCountPub++;
+            if(sanityCountPub % 1000 === 0)
+                slog.info("sanityCountPub", { sanityCountPub });
         }
 
         const snapshot = await messageQueue.get();
@@ -183,8 +188,10 @@ async function runLoadTest(pairs: TestRef[], m: number) {
             expect(receivedMsg.delta).to.not.be.undefined;
             if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
                 testValTracker.delete(receivedMsg.delta?.data);
-                sanityCount++;
-                if(sanityCount % 1000 === 0) slog.info("sanityCount", { sanityCount });
+
+                sanityCountSub++;
+                if(sanityCountSub % 1000 === 0)
+                    slog.info("sanityCountSub", { sanityCountSub });
             }
             if (testValTracker.size === 0) break;
         }
