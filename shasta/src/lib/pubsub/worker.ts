@@ -4,6 +4,8 @@ import {TagData, TagDataEnvelope, TagDataObjectIdentifier} from "../../../submod
 import {env} from "process";
 import {slog} from "../logger/slog";
 
+let sanityCountWorker = 0;
+
 class Worker {
     private kafkaConsumer: Consumer;
     private redisClient: Cluster;
@@ -120,6 +122,19 @@ class Worker {
                         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
                         const commonRedisStreamKey = `{${redisSnapshotKey}}:strm:`;
 
+                        sanityCountWorker++;
+                        if (sanityCountWorker % 1000 === 0) {
+                            slog.info(`Worker: `, {
+                                sanityCountWorker,
+                                commonRedisSnapshotKey,
+                                commonRedisStreamKey,
+                                tagData,
+                                redisDeltaKey,
+                                message
+                            });
+                        }
+
+                        /***
                         const snapshotSeqNo = await this.redisClient.xadd(commonRedisStreamKey, "*", "delta", Buffer.from(tagData.toBinary()).toString("base64"));
                         if (snapshotSeqNo === null) {
                             slog.error(`Missing redis seqno: `, {snapshotSeqNo});
