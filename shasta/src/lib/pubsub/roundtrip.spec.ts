@@ -32,6 +32,7 @@ async function setup() {
     await admin.connect();
     const topicConfig: ITopicConfig = {
         topic: kafkaTopic,
+        numPartitions: 128,
     };
     await admin.createTopics({
         topics: [topicConfig],
