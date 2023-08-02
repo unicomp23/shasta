@@ -189,6 +189,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         if(testRef.worker) await testRef.worker.groupJoined();
         const messageQueue = await testRef.subscriber.stream();
 
+        const tagDataArray = new Array<TagData>();
         for (let i = 0; i < m; i++) {
             const testVal = testValFormat(uuidSubStream, i);
             const tagData = new TagData({
@@ -196,12 +197,13 @@ async function runLoadTest(pairs: TestRef[], m: number) {
                 data: testVal,
             });
             testValTracker.add(testVal);
-            await testRef.publisher.send(tagData);
+            tagDataArray.push(tagData);
 
             sanityCountPub++;
             if(sanityCountPub % 1000 === 0)
                 slog.info("sanityCountPub", { sanityCountPub });
         }
+        await testRef.publisher.sendBatch(tagDataArray);
 
         const snapshot = await messageQueue.get();
         expect(snapshot.snapshot).to.not.be.undefined;
