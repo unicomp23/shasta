@@ -8,6 +8,7 @@ import {
 } from '../../../submodules/src/gen/tag_data_pb';
 import {env} from "process";
 import {slog} from "../logger/slog";
+import {Instrumentation} from "./instrument";
 
 type Message = {
     snapshot?: TagDataSnapshot;
@@ -85,6 +86,7 @@ class Subscriber {
                                 });*/
                                 const [, value] = messageData;
                                 const delta = TagData.fromBinary(Buffer.from(value, 'base64'));
+                                Instrumentation.instance.getTimestamps(delta.identifier!).afterSubscribeXRead = Date.now();
                                 queue.put({delta});
 
                                 // Update the last sequence number for the next XREAD() call

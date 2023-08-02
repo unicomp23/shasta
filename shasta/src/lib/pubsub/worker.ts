@@ -3,6 +3,7 @@ import {Cluster} from 'ioredis';
 import {TagData, TagDataEnvelope, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
 import {env} from "process";
 import {slog} from "../logger/slog";
+import {Instrumentation} from "./instrument";
 
 class Worker {
     private kafkaConsumer: Consumer;
@@ -115,6 +116,7 @@ class Worker {
                         }
 
                         tagDataObjIdentifierPartition.name = "";
+                        Instrumentation.instance.getTimestamps(tagDataObjIdentifierPartition).afterConsume = Date.now();
                         const redisSnapshotKey = Buffer.from(tagDataObjIdentifierPartition.toBinary()).toString("base64");
 
                         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
@@ -125,6 +127,7 @@ class Worker {
                             slog.error(`Missing redis seqno: `, {snapshotSeqNo});
                             return;
                         }
+                        Instrumentation.instance.getTimestamps(tagDataObjIdentifierPartition).afterWorkerXAdd = Date.now();
                         const tagDataEnvelope = new TagDataEnvelope({
                             tagData,
                             sequenceNumber: snapshotSeqNo
@@ -140,6 +143,7 @@ class Worker {
                         await this.redisClient.hset(commonRedisSnapshotKey,
                             redisDeltaKey, Buffer.from(tagDataEnvelope.toBinary()).toString("base64"),
                             "seqno", snapshotSeqNo);
+                        Instrumentation.instance.getTimestamps(tagDataObjIdentifierPartition).afterWorkerHSet = Date.now();
 
                         /*slog.info(`Worker: `, {
                             snapshotSeqNo,

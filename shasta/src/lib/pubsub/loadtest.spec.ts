@@ -16,6 +16,7 @@ import { Kafka } from "kafkajs";
 import { slog } from "../logger/slog";
 import {RedisKeyCleanup} from "./redisKeyCleanup";
 import {delay} from "@esfx/async";
+import {Instrumentation} from "./instrument";
 
 envVarsSync();
 
@@ -73,11 +74,14 @@ describe("End-to-End Load Test", () => {
 
         await setupKafkaPairs(pairs, pairCount);
         slog.info("runLoadTest");
+
         const start = Date.now();
         await runLoadTest(pairs, messageCount);
         const elapsed = Date.now() - start;
+
         const total = pairs.length * messageCount;
         slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate_per_second: total / (elapsed / 1000) });
+        Instrumentation.instance.dump();
     });
 });
 
@@ -197,6 +201,8 @@ async function runLoadTest(pairs: TestRef[], m: number) {
                 data: testVal,
             });
             testValTracker.add(testVal);
+            Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
+
             tagDataArray.push(tagData);
 
             sanityCountPub++;
@@ -204,6 +210,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
                 slog.info("sanityCountPub", { sanityCountPub });
         }
         await testRef.publisher.sendBatch(tagDataArray);
+        for(const tagData of tagDataArray) { Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = Date.now(); }
 
         const snapshot = await messageQueue.get();
         expect(snapshot.snapshot).to.not.be.undefined;

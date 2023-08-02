@@ -4,12 +4,10 @@ import {slog} from "../logger/slog";
 export class Timestamps {
     public beforePublish: number = 0;
     public afterPublish: number = 0;
-    public beforeConsume: number = 0;
     public afterConsume: number = 0;
-    public beforePublishToRedis: number = 0;
-    public afterPublishToRedis: number = 0;
-    public beforeConsumeFromRedis: number = 0;
-    public afterConsumeFromRedis: number = 0;
+    public afterWorkerXAdd: number = 0;
+    public afterWorkerHSet: number = 0;
+    public afterSubscribeXRead: number = 0;
 }
 
 export class Instrumentation {
