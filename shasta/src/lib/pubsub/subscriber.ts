@@ -14,9 +14,6 @@ type Message = {
     delta?: TagData
 };
 
-export let subscriber_total_time = 0;
-export let subscriber_total_count = 0;
-
 class Subscriber {
     private readonly redisClient: Cluster;
     private readonly tagDataObjIdentifier: TagDataObjectIdentifier;
@@ -74,14 +71,9 @@ class Subscriber {
         const readStreamMessages = async (lastSeqNo: string) => {
             if (this.redisClient.status == "ready") {
                 try {
-                    const start = Date.now();
                     const streamMessages = await this.redisClient.xread(
-                        'COUNT', 100, 'BLOCK', 100, 'STREAMS', this.redisStreamKey, lastSeqNo
+                        'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisStreamKey, lastSeqNo
                     );
-                    const elapsed = Date.now() - start;
-                    subscriber_total_time += elapsed;
-                    subscriber_total_count += 1;
-
                     //slog.info('xread: ', {streamMessages});
 
                     if (streamMessages) {

@@ -4,8 +4,8 @@ import {
     TagDataObjectIdentifier,
 } from "../../../submodules/src/gen/tag_data_pb";
 import { Publisher } from "./publisher";
-import {Subscriber, subscriber_total_count, subscriber_total_time} from "./subscriber";
-import {Worker, worker_total_count, worker_total_time} from "./worker";
+import { Subscriber } from "./subscriber";
+import { Worker } from "./worker";
 import { createKafka } from "../kafka/createKafka";
 import crypto from "crypto";
 import { envVarsSync } from "../../automation";
@@ -77,15 +77,7 @@ describe("End-to-End Load Test", () => {
         await runLoadTest(pairs, messageCount);
         const elapsed = Date.now() - start;
         const total = pairs.length * messageCount;
-        slog.info(`stats:`,{
-            elapsed,
-            pairs: pairs.length,
-            messageCount,
-            total,
-            event_rate_per_second: total / (elapsed / 1000),
-            avg_worker_milliseconds_per_message: worker_total_time / worker_total_count,
-            avg_subscriber_milliseconds_per_message: subscriber_total_time / subscriber_total_count,
-        });
+        slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate_per_second: total / (elapsed / 1000) });
     });
 });
 
@@ -166,7 +158,7 @@ async function setup(i: number): Promise<TestRef> {
     const subscriber = new Subscriber(tagDataObjectIdentifier);
 
     const groupId = `test-group-id-${crypto.randomUUID()}`;
-    const worker = (i % 6 == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
+    const worker = (i % 2 == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
     if(worker !== null) slog.info("setup worker", { i, groupId, kafkaTopicLoad });
 
     return {
