@@ -27,24 +27,29 @@ const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-async function deleteTestTopics(kafka: Kafka) {
+async function deleteTestTopics() {
+    const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
     const admin = kafka.admin();
-    await admin.connect();
+    try {
+        await admin.connect();
 
-    // List all topics in the Kafka cluster
-    const topicMetadata = await admin.fetchTopicMetadata();
-    const topics = topicMetadata.topics.map((topicInfo) => topicInfo.name);
+        // List all topics in the Kafka cluster
+        const topicMetadata = await admin.fetchTopicMetadata();
+        const topics = topicMetadata.topics.map((topicInfo) => topicInfo.name);
 
-    // Filter the topics that contain "test" (case-insensitive)
-    const testTopics = topics.filter((topic) => /test/i.test(topic));
-    slog.info("deleteTestTopics", { testTopics });
+        // Filter the topics that contain "test" (case-insensitive)
+        const testTopics = topics.filter((topic) => /test/i.test(topic));
+        slog.info("deleteTestTopics", {testTopics});
 
-    // Delete the filtered topics
-    await admin.deleteTopics({ topics: testTopics });
+        // Delete the filtered topics
+        await admin.deleteTopics({topics: testTopics});
 
-    await admin.disconnect();
+        await admin.disconnect();
 
-    await delay(3000);
+        await delay(3000);
+    } finally {
+        await admin.disconnect();
+    }
 }
 
 interface TestRef {
@@ -71,6 +76,7 @@ describe("End-to-End Load Test", () => {
         cleaner.deleteAllKeys()
             .then(() => cleaner.disconnect())
             .catch(console.error);
+        //await deleteTestTopics();
 
         await setupKafkaPairs(pairs, pairCount);
         slog.info("runLoadTest");
@@ -124,37 +130,39 @@ async function setup(i: number): Promise<TestRef> {
     tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
 
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
-    //await deleteTestTopics(kafka);
 
     const admin = kafka.admin();
     await admin.connect();
-    const topicConfig: ITopicConfig = {
-        topic: kafkaTopicLoad,
-        //numPartitions: 100,
-    };
-    await admin.createTopics({
-        topics: [topicConfig],
-    });
+    try {
+        const topicConfig: ITopicConfig = {
+            topic: kafkaTopicLoad,
+            //numPartitions: 100,
+        };
+        await admin.createTopics({
+            topics: [topicConfig],
+        });
 
-    // Repeatedly check if the topic has been created.
-    let topicExists = false;
-    const timeoutMs = 5000;
-    const startTime = Date.now();
+        // Repeatedly check if the topic has been created.
+        let topicExists = false;
+        const timeoutMs = 5000;
+        const startTime = Date.now();
 
-    while (!topicExists) {
-        const metadata = await admin.fetchTopicMetadata({ topics: [kafkaTopicLoad] });
-        if (findTopicInMetadata(kafkaTopicLoad, metadata.topics)) {
-            topicExists = true;
-        } else {
-            // If the timeout is hit, throw an error.
-            if (Date.now() - startTime > timeoutMs) {
-                throw new Error(`Timed out waiting for topic '${kafkaTopicLoad}' to be created.`);
+        while (!topicExists) {
+            const metadata = await admin.fetchTopicMetadata({topics: [kafkaTopicLoad]});
+            if (findTopicInMetadata(kafkaTopicLoad, metadata.topics)) {
+                topicExists = true;
+            } else {
+                // If the timeout is hit, throw an error.
+                if (Date.now() - startTime > timeoutMs) {
+                    throw new Error(`Timed out waiting for topic '${kafkaTopicLoad}' to be created.`);
+                }
+                // Otherwise, wait 500 ms before the next check.
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
-            // Otherwise, wait 500 ms before the next check.
-            await new Promise(resolve => setTimeout(resolve, 500));
         }
+    } finally {
+        await admin.disconnect();
     }
-    await admin.disconnect();
 
     const publisher = new Publisher(kafka, kafkaTopicLoad);
     await publisher.connect();
