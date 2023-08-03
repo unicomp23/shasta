@@ -42,7 +42,6 @@ class Publisher {
 
                 // Prepare Kafka message
                 const tagDataIdentifierPartition = tagData.identifier.clone();
-                tagDataIdentifierPartition.name = "";
                 const message = {
                     value: Buffer.from(tagData.toBinary()),
                     key: Buffer.from(tagDataIdentifierPartition.toBinary()),
