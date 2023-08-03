@@ -207,7 +207,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
             const tagDataObjectIdentifierNamed = testRef.tagDataObjectIdentifier.clone();
             tagDataObjectIdentifierNamed.name = `name-${crypto.randomUUID()}`;
             const tagData = new TagData({
-                identifier: tagDataObjectIdentifierNamed,
+                identifier: testRef.tagDataObjectIdentifier,
                 data: testVal,
             });
             testValTracker.add(testVal);
