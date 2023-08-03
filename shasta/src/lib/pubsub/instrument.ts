@@ -18,7 +18,6 @@ export class Instrumentation {
 
     public getTimestamps(tdoid: TagDataObjectIdentifier): Timestamps {
         const clone = tdoid.clone();
-        clone.name = "";
         const key = Buffer.from(clone.toBinary()).toString("base64");
         if (!this.timestamps.has(key)) {
             this.timestamps.set(key, new Timestamps());

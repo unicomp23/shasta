@@ -204,6 +204,8 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         const tagDataArray = new Array<TagData>();
         for (let i = 0; i < m; i++) {
             const testVal = testValFormat(uuidSubStream, i);
+            const tagDataObjectIdentifierNamed = testRef.tagDataObjectIdentifier.clone();
+            tagDataObjectIdentifierNamed.name = `name-${crypto.randomUUID()}`;
             const tagData = new TagData({
                 identifier: testRef.tagDataObjectIdentifier,
                 data: testVal,
