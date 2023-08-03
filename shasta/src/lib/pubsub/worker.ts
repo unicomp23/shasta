@@ -116,7 +116,7 @@ class Worker {
                         }
 
                         tagDataObjIdentifierPartition.name = "";
-                        Instrumentation.instance.getTimestamps(tagDataObjIdentifierPartition).afterConsume = Date.now();
+                        Instrumentation.instance.getTimestamps(tagData.identifier).afterConsume = Date.now();
                         const redisSnapshotKey = Buffer.from(tagDataObjIdentifierPartition.toBinary()).toString("base64");
 
                         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
@@ -127,7 +127,7 @@ class Worker {
                             slog.error(`Missing redis seqno: `, {snapshotSeqNo});
                             return;
                         }
-                        Instrumentation.instance.getTimestamps(tagDataObjIdentifierPartition).afterWorkerXAdd = Date.now();
+                        Instrumentation.instance.getTimestamps(tagData.identifier).afterWorkerXAdd = Date.now();
                         const tagDataEnvelope = new TagDataEnvelope({
                             tagData,
                             sequenceNumber: snapshotSeqNo
@@ -143,7 +143,7 @@ class Worker {
                         await this.redisClient.hset(commonRedisSnapshotKey,
                             redisDeltaKey, Buffer.from(tagDataEnvelope.toBinary()).toString("base64"),
                             "seqno", snapshotSeqNo);
-                        Instrumentation.instance.getTimestamps(tagDataObjIdentifierPartition).afterWorkerHSet = Date.now();
+                        Instrumentation.instance.getTimestamps(tagData.identifier).afterWorkerHSet = Date.now();
 
                         /*slog.info(`Worker: `, {
                             snapshotSeqNo,
