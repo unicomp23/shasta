@@ -42,8 +42,12 @@ export class Instrumentation {
     }
 
     public dump() {
+        const timestampsObj = Array.from(this.timestamps).reduce((obj: { [key: string]: Timestamps }, [key, value]) => {
+            obj[key] = value;
+            return obj;
+        }, {});
         slog.info("Instrumentation dump:", {
-            timestamps: this.timestamps
+            timestamps: timestampsObj
         });
     }
 }
