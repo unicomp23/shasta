@@ -103,7 +103,7 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
     try {
         const topicConfig: ITopicConfig = {
             topic: kafkaTopicLoad,
-            //numPartitions: 100,
+            numPartitions: 128,
         };
         await admin.createTopics({
             topics: [topicConfig],
