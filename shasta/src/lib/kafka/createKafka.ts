@@ -28,7 +28,7 @@ export function createKafka(clientId: string, region: string = 'us-east-1'): Kaf
         // reauthenticationThreshold: 10000,
         ssl: true,
         sasl: {
-            mechanism: 'plain', // scram-sha-256 or scram-sha-512
+            mechanism: 'scram-sha-256',
             username: 'jdavis',
             password: 'wbL.+xkhad1|.).7DzKEMaM5(aH+xS'
         },
