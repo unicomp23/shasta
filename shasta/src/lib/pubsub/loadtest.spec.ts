@@ -137,14 +137,12 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
         setupPromise.then((ref) => { pendingSetup.put(ref); pairs.push(ref); });
         if(pendingSetup.size >= maxConcurrentConnects) {
             const ref = await pendingSetup.get();
-            pairs.push(ref);
             slog.info("setup complete", { i, groupId, kafkaTopicLoad });
         }
     }
 
     while(pendingSetup.size > 0) {
         const ref = await pendingSetup.get();
-        pairs.push(ref);
         slog.info("setup complete", { i: n, groupId, kafkaTopicLoad });
     }
 }
