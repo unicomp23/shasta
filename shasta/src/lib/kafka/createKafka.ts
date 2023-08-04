@@ -4,7 +4,7 @@ import {createMechanism} from "@jm18457/kafkajs-msk-iam-authentication-mechanism
 import {env} from "process";
 
 export function createKafka(clientId: string, region: string = 'us-east-1'): Kafka {
-    const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
+    /*const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
     if (env.NOTLS) {
         return new Kafka({
             clientId,
@@ -19,5 +19,18 @@ export function createKafka(clientId: string, region: string = 'us-east-1'): Kaf
             ssl: true,
             sasl: createMechanism({region}),
         });
-    }
+    }*/
+    const bootstrapEndpoints = ["seed-786754f2.cj6iplqr6237gqb2l7n0.fmc.prd.cloud.redpanda.com:9092"];
+    return new Kafka({
+        clientId: 'my-app',
+        brokers: ['seed-786754f2.cj6iplqr6237gqb2l7n0.fmc.prd.cloud.redpanda.com:9092'],
+        // authenticationTimeout: 10000,
+        // reauthenticationThreshold: 10000,
+        ssl: true,
+        sasl: {
+            mechanism: 'plain', // scram-sha-256 or scram-sha-512
+            username: 'jdavis',
+            password: 'wbL.+xkhad1|.).7DzKEMaM5(aH+xS'
+        },
+    });
 }
