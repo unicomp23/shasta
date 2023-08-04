@@ -92,7 +92,8 @@ describe("End-to-End Load Test", () => {
 });
 
 async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
-    const maxConcurrentConnects = 16;
+    const maxConcurrent = 16;
+    const setupPromises: Promise<TestRef>[] = [];
     const groupId = `test-group-id-${crypto.randomUUID()}`;
 
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
@@ -130,20 +131,20 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
         await admin.disconnect();
     }
 
-    // overlap connection setup
-    const pendingSetup = new AsyncQueue<TestRef>();
     for (let i = 0; i < n; i++) {
         const setupPromise = setup(i, groupId, kafka);
-        setupPromise.then((ref) => { pendingSetup.put(ref); pairs.push(ref); });
-        if(pendingSetup.size >= maxConcurrentConnects) {
-            const ref = await pendingSetup.get();
-            slog.info("setup complete", { i, groupId, kafkaTopicLoad });
-        }
-    }
+        setupPromises.push(setupPromise);
 
-    while(pendingSetup.size > 0) {
-        const ref = await pendingSetup.get();
-        slog.info("setup complete", { i: n, groupId, kafkaTopicLoad });
+        if (setupPromises.length === maxConcurrent || i === n - 1) {
+            await Promise.all(setupPromises)
+                .then((results) => {
+                    pairs.push(...results);
+                    slog.info("setupKafkaPairs", { pairs: pairs.length });
+                })
+                .finally(() => {
+                    setupPromises.length = 0;
+                });
+        }
     }
 }
 
