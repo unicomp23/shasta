@@ -96,9 +96,10 @@ describe("End-to-End Load Test", () => {
 async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
     const maxConcurrent = 16;
     const setupPromises: Promise<TestRef>[] = [];
+    const groupId = `test-group-id-${crypto.randomUUID()}`;
 
     for (let i = 0; i < n; i++) {
-        const setupPromise = setup(i);
+        const setupPromise = setup(i, groupId);
         setupPromises.push(setupPromise);
 
         if (setupPromises.length === maxConcurrent || i === n - 1) {
@@ -124,7 +125,7 @@ async function teardown(pairs: TestRef[]) {
     await Promise.all(tasks);
 }
 
-async function setup(i: number): Promise<TestRef> {
+async function setup(i: number, groupId: string): Promise<TestRef> {
     const tagDataObjectIdentifier = new TagDataObjectIdentifier();
     tagDataObjectIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
     tagDataObjectIdentifier.tag = `tag-id-${crypto.randomUUID()}`;
@@ -171,8 +172,7 @@ async function setup(i: number): Promise<TestRef> {
 
     const subscriber = new Subscriber(tagDataObjectIdentifier);
 
-    const groupId = `test-group-id-${crypto.randomUUID()}`;
-    const worker = (i % 2 == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
+    const worker = (i % 8 == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
     if(worker !== null) slog.info("setup worker", { i, groupId, kafkaTopicLoad });
 
     return {
