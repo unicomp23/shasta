@@ -134,7 +134,7 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
     const pendingSetup = new AsyncQueue<TestRef>();
     for (let i = 0; i < n; i++) {
         const setupPromise = setup(i, groupId, kafka);
-        setupPromise.then((ref) => { pendingSetup.put(ref); });
+        setupPromise.then((ref) => { pendingSetup.put(ref); pairs.push(ref); });
         if(pendingSetup.size >= maxConcurrentConnects) {
             const ref = await pendingSetup.get();
             pairs.push(ref);
