@@ -15,7 +15,7 @@ import { AsyncQueue } from "@esfx/async-queue";
 import { Kafka } from "kafkajs";
 import { slog } from "../logger/slog";
 import {RedisKeyCleanup} from "./redisKeyCleanup";
-import {delay} from "@esfx/async";
+import {Deferred, delay} from "@esfx/async";
 import {Instrumentation} from "./instrument";
 
 envVarsSync();
@@ -201,6 +201,31 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         if(testRef.worker) await testRef.worker.groupJoined();
         const messageQueue = await testRef.subscriber.stream();
 
+        // consume
+        const doneConsuming = new Deferred<boolean>();
+        const consumeTask = async() => {
+            const snapshot = await messageQueue.get();
+            expect(snapshot.snapshot).to.not.be.undefined;
+
+            for (; ;) {
+                const receivedMsg = await messageQueue.get();
+                expect(receivedMsg.delta).to.not.be.undefined;
+                if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
+                    testValTracker.delete(receivedMsg.delta?.data);
+
+                    sanityCountSub++;
+                    if (sanityCountSub % 1000 === 0)
+                        slog.info("sanityCountSub", {sanityCountSub});
+                }
+                if (testValTracker.size === 0) {
+                    doneConsuming.resolve(true);
+                    break;
+                }
+            }
+        };
+        const notUsed = consumeTask();
+
+        // produce
         const tagDataArray = new Array<TagData>();
         for (let i = 0; i < m; i++) {
             const testVal = testValFormat(uuidSubStream, i);
@@ -222,21 +247,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
         await testRef.publisher.sendBatch(tagDataArray);
         for(const tagData of tagDataArray) { Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = Date.now(); }
 
-        const snapshot = await messageQueue.get();
-        expect(snapshot.snapshot).to.not.be.undefined;
-
-        for (;;) {
-            const receivedMsg = await messageQueue.get();
-            expect(receivedMsg.delta).to.not.be.undefined;
-            if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
-                testValTracker.delete(receivedMsg.delta?.data);
-
-                sanityCountSub++;
-                if(sanityCountSub % 1000 === 0)
-                    slog.info("sanityCountSub", { sanityCountSub });
-            }
-            if (testValTracker.size === 0) break;
-        }
+        await doneConsuming.promise;
 
         slog.info("runLoadTest", { iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0) });
         completions.put(testRef.tagDataObjectIdentifier);
