@@ -96,40 +96,6 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
     const setupPromises: Promise<TestRef>[] = [];
     const groupId = `test-group-id-${crypto.randomUUID()}`;
 
-    for (let i = 0; i < n; i++) {
-        const setupPromise = setup(i, groupId);
-        setupPromises.push(setupPromise);
-
-        if (setupPromises.length === maxConcurrent || i === n - 1) {
-            await Promise.all(setupPromises)
-                .then((results) => {
-                    pairs.push(...results);
-                    slog.info("setupKafkaPairs", { pairs: pairs.length });
-                })
-                .finally(() => {
-                    setupPromises.length = 0;
-                });
-        }
-    }
-}
-
-async function teardown(pairs: TestRef[]) {
-    const tasks = pairs.map(async ({ worker, publisher, subscriber }) => {
-        await worker?.shutdown();
-        await publisher.disconnect();
-        await subscriber.disconnect();
-    });
-
-    await Promise.all(tasks);
-}
-
-async function setup(i: number, groupId: string): Promise<TestRef> {
-    const tagDataObjectIdentifier = new TagDataObjectIdentifier();
-    tagDataObjectIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
-    tagDataObjectIdentifier.tag = `tag-id-${crypto.randomUUID()}`;
-    tagDataObjectIdentifier.scope = `scope-id-${crypto.randomUUID()}`;
-    tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
-
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
 
     const admin = kafka.admin();
@@ -164,6 +130,40 @@ async function setup(i: number, groupId: string): Promise<TestRef> {
     } finally {
         await admin.disconnect();
     }
+
+    for (let i = 0; i < n; i++) {
+        const setupPromise = setup(i, groupId, kafka);
+        setupPromises.push(setupPromise);
+
+        if (setupPromises.length === maxConcurrent || i === n - 1) {
+            await Promise.all(setupPromises)
+                .then((results) => {
+                    pairs.push(...results);
+                    slog.info("setupKafkaPairs", { pairs: pairs.length });
+                })
+                .finally(() => {
+                    setupPromises.length = 0;
+                });
+        }
+    }
+}
+
+async function teardown(pairs: TestRef[]) {
+    const tasks = pairs.map(async ({ worker, publisher, subscriber }) => {
+        await worker?.shutdown();
+        await publisher.disconnect();
+        await subscriber.disconnect();
+    });
+
+    await Promise.all(tasks);
+}
+
+async function setup(i: number, groupId: string, kafka: Kafka): Promise<TestRef> {
+    const tagDataObjectIdentifier = new TagDataObjectIdentifier();
+    tagDataObjectIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
+    tagDataObjectIdentifier.tag = `tag-id-${crypto.randomUUID()}`;
+    tagDataObjectIdentifier.scope = `scope-id-${crypto.randomUUID()}`;
+    tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
 
     const publisher = new Publisher(kafka, kafkaTopicLoad);
     await publisher.connect();
