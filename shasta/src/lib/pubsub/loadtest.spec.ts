@@ -23,9 +23,7 @@ envVarsSync();
 const pairCount = 128; // Number of publisher/subscriber pairs
 const messageCount = 1024; // Number of published messages per pair
 
-//const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`; todo
-const kafkaTopicLoad = `load_test_001`;
-
+const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
