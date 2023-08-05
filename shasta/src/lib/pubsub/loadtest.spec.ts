@@ -236,7 +236,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
                 data: testVal,
             });
             testValTracker.add(testVal);
-            Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
+            Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
             tagDataArray.push(tagData);
 
@@ -245,7 +245,7 @@ async function runLoadTest(pairs: TestRef[], m: number) {
                 slog.info("sanityCountPub", { sanityCountPub });
         }
         await testRef.publisher.sendBatch(tagDataArray);
-        const now = Date.now();
+        const now = performance.now();
         for(const tagData of tagDataArray) { Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = now; }
 
         await doneConsuming.promise;

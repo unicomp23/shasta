@@ -86,7 +86,7 @@ class Subscriber {
                                 });*/
                                 const [, value] = messageData;
                                 const delta = TagData.fromBinary(Buffer.from(value, 'base64'));
-                                Instrumentation.instance.getTimestamps(delta.identifier!).afterSubscribeXRead = Date.now();
+                                Instrumentation.instance.getTimestamps(delta.identifier!).afterSubscribeXRead = performance.now();
                                 queue.put({delta});
 
                                 // Update the last sequence number for the next XREAD() call
