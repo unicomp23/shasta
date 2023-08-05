@@ -245,7 +245,8 @@ async function runLoadTest(pairs: TestRef[], m: number) {
                 slog.info("sanityCountPub", { sanityCountPub });
         }
         await testRef.publisher.sendBatch(tagDataArray);
-        for(const tagData of tagDataArray) { Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = Date.now(); }
+        const now = Date.now();
+        for(const tagData of tagDataArray) { Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = now; }
 
         await doneConsuming.promise;
 
