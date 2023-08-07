@@ -92,7 +92,6 @@ describe("End-to-End Load Test", () => {
 });
 
 async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
-    const maxConcurrent = 16;
     const setupPromises: Promise<TestRef>[] = [];
     const groupId = `test-group-id-${crypto.randomUUID()}`;
 
@@ -131,11 +130,14 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
         await admin.disconnect();
     }
 
+    const maxConcurrentConnects = 20;
+    // https://docs.aws.amazon.com/msk/latest/developerguide/limits.html
+
     for (let i = 0; i < n; i++) {
         const setupPromise = setup(i, groupId, kafka);
         setupPromises.push(setupPromise);
 
-        if (setupPromises.length === maxConcurrent || i === n - 1) {
+        if (setupPromises.length === maxConcurrentConnects || i === n - 1) {
             await Promise.all(setupPromises)
                 .then((results) => {
                     pairs.push(...results);
@@ -144,6 +146,7 @@ async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
                 .finally(() => {
                     setupPromises.length = 0;
                 });
+            await delay(1000);
         }
     }
 }
