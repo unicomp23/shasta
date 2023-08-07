@@ -30,7 +30,7 @@ export function createKafka(clientId: string, region: string = 'us-east-1'): Kaf
         sasl: {
             mechanism: 'scram-sha-256',
             username: 'jdavis',
-            password: 'wbL.+xkhad1|.).7DzKEMaM5(aH+xS'
+            password: env.REDPANDA_SASL_PASSWORD || ''
         },
     });
 }
