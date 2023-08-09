@@ -10,6 +10,7 @@ import {Worker} from "./worker";
 import {AsyncQueue} from "@esfx/async-queue";
 import {expect} from "chai";
 import {Instrumentation} from "./instrument";
+import {RedisKeyCleanup} from "./redisKeyCleanup";
 
 export const pairCount = 768; // Number of publisher/subscriber pairs
 export const messageCount = 32; // Number of published messages per pair
@@ -22,6 +23,9 @@ const maxConcurrentConnects = 20;
 // https://docs.aws.amazon.com/msk/latest/developerguide/limits.html
 
 const workerModulo = 32;
+
+export const pairs = new Array<TestRef>();
+
 
 async function deleteTestTopics() {
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
@@ -219,4 +223,27 @@ export async function runLoadTest(pairs: TestRef[], m: number) {
     });
 
     await Promise.all(runTestTasks);
+}
+
+export async function loadTest() {
+    const cleaner = new RedisKeyCleanup();
+    cleaner.deleteAllKeys()
+        .then(() => cleaner.disconnect())
+        .catch(console.error);
+    //await deleteTestTopics();
+
+    await setupKafkaPairs(pairs, pairCount);
+    slog.info("runLoadTest");
+
+    const start = Date.now();
+    await runLoadTest(pairs, messageCount);
+    const elapsed = Date.now() - start;
+
+    const total = pairs.length * messageCount;
+    slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate_per_second: total / (elapsed / 1000) });
+    Instrumentation.instance.dump();
+
+    await teardownTest(pairs);
+
+    return sanityCountSub;
 }
