@@ -5,6 +5,7 @@ import { Worker } from 'worker_threads';
 import path from 'path';
 import {AsyncQueue} from "@esfx/async-queue";
 import {TimestampedUuid} from "./loadtestThread";
+import crypto from "crypto";
 
 describe("End-to-End Load Test", () => {
 
@@ -24,12 +25,14 @@ describe("End-to-End Load Test", () => {
             });
 
             worker.on('message', (data: TimestampedUuid) => {
-                console.log(`Received UUID: ${data.uuid} with Timestamp: ${data.timestamp}`);
+                console.log(`Received UUID, main: ${data.uuid} with Timestamp: ${data.timestamp}`);
                 completions.put(data);
+                worker.terminate();
             });
 
             worker.on('error', (error) => {
                 console.error(`Worker Error: ${error}`);
+                worker.terminate();
             });
 
             worker.on('exit', (code) => {
@@ -38,11 +41,9 @@ describe("End-to-End Load Test", () => {
                 }
             });
 
-            const uuid = '123e4567-e89b-12d3-a456-426614174000';
+            const uuid = crypto.randomUUID();
             worker.postMessage(uuid);
         }
-
-        expect(completions.size).to.equal(count);
 
         for(let i = 0; i < count; i++) {
             const data = await completions.get();
