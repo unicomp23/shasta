@@ -5,18 +5,18 @@ export const slog = {
     info: (message: string, o?: any) => {
         if (o)
             message = message + ": " + JSON.stringify(o, null, prettySpaces);
-        logger.info(message);
+        console.info(message);
     },
 
     warn: (message: string, o?: any) => {
         if (o)
             message = message + ": " + JSON.stringify(o, null, prettySpaces);
-        logger.warn(message);
+        console.warn(message);
     },
 
     error: (message: string, o?: any) => {
         if (o)
             message = message + ": " + JSON.stringify(o, null, prettySpaces);
-        logger.error(message);
+        console.error(message);
     }
 };
