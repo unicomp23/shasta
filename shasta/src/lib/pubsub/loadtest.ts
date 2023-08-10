@@ -245,4 +245,6 @@ export async function loadTest() {
     slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate_per_second: total / (elapsed / 1000) });
     Instrumentation.instance.dump();
     await teardownTest(pairs);
+
+    return sanityCountSub;
 }
