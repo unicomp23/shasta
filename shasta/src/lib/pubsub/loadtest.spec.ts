@@ -25,7 +25,7 @@ describe("End-to-End Load Test", () => {
             });
 
             worker.on('message', (data: TimestampedUuid) => {
-                console.log(`Received UUID, main: ${data.uuid} with Timestamp: ${data.timestamp}`);
+                console.log(`Received UUID, worker: ${data.uuid} with Timestamp: ${data.timestamp}`);
                 completions.put(data);
                 worker.terminate();
             });
@@ -47,7 +47,7 @@ describe("End-to-End Load Test", () => {
 
         for(let i = 0; i < count; i++) {
             const data = await completions.get();
-            console.log(`Received UUID: ${data.uuid} with Timestamp: ${data.timestamp}`);
+            console.log(`Received UUID, main: ${data.uuid} with Timestamp: ${data.timestamp}`);
         }
 
         expect(completions.size).to.equal(0);

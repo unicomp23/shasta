@@ -1,5 +1,6 @@
 // worker.ts
 import { parentPort } from 'worker_threads';
+import {loadTest} from "./loadtest";
 
 export interface TimestampedUuid {
     uuid: string;
@@ -7,9 +8,14 @@ export interface TimestampedUuid {
 }
 
 parentPort?.on('message', (uuid: string) => {
-    const timestampedUuid = {
-        uuid,
-        timestamp: Date.now(),
-    } as TimestampedUuid;
-    parentPort?.postMessage(timestampedUuid);
+    loadTest().then((sanityCountSub) => {
+        console.log(`sanityCountSub: ${sanityCountSub}`);
+        const timestampedUuid = {
+            uuid,
+            timestamp: Date.now(),
+        } as TimestampedUuid;
+        parentPort?.postMessage(timestampedUuid);
+    }).catch((error) => {
+        console.error(`loadTest Error ${uuid}: ${error}`);
+    });
 });
