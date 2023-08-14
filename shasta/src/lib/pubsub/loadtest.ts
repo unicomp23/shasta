@@ -20,7 +20,7 @@ const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const maxConcurrentConnects = 20;
+const maxConcurrentConnects = 10;
 // https://docs.aws.amazon.com/msk/latest/developerguide/limits.html
 
 const workerModulo = 32;
@@ -232,7 +232,7 @@ export async function loadTest() {
     cleaner.deleteAllKeys()
         .then(() => cleaner.disconnect())
         .catch(console.error);
-    //await deleteTestTopics();
+    await deleteTestTopics();
 
     await setupKafkaPairs(pairs, pairCount);
     slog.info("runLoadTest");

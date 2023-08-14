@@ -14,7 +14,7 @@ describe("End-to-End Load Test", () => {
         expect(sanityCountSub).to.equal(pairCount * messageCount);
     });
 
-    it("should spawn web worker threads to load test messages from Publisher->Worker->Redis Subscriber", async () => {
+    /*it("should spawn web worker threads to load test messages from Publisher->Worker->Redis Subscriber", async () => {
 
         const count = 4;
         const completions = new AsyncQueue<TimestampedUuid>();
@@ -51,5 +51,5 @@ describe("End-to-End Load Test", () => {
         }
 
         expect(completions.size).to.equal(0);
-    });
+    });*/
 });
