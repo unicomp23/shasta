@@ -29,7 +29,7 @@ const pairs = new Array<TestRef>();
 
 envVarsSync();
 
-async function deleteTestTopics() {
+export async function deleteTestTopics() {
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
     const admin = kafka.admin();
     try {
@@ -232,7 +232,6 @@ export async function loadTest() {
     cleaner.deleteAllKeys()
         .then(() => cleaner.disconnect())
         .catch(console.error);
-    await deleteTestTopics();
 
     await setupKafkaPairs(pairs, pairCount);
     slog.info("runLoadTest");
