@@ -208,13 +208,15 @@ export async function runLoadTest(pairs: TestRef[], m: number) {
             testValTracker.add(testVal);
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
-            tagDataArray.push(tagData);
+            //tagDataArray.push(tagData);
+            await testRef.publisher.send(tagData);
+            // todo no batching
 
             sanityCountPub++;
             if(sanityCountPub % 1000 === 0)
                 slog.info("sanityCountPub", { sanityCountPub });
         }
-        await testRef.publisher.sendBatch(tagDataArray);
+        //await testRef.publisher.sendBatch(tagDataArray); todo no batching
         const now = performance.now();
         for(const tagData of tagDataArray) { Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = now; }
 
