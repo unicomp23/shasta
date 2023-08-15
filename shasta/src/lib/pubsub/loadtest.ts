@@ -230,14 +230,6 @@ export async function runLoadTest(pairs: TestRef[], m: number) {
 }
 
 export async function loadTest() {
-    const cleaner = new RedisKeyCleanup();
-    /* todo re-enable
-    cleaner.deleteAllKeys()
-        .then(() => cleaner.disconnect())
-        .catch(console.error);
-
-     */
-
     await setupKafkaPairs(pairs, pairCount);
     slog.info("runLoadTest");
 

@@ -9,11 +9,16 @@ import crypto from "crypto";
 import * as cluster from 'cluster';
 import * as http from 'http';
 import * as os from 'os';
+import {RedisKeyCleanup} from "./redisKeyCleanup";
 
 describe("End-to-End Load Test", () => {
 
     it("should load test messages from Publisher->Worker->Redis Subscriber", async () => {
-        // await deleteTestTopics(); todo re-enable
+        await deleteTestTopics();
+        const cleaner = new RedisKeyCleanup();
+        cleaner.deleteAllKeys()
+            .then(() => cleaner.disconnect())
+            .catch(console.error);
 
         const numCPUs = os.cpus().length;
         console.log(`numCPUs: ${numCPUs}`);
