@@ -13,8 +13,8 @@ import {Instrumentation} from "./instrument";
 import {RedisKeyCleanup} from "./redisKeyCleanup";
 import {envVarsSync} from "../../automation";
 
-export const pairCount = 768; // Number of publisher/subscriber pairs
-export const messageCount = 32; // Number of published messages per pair
+export const pairCount = 512; // Number of publisher/subscriber pairs
+export const messageCount = 1024; // Number of published messages per pair
 
 const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCountSub = 0;
@@ -231,9 +231,12 @@ export async function runLoadTest(pairs: TestRef[], m: number) {
 
 export async function loadTest() {
     const cleaner = new RedisKeyCleanup();
+    /* todo re-enable
     cleaner.deleteAllKeys()
         .then(() => cleaner.disconnect())
         .catch(console.error);
+
+     */
 
     await setupKafkaPairs(pairs, pairCount);
     slog.info("runLoadTest");

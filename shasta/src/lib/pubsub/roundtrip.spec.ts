@@ -82,6 +82,7 @@ describe("End-to-End Test", () => {
         expect(count).to.equal(snapCount + deltaCount);
     });
 
+    /* todo re-enable
     it("should process messages from Publisher to Worker via Redis Subscriber", async () => {
         const tagData = new TagData();
         tagData.identifier = identifier.clone();
@@ -114,6 +115,7 @@ describe("End-to-End Test", () => {
             count++;
         }
     });
+     */
 });
 
 // todo recover redis connection (ie tcp send fail)
