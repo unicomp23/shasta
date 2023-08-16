@@ -20,7 +20,7 @@ describe("End-to-End Load Test", () => {
             .then(() => cleaner.disconnect())
             .catch(console.error);
 
-        const numCPUs = os.cpus().length;
+        const numCPUs = os.cpus().length / 4;
         console.log(`numCPUs: ${numCPUs}`);
 
         if (cluster.default.isPrimary) {

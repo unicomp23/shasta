@@ -13,8 +13,8 @@ import {Instrumentation} from "./instrument";
 import {RedisKeyCleanup} from "./redisKeyCleanup";
 import {envVarsSync} from "../../automation";
 
-export const pairCount = 512; // Number of publisher/subscriber pairs
-export const messageCount = 1024; // Number of published messages per pair
+export const pairCount = 256; // Number of publisher/subscriber pairs
+export const messageCount = 1024 * 4; // Number of published messages per pair
 
 const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCountSub = 0;
@@ -72,7 +72,7 @@ export async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void
     try {
         const topicConfig: ITopicConfig = {
             topic: kafkaTopicLoad,
-            numPartitions: 128,
+            numPartitions: 16,
         };
         await admin.createTopics({
             topics: [topicConfig],
@@ -113,7 +113,7 @@ export async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void
                 .finally(() => {
                     setupPromises.length = 0;
                 });
-            await delay(1000);
+            await delay(3000);
         }
     }
 }
