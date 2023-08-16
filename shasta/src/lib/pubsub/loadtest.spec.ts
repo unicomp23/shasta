@@ -49,8 +49,10 @@ describe("End-to-End Load Test", () => {
         } else {
             const sanityCountSub = await loadTest(kafkaTopicLoad);
             expect(sanityCountSub).to.equal(pairCount * messageCount);
-            if(process.send !== undefined)
+            if(process.send !== undefined) {
                 process.send(JSON.stringify({sanityCountSub, pid: process.pid}));
+                process.exit(0);
+            }
         }
     });
 
