@@ -47,7 +47,7 @@ describe("End-to-End Load Test", () => {
                 console.log(`Worker ${pid} died, primary`);
             }
         } else {
-            const sanityCountSub = await loadTest(kafkaTopicLoad);
+            const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs);
             expect(sanityCountSub).to.equal(pairCount * messageCount);
             if(process.send !== undefined) {
                 process.send(JSON.stringify({sanityCountSub, pid: process.pid}));

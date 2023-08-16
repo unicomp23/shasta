@@ -60,7 +60,7 @@ export interface TestRef {
     tagDataObjectIdentifier: TagDataObjectIdentifier;
 }
 
-export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], n: number): Promise<void> {
+export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number): Promise<void> {
     const setupPromises: Promise<TestRef>[] = [];
     const groupId = `test-group-id-${crypto.randomUUID()}`;
 
@@ -99,11 +99,11 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
         await admin.disconnect();
     }
 
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < pairCount; i++) {
         const setupPromise = setup(kafkaTopicLoad, i, groupId, kafka);
         setupPromises.push(setupPromise);
 
-        if (setupPromises.length === maxConcurrentConnects || i === n - 1) {
+        if (setupPromises.length === maxConcurrentConnects || i === pairCount - 1) {
             await Promise.all(setupPromises)
                 .then((results) => {
                     pairs.push(...results);
@@ -112,7 +112,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
                 .finally(() => {
                     setupPromises.length = 0;
                 });
-            await delay(3000);
+            await delay(numCPUs * 1000);
         }
     }
 }
@@ -228,8 +228,8 @@ export async function runLoadTest(pairs: TestRef[], m: number) {
     await Promise.all(runTestTasks);
 }
 
-export async function loadTest(kafkaTopicLoad: string) {
-    await setupKafkaPairs(kafkaTopicLoad, pairs, pairCount);
+export async function loadTest(kafkaTopicLoad: string, numCPUs: number) {
+    await setupKafkaPairs(kafkaTopicLoad, pairs, pairCount, numCPUs);
     slog.info("runLoadTest");
 
     const start = Date.now();
