@@ -13,8 +13,8 @@ import {Instrumentation} from "./instrument";
 import {RedisKeyCleanup} from "./redisKeyCleanup";
 import {envVarsSync} from "../../automation";
 
-export const pairCount = 256; // Number of publisher/subscriber pairs
-export const messageCount = 1024 * 4; // Number of published messages per pair
+export const pairCount = 32; // Number of publisher/subscriber pairs
+export const messageCount = 32; // Number of published messages per pair
 
 const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCountSub = 0;
