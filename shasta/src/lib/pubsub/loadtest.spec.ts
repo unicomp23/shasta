@@ -27,7 +27,8 @@ describe("End-to-End Load Test", () => {
         if (cluster.default.isPrimary) {
             // Fork workers.
             for (let i = 0; i < numCPUs; i++) {
-                cluster.default.fork();
+                const worker = cluster.default.fork();
+                console.log(`Worker ${worker.process.pid} forked, primary`);
             }
 
             cluster.default.on('exit', (worker, code, signal) => {
