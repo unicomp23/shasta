@@ -22,6 +22,7 @@ describe("End-to-End Load Test", () => {
 
         const numCPUs = os.cpus().length / 4;
         console.log(`numCPUs: ${numCPUs}`);
+        const exitQueue = new AsyncQueue<number>();
 
         if (cluster.default.isPrimary) {
             // Fork workers.
@@ -30,8 +31,19 @@ describe("End-to-End Load Test", () => {
             }
 
             cluster.default.on('exit', (worker, code, signal) => {
-                console.log(`Worker ${worker.process.pid} died`);
+                console.log(`Worker ${worker.process.pid} died, worker`);
+                if(worker.process.pid !== undefined)
+                    exitQueue.put(worker.process.pid);
             });
+
+            cluster.default.on('message', (worker, message, handle) => {
+                console.log(`Worker ${worker.process.pid} sent message: ${message}`);
+            });
+
+            for(let i = 0; i < numCPUs; i++) {
+                const pid = await exitQueue.get();
+                console.log(`Worker ${pid} died, primary`);
+            }
         } else {
             const sanityCountSub = await loadTest();
             expect(sanityCountSub).to.equal(pairCount * messageCount);
