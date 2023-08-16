@@ -16,7 +16,6 @@ import {envVarsSync} from "../../automation";
 export const pairCount = 32; // Number of publisher/subscriber pairs
 export const messageCount = 32; // Number of published messages per pair
 
-const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
@@ -61,7 +60,7 @@ export interface TestRef {
     tagDataObjectIdentifier: TagDataObjectIdentifier;
 }
 
-export async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void> {
+export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], n: number): Promise<void> {
     const setupPromises: Promise<TestRef>[] = [];
     const groupId = `test-group-id-${crypto.randomUUID()}`;
 
@@ -101,7 +100,7 @@ export async function setupKafkaPairs(pairs: TestRef[], n: number): Promise<void
     }
 
     for (let i = 0; i < n; i++) {
-        const setupPromise = setup(i, groupId, kafka);
+        const setupPromise = setup(kafkaTopicLoad, i, groupId, kafka);
         setupPromises.push(setupPromise);
 
         if (setupPromises.length === maxConcurrentConnects || i === n - 1) {
@@ -128,7 +127,7 @@ export async function teardownTest(pairs: TestRef[]) {
     await Promise.all(tasks);
 }
 
-async function setup(i: number, groupId: string, kafka: Kafka): Promise<TestRef> {
+async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: Kafka): Promise<TestRef> {
     const tagDataObjectIdentifier = new TagDataObjectIdentifier();
     tagDataObjectIdentifier.appId = `some-app-id-${crypto.randomUUID()}`;
     tagDataObjectIdentifier.tag = `tag-id-${crypto.randomUUID()}`;
@@ -229,8 +228,8 @@ export async function runLoadTest(pairs: TestRef[], m: number) {
     await Promise.all(runTestTasks);
 }
 
-export async function loadTest() {
-    await setupKafkaPairs(pairs, pairCount);
+export async function loadTest(kafkaTopicLoad: string) {
+    await setupKafkaPairs(kafkaTopicLoad, pairs, pairCount);
     slog.info("runLoadTest");
 
     const start = Date.now();

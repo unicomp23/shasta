@@ -12,6 +12,7 @@ import * as os from 'os';
 import {RedisKeyCleanup} from "./redisKeyCleanup";
 
 describe("End-to-End Load Test", () => {
+    const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
 
     it("should load test messages from Publisher->Worker->Redis Subscriber", async () => {
         await deleteTestTopics();
@@ -46,7 +47,7 @@ describe("End-to-End Load Test", () => {
                 console.log(`Worker ${pid} died, primary`);
             }
         } else {
-            const sanityCountSub = await loadTest();
+            const sanityCountSub = await loadTest(kafkaTopicLoad);
             expect(sanityCountSub).to.equal(pairCount * messageCount);
         }
     });
