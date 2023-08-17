@@ -13,13 +13,13 @@ import {Instrumentation} from "./instrument";
 import {RedisKeyCleanup} from "./redisKeyCleanup";
 import {envVarsSync} from "../../automation";
 
-export const pairCount = 512; // Number of publisher/subscriber pairs
+export const pairCount = 8; // Number of publisher/subscriber pairs
 export const messageCount = 32; // Number of published messages per pair
 
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const maxConcurrentConnects = 10;
+const maxConcurrentConnects = 20;
 // https://docs.aws.amazon.com/msk/latest/developerguide/limits.html
 
 const workerModulo = 32;
