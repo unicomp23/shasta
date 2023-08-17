@@ -12,8 +12,6 @@ import * as os from 'os';
 import {RedisKeyCleanup} from "./redisKeyCleanup";
 
 describe("End-to-End Load Test", () => {
-    const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
-
     it("should load test messages from Publisher->Worker->Redis Subscriber", async () => {
         await deleteTestTopics();
         const cleaner = new RedisKeyCleanup();
@@ -26,9 +24,11 @@ describe("End-to-End Load Test", () => {
         const exitQueue = new AsyncQueue<number>();
 
         if (cluster.default.isPrimary) {
+            const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
+
             // Fork workers.
             for (let i = 0; i < numCPUs; i++) {
-                const worker = cluster.default.fork();
+                const worker = cluster.default.fork({ KAFKA_TOPIC_LOAD: kafkaTopicLoad });
                 console.log(`Worker ${worker.process.pid} forked, primary`);
             }
 
@@ -47,6 +47,8 @@ describe("End-to-End Load Test", () => {
                 console.log(`Worker ${pid} died, primary`);
             }
         } else {
+            const kafkaTopicLoad = process.env.KAFKA_TOPIC_LOAD;
+            if(kafkaTopicLoad === undefined) throw new Error("KAFKA_TOPIC_LOAD environment variable is not set");
             const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs);
             expect(sanityCountSub).to.equal(pairCount * messageCount);
             if(process.send !== undefined) {
