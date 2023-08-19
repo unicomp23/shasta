@@ -3,7 +3,7 @@ import {kafkaLogLevel} from "./constants";
 import {createMechanism} from "@jm18457/kafkajs-msk-iam-authentication-mechanism";
 import {env} from "process";
 
-export function createKafka(clientId: string, region: string = 'us-east-1'): Kafka {
+export function createKafka(clientId: string, region: string = 'us-east-1', numCPUs = 1): Kafka {
     const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
     /*
     if (env.NOTLS) {
@@ -32,5 +32,9 @@ export function createKafka(clientId: string, region: string = 'us-east-1'): Kaf
             username: 'jdavis',
             password: env.REDPANDA_SASL_PASSWORD || ''
         },
+        retry: {
+            initialRetryTime: 100 * numCPUs,
+            retries: 8
+        }
     });
 }

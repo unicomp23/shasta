@@ -58,7 +58,7 @@ export interface TestRef {
 export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number): Promise<void> {
     const groupId = `test-group-id-${crypto.randomUUID()}`;
 
-    const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
+    const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`, "us-east-1", numCPUs);
 
     const admin = kafka.admin();
     await admin.connect();
