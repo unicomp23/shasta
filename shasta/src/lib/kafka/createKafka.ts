@@ -23,7 +23,7 @@ export function createKafka(clientId: string, region: string = 'us-east-1'): Kaf
     }*/
     return new Kafka({
         clientId: 'my-app',
-        brokers: ['seed-0e0f0d8f.cjf46covk4juta2iplm0.fmc.prd.cloud.redpanda.com:9092'],
+        brokers: ['seed-374cea23.cjfoit0ccm8eecla1s60.fmc.prd.cloud.redpanda.com:9092'],
         // authenticationTimeout: 10000,
         // reauthenticationThreshold: 10000,
         ssl: true,
