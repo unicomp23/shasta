@@ -17,9 +17,6 @@ export const messageCount = 32; // Number of published messages per pair
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const maxConcurrentConnects = 20;
-// https://docs.aws.amazon.com/msk/latest/developerguide/limits.html
-
 const workerModulo = 32;
 
 const pairs = new Array<TestRef>();
