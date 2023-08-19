@@ -143,7 +143,7 @@ function findTopicInMetadata(topic: string, metadata: ITopicMetadata[]): boolean
     return metadata.some((topicMetadata: ITopicMetadata) => topicMetadata.name === topic);
 }
 
-export async function runLoadTest(pairs: TestRef[], m: number) {
+export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) {
     const runTestTasks = pairs.map(async (testRef) => {
         if (testRef.tagDataObjectIdentifier.name === "" || testRef.tagDataObjectIdentifier.name === undefined) {
             throw new Error("TagDataObjectIdentifier name is empty");
@@ -194,6 +194,7 @@ export async function runLoadTest(pairs: TestRef[], m: number) {
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
             //tagDataArray.push(tagData);
+            await delay(50 * numCPUs);
             await testRef.publisher.send(tagData);
             // todo no batching
 
@@ -218,7 +219,7 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number) {
     slog.info("runLoadTest");
 
     const start = Date.now();
-    await runLoadTest(pairs, messageCount);
+    await runLoadTest(pairs, messageCount, numCPUs);
     const elapsed = Date.now() - start;
 
     const total = pairs.length * messageCount;
