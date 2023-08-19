@@ -7,10 +7,8 @@ import {TagData, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_
 import {Publisher} from "./publisher";
 import {Subscriber} from "./subscriber";
 import {Worker} from "./worker";
-import {AsyncQueue} from "@esfx/async-queue";
 import {expect} from "chai";
 import {Instrumentation} from "./instrument";
-import {RedisKeyCleanup} from "./redisKeyCleanup";
 import {envVarsSync} from "../../automation";
 
 export const pairCount = 8; // Number of publisher/subscriber pairs
@@ -61,7 +59,6 @@ export interface TestRef {
 }
 
 export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number): Promise<void> {
-    const setupPromises: Promise<TestRef>[] = [];
     const groupId = `test-group-id-${crypto.randomUUID()}`;
 
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
@@ -100,20 +97,11 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
     }
 
     for (let i = 0; i < pairCount; i++) {
-        const setupPromise = setup(kafkaTopicLoad, i, groupId, kafka);
-        setupPromises.push(setupPromise);
-
-        if (setupPromises.length === maxConcurrentConnects || i === pairCount - 1) {
-            await Promise.all(setupPromises)
-                .then((results) => {
-                    pairs.push(...results);
-                    slog.info("setupKafkaPairs", { pairs: pairs.length });
-                })
-                .finally(() => {
-                    setupPromises.length = 0;
-                });
-            await delay(numCPUs * 1000);
-        }
+        const testRef = await setup(kafkaTopicLoad, i, groupId, kafka);
+        pairs.push(testRef);
+        if(i % 100 === 0)
+            slog.info("setupKafkaPairs", { pairs: pairs.length });
+        await delay(numCPUs * 50);
     }
 }
 
@@ -156,8 +144,6 @@ function findTopicInMetadata(topic: string, metadata: ITopicMetadata[]): boolean
 }
 
 export async function runLoadTest(pairs: TestRef[], m: number) {
-    const completions = new AsyncQueue<TagDataObjectIdentifier>();
-
     const runTestTasks = pairs.map(async (testRef) => {
         if (testRef.tagDataObjectIdentifier.name === "" || testRef.tagDataObjectIdentifier.name === undefined) {
             throw new Error("TagDataObjectIdentifier name is empty");
@@ -222,7 +208,6 @@ export async function runLoadTest(pairs: TestRef[], m: number) {
         await doneConsuming.promise;
 
         slog.info("runLoadTest", { iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0) });
-        completions.put(testRef.tagDataObjectIdentifier);
     });
 
     await Promise.all(runTestTasks);
