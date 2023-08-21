@@ -18,7 +18,7 @@ describe("End-to-End Load Test", () => {
             .then(() => cleaner.disconnect())
             .catch(console.error);
 
-        const numCPUs = os.cpus().length / 2;
+        const numCPUs = 16; //os.cpus().length / 2;
         console.log(`numCPUs: ${numCPUs}`);
         const exitQueue = new AsyncQueue<number>();
 

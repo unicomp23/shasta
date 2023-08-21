@@ -33,7 +33,7 @@ export function createKafka(clientId: string, region: string = 'us-east-1', numC
             password: env.REDPANDA_SASL_PASSWORD || ''
         },
         retry: {
-            initialRetryTime: 100 * numCPUs,
+            initialRetryTime: 200 * numCPUs,
             retries: 8
         }
     });

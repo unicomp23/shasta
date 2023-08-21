@@ -11,8 +11,8 @@ import {expect} from "chai";
 import {Instrumentation} from "./instrument";
 import {envVarsSync} from "../../automation";
 
-export const pairCount = 8; // Number of publisher/subscriber pairs
-export const messageCount = 32; // Number of published messages per pair
+export const pairCount = 128; // Number of publisher/subscriber pairs
+export const messageCount = 32 * 1024; // Number of published messages per pair
 
 let sanityCountSub = 0;
 let sanityCountPub = 0;
@@ -65,7 +65,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
     try {
         const topicConfig: ITopicConfig = {
             topic: kafkaTopicLoad,
-            numPartitions: 16,
+            numPartitions: 64,
         };
         await admin.createTopics({
             topics: [topicConfig],
@@ -98,7 +98,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
         pairs.push(testRef);
         if(i % 100 === 0)
             slog.info("setupKafkaPairs", { pairs: pairs.length });
-        await delay(numCPUs * 50);
+        await delay(numCPUs * 200);
     }
 }
 
@@ -191,7 +191,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
             //tagDataArray.push(tagData);
-            await delay(50 * numCPUs);
+            await delay(200 * numCPUs);
             await testRef.publisher.send(tagData);
             // todo no batching
 
