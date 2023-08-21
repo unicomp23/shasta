@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import {createKafka} from "../kafka/createKafka";
+import {createKafka, singleServerTcpSpacingMillis} from "../kafka/createKafka";
 import {ITopicConfig, ITopicMetadata, Kafka} from "kafkajs";
 import {slog} from "../logger/slog";
 import {Deferred, delay} from "@esfx/async";
@@ -98,7 +98,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
         pairs.push(testRef);
         if(i % 100 === 0)
             slog.info("setupKafkaPairs", { pairs: pairs.length });
-        await delay(numCPUs * 200);
+        await delay(numCPUs * singleServerTcpSpacingMillis);
     }
 }
 
@@ -191,7 +191,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
             //tagDataArray.push(tagData);
-            await delay(200 * numCPUs);
+            await delay(singleServerTcpSpacingMillis * numCPUs);
             await testRef.publisher.send(tagData);
             // todo no batching
 

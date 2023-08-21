@@ -3,6 +3,8 @@ import {kafkaLogLevel} from "./constants";
 import {createMechanism} from "@jm18457/kafkajs-msk-iam-authentication-mechanism";
 import {env} from "process";
 
+export const singleServerTcpSpacingMillis = 200;
+
 export function createKafka(clientId: string, region: string = 'us-east-1', numCPUs = 1): Kafka {
     const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
     /*
@@ -33,7 +35,7 @@ export function createKafka(clientId: string, region: string = 'us-east-1', numC
             password: env.REDPANDA_SASL_PASSWORD || ''
         },
         retry: {
-            initialRetryTime: 200 * numCPUs,
+            initialRetryTime: singleServerTcpSpacingMillis * numCPUs,
             retries: 8
         }
     });
