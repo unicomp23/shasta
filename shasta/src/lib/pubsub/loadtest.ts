@@ -94,7 +94,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
     for (let i = 0; i < pairCount; i++) {
         const testRef = await setup(kafkaTopicLoad, i, groupId, kafka);
         pairs.push(testRef);
-        if(i % 100 === 0)
+        //if(i % 100 === 0)
             slog.info("setupKafkaPairs", { pairs: pairs.length });
         await delay(numCPUs * singleServerTcpSpacingMillis);
     }

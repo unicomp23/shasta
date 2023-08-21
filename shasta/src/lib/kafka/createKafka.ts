@@ -6,9 +6,8 @@ import {env} from "process";
 export const singleServerTcpSpacingMillis = 200;
 
 export function createKafka(clientId: string, region: string = 'us-east-1', numCPUs = 1): Kafka {
-    const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
-    /*
-    if (env.NOTLS) {
+    const bootstrapEndpoints = ["b-1.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092","b-2.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092","b-3.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092"];
+    if (true) {
         return new Kafka({
             clientId,
             brokers: bootstrapEndpoints,
@@ -22,7 +21,8 @@ export function createKafka(clientId: string, region: string = 'us-east-1', numC
             ssl: true,
             sasl: createMechanism({region}),
         });
-    }*/
+    }
+    /*
     return new Kafka({
         clientId: 'my-app',
         brokers: ['seed-374cea23.cjfoit0ccm8eecla1s60.fmc.prd.cloud.redpanda.com:9092'],
@@ -38,5 +38,5 @@ export function createKafka(clientId: string, region: string = 'us-east-1', numC
             initialRetryTime: singleServerTcpSpacingMillis * numCPUs,
             retries: 8
         }
-    });
+    });*/
 }

@@ -18,7 +18,7 @@ describe("End-to-End Load Test", () => {
             .then(() => cleaner.disconnect())
             .catch(console.error);
 
-        const numCPUs = 16; //os.cpus().length / 2;
+        const numCPUs = 8; //os.cpus().length / 2;
         console.log(`numCPUs: ${numCPUs}`);
         const exitQueue = new AsyncQueue<number>();
 
@@ -28,7 +28,7 @@ describe("End-to-End Load Test", () => {
 
             // Fork workers.
             for (let i = 0; i < numCPUs; i++) {
-                const worker = cluster.default.fork({ KAFKA_TOPIC_LOAD: kafkaTopicLoad, KAFA_GROUP_ID: groupId });
+                const worker = cluster.default.fork({ KAFKA_TOPIC_LOAD: kafkaTopicLoad, KAFKA_GROUP_ID: groupId });
                 console.log(`Worker ${worker.process.pid} forked, primary`);
             }
 
