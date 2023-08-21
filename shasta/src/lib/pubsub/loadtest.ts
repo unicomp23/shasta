@@ -55,9 +55,7 @@ export interface TestRef {
     tagDataObjectIdentifier: TagDataObjectIdentifier;
 }
 
-export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number): Promise<void> {
-    const groupId = `test-group-id-${crypto.randomUUID()}`;
-
+export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number, groupId: string): Promise<void> {
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`, "us-east-1", numCPUs);
 
     const admin = kafka.admin();
@@ -211,8 +209,8 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
     await Promise.all(runTestTasks);
 }
 
-export async function loadTest(kafkaTopicLoad: string, numCPUs: number) {
-    await setupKafkaPairs(kafkaTopicLoad, pairs, pairCount, numCPUs);
+export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId: string) {
+    await setupKafkaPairs(kafkaTopicLoad, pairs, pairCount, numCPUs, groupId);
     slog.info("runLoadTest");
 
     const start = Date.now();
