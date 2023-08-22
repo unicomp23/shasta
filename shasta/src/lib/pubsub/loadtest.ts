@@ -189,7 +189,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
             //tagDataArray.push(tagData);
-            await delay(singleServerTcpSpacingMillis * numCPUs);
+            await delay(50 * numCPUs);
             await testRef.publisher.send(tagData);
             // todo no batching
 
