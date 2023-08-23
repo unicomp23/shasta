@@ -7,13 +7,7 @@ class Publisher {
     private producer: Producer;
 
     constructor(kafka: Kafka, readonly topic: string) {
-        this.producer = kafka.producer({
-            maxInFlightRequests: 1,
-            idempotent: true,
-            retry: {
-                retries: 3,
-            }
-        });
+        this.producer = kafka.producer();
     }
 
     // Connect to Kafka producer
