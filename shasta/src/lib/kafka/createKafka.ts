@@ -1,4 +1,4 @@
-import {Kafka} from "kafkajs";
+import {Kafka, logLevel} from "kafkajs";
 import {kafkaLogLevel} from "./constants";
 import {createMechanism} from "@jm18457/kafkajs-msk-iam-authentication-mechanism";
 import {env} from "process";
@@ -11,7 +11,13 @@ export function createKafka(clientId: string, region: string = 'us-east-1', numC
         return new Kafka({
             clientId,
             brokers: bootstrapEndpoints,
-            logLevel: kafkaLogLevel,
+            logLevel: logLevel.DEBUG,
+            logCreator: logLevel => {
+                return ({ namespace, level, label, log }) => {
+                    const { message, ...others } = log
+                    console.log(`[${label}] ${namespace} - ${message}`, others)
+                }
+            },
         });
     } else {
         return new Kafka({
