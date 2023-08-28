@@ -12,18 +12,18 @@ import {RedisKeyCleanup} from "./redisKeyCleanup";
 
 describe("End-to-End Load Test", () => {
     it("should load test messages from Publisher->Worker->Redis Subscriber", async () => {
-        await deleteTestTopics();
+        /*await deleteTestTopics();
         const cleaner = new RedisKeyCleanup();
         cleaner.deleteAllKeys()
             .then(() => cleaner.disconnect())
-            .catch(console.error);
+            .catch(console.error);*/
 
-        const numCPUs = 8; //os.cpus().length / 2;
+        const numCPUs = 1; //os.cpus().length / 2;
         console.log(`numCPUs: ${numCPUs}`);
         const exitQueue = new AsyncQueue<number>();
 
         if (cluster.default.isPrimary) {
-            const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
+            const kafkaTopicLoad = `test_topic_load-12345`;
             const groupId = `test_group_id-${crypto.randomUUID()}`;
 
             // Fork workers.
