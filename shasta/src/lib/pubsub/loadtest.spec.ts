@@ -23,7 +23,7 @@ describe("End-to-End Load Test", () => {
         env.REDIS_PORT = "6379";
         env.KAFKA_BROKERS = "b-1.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092,b-2.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092,b-3.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092";
         env.NOTLS = "true";
-        
+
         const numCPUs = 1; //os.cpus().length / 2;
         console.log(`numCPUs: ${numCPUs}`);
         const exitQueue = new AsyncQueue<number>();

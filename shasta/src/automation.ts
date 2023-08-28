@@ -44,7 +44,8 @@ function getConfig(): Config {
             throw new Error(`File doesn't exist at path: ${configFilePath}`);
         }
     } else {
-        throw new Error("Environment variable APP_CONFIG || AUTOMATION_APP_CONFIG is not set");
+        // todo revert, throw new Error("Environment variable APP_CONFIG || AUTOMATION_APP_CONFIG is not set");
+        console.error("Environment variable APP_CONFIG || AUTOMATION_APP_CONFIG is not set");
     }
 }
 
