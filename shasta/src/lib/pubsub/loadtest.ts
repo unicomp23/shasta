@@ -21,7 +21,7 @@ const workerModulo = 32;
 
 const pairs = new Array<TestRef>();
 
-envVarsSync();
+// todo revert, envVarsSync();
 
 export async function deleteTestTopics() {
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
