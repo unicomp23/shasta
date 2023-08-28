@@ -9,6 +9,7 @@ import * as cluster from 'cluster';
 import * as http from 'http';
 import * as os from 'os';
 import {RedisKeyCleanup} from "./redisKeyCleanup";
+import {env} from "process";
 
 describe("End-to-End Load Test", () => {
     it("should load test messages from Publisher->Worker->Redis Subscriber", async () => {
@@ -18,6 +19,11 @@ describe("End-to-End Load Test", () => {
             .then(() => cleaner.disconnect())
             .catch(console.error);*/
 
+        env.REDIS_HOST = "clustercfg.shasta-redis-automation786.3ezarj.memorydb.us-east-1.amazonaws.com";
+        env.REDIS_PORT = "6379";
+        env.KAFKA_BROKERS = "b-1.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092,b-2.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092,b-3.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092";
+        env.NOTLS = "true";
+        
         const numCPUs = 1; //os.cpus().length / 2;
         console.log(`numCPUs: ${numCPUs}`);
         const exitQueue = new AsyncQueue<number>();
