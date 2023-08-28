@@ -23,7 +23,7 @@ class Subscriber {
 
     constructor(tagDataObjIdentifier: TagDataObjectIdentifier) {
         this.redisClient = new Cluster([{
-            host: env.REDIS_HOST,
+            host: "clustercfg.shasta-redis-automation786.3ezarj.memorydb.us-east-1.amazonaws.com", //todo revert env.REDIS_HOST,
             port: parseInt(env.REDIS_PORT || "6379")
         }], {
             dnsLookup: (address, callback) => callback(null, address),

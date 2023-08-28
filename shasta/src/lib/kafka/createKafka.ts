@@ -12,12 +12,6 @@ export function createKafka(clientId: string, region: string = 'us-east-1', numC
             clientId,
             brokers: bootstrapEndpoints,
             logLevel: logLevel.DEBUG,
-            logCreator: logLevel => {
-                return ({ namespace, level, label, log }) => {
-                    const { message, ...others } = log
-                    console.log(`[${label}] ${namespace} - ${message}`, others)
-                }
-            },
         });
     } else {
         return new Kafka({
