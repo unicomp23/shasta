@@ -12,7 +12,7 @@ import {Instrumentation} from "./instrument";
 import {envVarsSync} from "../../automation";
 
 export const pairCount = 512; // Number of publisher/subscriber pairs
-export const messageCount = 1024; // Number of published messages per pair
+export const messageCount = 8 * 1024; // Number of published messages per pair
 
 let sanityCountSub = 0;
 let sanityCountPub = 0;
