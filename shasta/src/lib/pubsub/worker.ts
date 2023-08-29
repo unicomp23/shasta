@@ -12,7 +12,11 @@ class Worker {
     private groupJoined_: boolean = false;
 
     private constructor(kafka: Kafka, groupId: string, topic: string) {
-        this.kafkaConsumer = kafka.consumer({groupId});
+        this.kafkaConsumer = kafka.consumer({
+            groupId,
+            minBytes: 1,
+            maxWaitTimeInMs: 1000,
+        });
         this.redisClient = new Cluster([{
             host: env.REDIS_HOST,
             port: parseInt(env.REDIS_PORT || "6379")
