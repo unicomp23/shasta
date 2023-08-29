@@ -7,7 +7,14 @@ class Publisher {
     private producer: Producer;
 
     constructor(kafka: Kafka, readonly topic: string) {
-        this.producer = kafka.producer();
+        this.producer = kafka.producer({
+            maxInFlightRequests: 5,
+            idempotent: true,
+            retry: {
+                initialRetryTime: 100,
+                retries: 8
+            }
+        });
     }
 
     // Connect to Kafka producer
@@ -54,6 +61,7 @@ class Publisher {
             await this.producer.send({
                 topic: this.topic,
                 messages,
+                acks: -1,
             });
 
             //slog.info("Messages published successfully");
