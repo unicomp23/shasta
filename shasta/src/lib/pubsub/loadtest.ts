@@ -189,8 +189,9 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
             //tagDataArray.push(tagData);
-            await delay(50 * numCPUs);
+            // todo await delay(50 * numCPUs);
             await testRef.publisher.send(tagData);
+            Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = performance.now();
             // todo no batching
 
             sanityCountPub++;
@@ -198,8 +199,6 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                 slog.info("sanityCountPub", { sanityCountPub });
         }
         //await testRef.publisher.sendBatch(tagDataArray); todo no batching
-        const now = performance.now();
-        for(const tagData of tagDataArray) { Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = now; }
 
         await doneConsuming.promise;
 
