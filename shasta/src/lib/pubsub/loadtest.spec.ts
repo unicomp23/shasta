@@ -13,16 +13,17 @@ import {env} from "process";
 
 describe("End-to-End Load Test", () => {
     it("should load test messages from Publisher->Worker->Redis Subscriber", async () => {
-        /*await deleteTestTopics();
-        const cleaner = new RedisKeyCleanup();
-        cleaner.deleteAllKeys()
-            .then(() => cleaner.disconnect())
-            .catch(console.error);*/
 
         env.REDIS_HOST = "clustercfg.shasta-redis-automation786.3ezarj.memorydb.us-east-1.amazonaws.com";
         env.REDIS_PORT = "6379";
         env.KAFKA_BROKERS = "b-1.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092,b-2.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092,b-3.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092";
         env.NOTLS = "true";
+
+    	await deleteTestTopics();
+        const cleaner = new RedisKeyCleanup();
+        cleaner.deleteAllKeys()
+            .then(() => cleaner.disconnect())
+            .catch(console.error);
 
         const numCPUs = 1; //os.cpus().length / 2;
         console.log(`numCPUs: ${numCPUs}`);
