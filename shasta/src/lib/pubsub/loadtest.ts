@@ -186,10 +186,10 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                 data: testVal,
             });
             testValTracker.add(testVal);
+            await delay(50 * numCPUs);
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
             //tagDataArray.push(tagData);
-            // todo await delay(50 * numCPUs);
             await testRef.publisher.send(tagData);
             Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = performance.now();
             // todo no batching

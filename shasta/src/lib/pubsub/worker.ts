@@ -120,7 +120,6 @@ class Worker {
                         }
 
                         tagDataObjIdentifierPartition.name = "";
-                        Instrumentation.instance.getTimestamps(tagData.identifier).afterPublish = parseInt(message.timestamp, 10);
                         Instrumentation.instance.getTimestamps(tagData.identifier).afterConsume = performance.now();
                         const redisSnapshotKey = Buffer.from(tagDataObjIdentifierPartition.toBinary()).toString("base64");
 
