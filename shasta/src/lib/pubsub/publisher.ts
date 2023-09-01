@@ -8,7 +8,7 @@ class Publisher {
 
     constructor(kafka: Kafka, readonly topic: string) {
         this.producer = kafka.producer({
-            maxInFlightRequests: 5,
+            maxInFlightRequests: 20,
             idempotent: true,
             retry: {
                 initialRetryTime: 100,
