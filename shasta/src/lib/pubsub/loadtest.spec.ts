@@ -26,7 +26,7 @@ describe("End-to-End Load Test", () => {
         const exitQueue = new AsyncQueue<number>();
 
         if (cluster.default.isPrimary) {
-            const kafkaTopicLoad = `test_topic_load-123`;
+            const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
             const groupId = `test_group_id-${crypto.randomUUID()}`;
 
             // Fork workers.
