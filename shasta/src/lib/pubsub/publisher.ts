@@ -61,7 +61,7 @@ class Publisher {
             await this.producer.send({
                 topic: this.topic,
                 messages,
-                acks: 1,
+                acks: -1,
             });
 
             //slog.info("Messages published successfully");
