@@ -1,0 +1,4 @@
+64 producers
+1024 messages per producer
+32 workers
+delay(10) per producer
