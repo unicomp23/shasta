@@ -53,3 +53,4 @@ This setup provides control over the number of publisher connections by adjustin
 
 Please note that this is a high-level overview and the actual implementation may require additional components and configurations based on your specific requirements and infrastructure.
 
+![Alt text](image-2.png)
