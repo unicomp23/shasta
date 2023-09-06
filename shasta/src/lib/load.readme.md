@@ -54,3 +54,30 @@ This setup provides control over the number of publisher connections by adjustin
 Please note that this is a high-level overview and the actual implementation may require additional components and configurations based on your specific requirements and infrastructure.
 
 ![Alt text](image-2.png)
+
+AWS Application Load Balancer (ALB) dynamically scales based on traffic demand, adjusting its scaling to accommodate incoming requests. Here's a general overview of the scaling process:
+
+### Scaling Up
+
+1. **Traffic Increase Detection**: ALB identifies the need for scaling up when traffic surpasses the capacity of existing resources.
+
+2. **Adding New Resources**: To distribute the increased traffic load efficiently, ALB adds new resources (targets). This could involve adding more EC2 instances or containers to the target groups.
+
+3. **Distributing Traffic**: ALB automatically begins distributing incoming traffic across all available targets, including newly added ones, to ensure load is evenly distributed.
+
+### Scaling Down
+
+1. **Traffic Decrease Detection**: ALB identifies a reduction in resource demand when traffic decreases.
+
+2. **Removing Resources**: To save costs, ALB removes unnecessary resources. This involves deregistering targets from the target groups that are not required to handle the current load.
+
+3. **Continuous Monitoring**: ALB continuously monitors traffic and is prepared to scale up again if traffic increases.
+
+### Under the Hood
+
+AWS manages ALB's infrastructure, ensuring it can automatically scale up and down. As a user, you only need to configure the ALB and its target groups, and AWS handles the scaling aspect.
+
+You can also establish CloudWatch Alarms to monitor your ALB's performance and health, and AWS Auto Scaling policies can be used to manage the scaling of resources behind the ALB (like EC2 instances) more precisely.
+
+Please note that this explanation doesn't involve code, as per your profile instruction. If you have any other questions or need further information, feel free to ask.
+
