@@ -1,10 +1,10 @@
 ![img.png](img.png)
 
-^w/ Ken's change
+^w/o Ken's change
 
 ![img_1.png](img_1.png)
 
-^w/o Ken's change
+^w Ken's change
 
 The JSON file contains the following hierarchical structure of fields:
 
