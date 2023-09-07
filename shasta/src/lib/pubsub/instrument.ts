@@ -48,10 +48,13 @@ export class Instrumentation {
             return obj;
         }, {});
         slog.info("", {
-            numCPUs,
-            pairCount,
-            messageCount,
-            timestamps: timestampsObj
-        });
+                instrumentData: {
+                    numCPUs,
+                    pairCount,
+                    messageCount,
+                    timestamps: timestampsObj
+                }
+            }
+        );
     }
 }
