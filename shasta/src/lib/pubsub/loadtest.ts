@@ -21,6 +21,14 @@ const workerModulo = 32;
 
 const pairs = new Array<TestRef>();
 
+enum TestType {
+    Consumer = "consumer",
+    Producer = "producer",
+    Both = "both",
+}
+
+const testType = TestType.Both;
+
 // todo revert, envVarsSync();
 
 export async function deleteTestTopics() {
@@ -49,7 +57,7 @@ export async function deleteTestTopics() {
 }
 
 export interface TestRef {
-    publisher: Publisher;
+    publisher: Publisher | null;
     subscriber: Subscriber;
     worker: Worker | null;
     tagDataObjectIdentifier: TagDataObjectIdentifier;
@@ -103,7 +111,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
 export async function teardownTest(pairs: TestRef[]) {
     const tasks = pairs.map(async ({ worker, publisher, subscriber }) => {
         await worker?.shutdown();
-        await publisher.disconnect();
+        await publisher?.disconnect();
         await subscriber.disconnect();
     });
 
@@ -117,13 +125,25 @@ async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: 
     tagDataObjectIdentifier.scope = `scope-id-${crypto.randomUUID()}`;
     tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
 
-    const publisher = new Publisher(kafka, kafkaTopicLoad);
-    await publisher.connect();
+    let publisher: Publisher | null = null;
+    // @ts-ignore
+    if(testType === TestType.Producer || testType === TestType.Both) {
+        publisher = new Publisher(kafka, kafkaTopicLoad);
+        await publisher.connect();
+    }
 
     const subscriber = new Subscriber(tagDataObjectIdentifier);
 
-    const worker = (i % workerModulo == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
-    if(worker !== null) slog.info("setup worker", { i, groupId, kafkaTopicLoad });
+    let worker: Worker | null = null;
+    // @ts-ignore
+    if(testType === TestType.Consumer || testType === TestType.Both) {
+        worker = (i % workerModulo == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
+        if (worker !== null) slog.info("setup worker", {
+            i,
+            groupId,
+            kafkaTopicLoad
+        });
+    }
 
     return {
         publisher,
@@ -190,7 +210,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
             //tagDataArray.push(tagData);
-            await testRef.publisher.send(tagData);
+            await testRef.publisher?.send(tagData);
             Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = performance.now();
             // todo no batching
 
