@@ -1,10 +1,10 @@
 ![img.png](img.png)
 
-^w/o Ken's change
+^w/o Ken's change, 1084.18 events/sec
 
 ![img_1.png](img_1.png)
 
-^w Ken's change
+^w Ken's change, 1627.34 events/sec
 
 The JSON file contains the following hierarchical structure of fields:
 
