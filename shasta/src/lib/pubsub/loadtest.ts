@@ -134,7 +134,8 @@ async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: 
 
     let subscriber: Subscriber | null = null;
     // @ts-ignore
-    if(testType === TestType.Consumer || testType === TestType.Both) {
+    if(testType === TestType.Producer || testType === TestType.Both) {
+        // redis subscriber runs on the same process as the publisher to validate the messages
         subscriber = new Subscriber(tagDataObjectIdentifier);
     }
 
