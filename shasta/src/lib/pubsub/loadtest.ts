@@ -58,7 +58,7 @@ export async function deleteTestTopics() {
 
 export interface TestRef {
     publisher: Publisher | null;
-    subscriber: Subscriber;
+    subscriber: Subscriber | null;
     worker: Worker | null;
     tagDataObjectIdentifier: TagDataObjectIdentifier;
 }
@@ -112,7 +112,7 @@ export async function teardownTest(pairs: TestRef[]) {
     const tasks = pairs.map(async ({ worker, publisher, subscriber }) => {
         await worker?.shutdown();
         await publisher?.disconnect();
-        await subscriber.disconnect();
+        await subscriber?.disconnect();
     });
 
     await Promise.all(tasks);
@@ -132,7 +132,11 @@ async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: 
         await publisher.connect();
     }
 
-    const subscriber = new Subscriber(tagDataObjectIdentifier);
+    let subscriber: Subscriber | null = null;
+    // @ts-ignore
+    if(testType === TestType.Consumer || testType === TestType.Both) {
+        subscriber = new Subscriber(tagDataObjectIdentifier);
+    }
 
     let worker: Worker | null = null;
     // @ts-ignore
@@ -169,27 +173,29 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
         const testValTracker = new Set<string>();
 
         if(testRef.worker) await testRef.worker.groupJoined();
-        const messageQueue = await testRef.subscriber.stream();
+        const messageQueue = await testRef.subscriber?.stream();
 
         // consume
         const doneConsuming = new Deferred<boolean>();
         const consumeTask = async() => {
-            const snapshot = await messageQueue.get();
-            expect(snapshot.snapshot).to.not.be.undefined;
+            if(messageQueue) {
+                const snapshot = await messageQueue.get();
+                expect(snapshot.snapshot).to.not.be.undefined;
 
-            for (; ;) {
-                const receivedMsg = await messageQueue.get();
-                expect(receivedMsg.delta).to.not.be.undefined;
-                if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
-                    testValTracker.delete(receivedMsg.delta?.data);
+                for (; ;) {
+                    const receivedMsg = await messageQueue.get();
+                    expect(receivedMsg.delta).to.not.be.undefined;
+                    if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
+                        testValTracker.delete(receivedMsg.delta?.data);
 
-                    sanityCountSub++;
-                    if (sanityCountSub % 1000 === 0)
-                        slog.info("sanityCountSub", {sanityCountSub});
-                }
-                if (testValTracker.size === 0) {
-                    doneConsuming.resolve(true);
-                    break;
+                        sanityCountSub++;
+                        if (sanityCountSub % 1000 === 0)
+                            slog.info("sanityCountSub", {sanityCountSub});
+                    }
+                    if (testValTracker.size === 0) {
+                        doneConsuming.resolve(true);
+                        break;
+                    }
                 }
             }
         };
