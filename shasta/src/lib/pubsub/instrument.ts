@@ -1,5 +1,7 @@
 import {TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
 import {slog} from "../logger/slog";
+import {messageCount, pairCount} from "./loadtest";
+import {numCPUs} from "./loadtest.spec";
 
 export class Timestamps {
     public beforePublish: number = 0;
@@ -45,7 +47,10 @@ export class Instrumentation {
             obj[key] = value;
             return obj;
         }, {});
-        slog.info("Instrumentation dump:", {
+        slog.info("", {
+            numCPUs,
+            pairCount,
+            messageCount,
             timestamps: timestampsObj
         });
     }

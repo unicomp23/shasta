@@ -7,6 +7,8 @@ import * as cluster from 'cluster';
 import {RedisKeyCleanup} from "./redisKeyCleanup";
 import {env} from "process";
 
+export const numCPUs = 1; //os.cpus().length / 2;
+
 describe("End-to-End Load Test", () => {
     it("should load test messages from Publisher->Worker->Redis Subscriber", async () => {
 
@@ -21,7 +23,6 @@ describe("End-to-End Load Test", () => {
             .then(() => cleaner.disconnect())
             .catch(console.error);
 
-        const numCPUs = 1; //os.cpus().length / 2;
         console.log(`numCPUs: ${numCPUs}`);
         const exitQueue = new AsyncQueue<number>();
 
