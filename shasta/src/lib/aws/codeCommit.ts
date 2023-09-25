@@ -1,15 +1,15 @@
 import { SQS } from 'aws-sdk';
 
-const sqs = new SQS({ region: 'us-east-1' }); // replace with your region
+const sqs = new SQS({ region: 'us-east-1' }); // replace with your region todo
 
 async function receiveMessages() {
   const params = {
-    QueueUrl: 'https://sqs.us-east-1.amazonaws.com/123456789012/MyQueue', // replace with your queue URL
+    QueueUrl: process.env.SQS_QUEUE_URL || 'default_queue_url', // replace 'default_queue_url' with a valid default value
     MaxNumberOfMessages: 10,
     VisibilityTimeout: 60,
     WaitTimeSeconds: 0
   };
-
+  
   try {
     const data = await sqs.receiveMessage(params).promise();
 
