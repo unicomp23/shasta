@@ -41,6 +41,7 @@
     "@esfx/collections": "1.0.2",
     "@esfx/disposable": "1.0.0",
     "@jm18457/kafkajs-msk-iam-authentication-mechanism": "3.1.1",
+    "aws-sdk": "^2.1464.0",
     "ioredis": "5.3.2",
     "kafkajs": "2.2.3",
     "node-media-utils": "github:airtimemedia/node-media-utils#1.23",
