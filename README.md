@@ -5,5 +5,4 @@ Shasta repository contains to parts:
 - Shasta Worker source
 - Shasta Library that interfaces with Redis
 
-** todo remove, test 009
-
+** todo remove, test 010
