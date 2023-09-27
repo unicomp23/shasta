@@ -18,7 +18,7 @@ async function readFromStream() {
             throw new Error('CODECOMMIT_STREAM_NAME is not defined in the environment variables');
         }
         const result = await redis.xread('COUNT', 1, 'STREAMS', streamName, '$');        
-        console.log('Finished xread', result);        
+        console.log(`Finished xread: ${streamName}`, result);        
     } catch (error) {
         console.error('Error during xread operation:', error);
     }
