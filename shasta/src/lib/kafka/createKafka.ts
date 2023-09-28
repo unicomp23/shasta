@@ -7,19 +7,11 @@ export const singleServerTcpSpacingMillis = 100;
 
 export function createKafka(clientId: string, region: string = 'us-east-1', numCPUs = 1): Kafka {
     const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
-    if (env.NOTLS) {
-        return new Kafka({
-            clientId,
-            brokers: bootstrapEndpoints,
-            logLevel: kafkaLogLevel,
-        });
-    } else {
-        return new Kafka({
-            clientId,
-            brokers: bootstrapEndpoints,
-            logLevel: kafkaLogLevel,
-            ssl: true,
-            sasl: createMechanism({region}),
-        });
-    }
+    console.log('kafka w/ tls')
+    return new Kafka({
+        clientId,
+        brokers: bootstrapEndpoints,
+        logLevel: kafkaLogLevel,
+        ssl: true,
+    });
 }
