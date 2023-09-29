@@ -12,10 +12,11 @@ export const numCPUs = 1; //os.cpus().length / 2;
 describe("End-to-End Load Test", () => {
     it("should load test messages from Publisher->Worker->Redis Subscriber", async () => {
 
-        env.REDIS_HOST = "clustercfg.shasta-redis-automation786.3ezarj.memorydb.us-east-1.amazonaws.com";
+        if(env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
+            env.REDIS_HOST = env.MEMORY_DB_ENDPOINT_ADDRESS;
         env.REDIS_PORT = "6379";
-        env.KAFKA_BROKERS = "b-1.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092,b-2.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092,b-3.shastamskautomation78.znsa2v.c21.kafka.us-east-1.amazonaws.com:9092";
-        env.NOTLS = "true";
+        if(env.BOOTSTRAP_BROKERS && env.BOOTSTRAP_BROKERS.length > 0)
+            env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
         await deleteTestTopics();
         const cleaner = new RedisKeyCleanup();
