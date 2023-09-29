@@ -1,4 +1,3 @@
-import {logger} from 'node-media-utils/libs';
 import {prettySpaces} from "../constants";
 
 export const slog = {
