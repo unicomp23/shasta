@@ -24,3 +24,5 @@ if (!bucketName) {
 
 // Usage
 getInstanceIds(bucketName).then(console.log);
+
+// aws ssm send-command     --region us-east-1     --document-name "AWS-RunShellScript"     --parameters 'commands=["ls -l > /tmp/log.txt"]'     --targets "Key=tag:Role,Values=worker"
