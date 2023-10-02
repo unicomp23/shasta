@@ -18,18 +18,19 @@ describe("End-to-End Load Test", () => {
         if(env.BOOTSTRAP_BROKERS && env.BOOTSTRAP_BROKERS.length > 0)
             env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
-        // todo, await deleteTestTopics();
+        /*** todo await deleteTestTopics();
         const cleaner = new RedisKeyCleanup();
         cleaner.deleteAllKeys()
             .then(() => cleaner.disconnect())
-            .catch(console.error);
+            .catch(console.error); ***/
 
         console.log(`numCPUs: ${numCPUs}`);
         const exitQueue = new AsyncQueue<number>();
 
         if (cluster.default.isPrimary) {
-            const kafkaTopicLoad = `test_topic_load-${crypto.randomUUID()}`;
-            const groupId = `test_group_id-${crypto.randomUUID()}`;
+            const randomTag = ""; // todo crypto.randomUUID();
+            const kafkaTopicLoad = `test_topic_load-${randomTag}`;
+            const groupId = `test_group_id-${randomTag}`;
 
             // Fork workers.
             for (let i = 0; i < numCPUs; i++) {
