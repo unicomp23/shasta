@@ -18,7 +18,7 @@ describe("End-to-End Load Test", () => {
         if(env.BOOTSTRAP_BROKERS && env.BOOTSTRAP_BROKERS.length > 0)
             env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
-        await deleteTestTopics();
+        // todo, await deleteTestTopics();
         const cleaner = new RedisKeyCleanup();
         cleaner.deleteAllKeys()
             .then(() => cleaner.disconnect())
