@@ -104,7 +104,8 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
         pairs.push(testRef);
         //if(i % 100 === 0)
             slog.info("setupKafkaPairs", { pairs: pairs.length });
-        await delay(numCPUs * singleServerTcpSpacingMillis);
+        // todo, await delay(numCPUs * singleServerTcpSpacingMillis);
+        await delay(1000);
     }
 }
 
@@ -213,7 +214,8 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                 data: testVal,
             });
             testValTracker.add(testVal);
-            await delay(50 * numCPUs);
+            // todo, await delay(50 * numCPUs);
+            await delay(1000);
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
 
             //tagDataArray.push(tagData);
