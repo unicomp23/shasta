@@ -216,11 +216,11 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             testValTracker.add(testVal);
             // todo, await delay(50 * numCPUs);
             await delay(1000);
-            Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = performance.now();
+            Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
 
             //tagDataArray.push(tagData);
             await testRef.publisher?.send(tagData);
-            Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = performance.now();
+            Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = Date.now();
             // todo no batching
 
             sanityCountPub++;
