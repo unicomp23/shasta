@@ -6,6 +6,7 @@ import * as os from 'os';
 import * as Redis from 'ioredis';
 import assert from 'assert';
 import fs from 'fs';
+import path from 'path';
 
 interface ITimestamps {
     beforePublish: number;
@@ -57,16 +58,18 @@ export class Instrumentation {
     }
 
     public dump() {
+        const tmpDir = path.join(os.homedir(), 'tmp');
+        if (!fs.existsSync(tmpDir)){
+            fs.mkdirSync(tmpDir);
+        }
         const timestampsArr = Array.from(this.timestamps, ([key, value]) => ({key, value}));
-        slog.info("", {
-                instrumentData: {
-                    numCPUs,
-                    pairCount,
-                    messageCount,
-                    timestamps: timestampsArr
-                }
-            }
-        );
+        const instrumentData = {
+            numCPUs,
+            pairCount,
+            messageCount,
+            timestamps: timestampsArr
+        };
+        fs.writeFileSync(path.join(tmpDir, 'instrumentation.json'), JSON.stringify(instrumentData));
     }
 
     public async writeNodeInstrumentData() {
