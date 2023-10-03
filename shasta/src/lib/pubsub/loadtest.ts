@@ -105,7 +105,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
         //if(i % 100 === 0)
             slog.info("setupKafkaPairs", { pairs: pairs.length });
         // todo, await delay(numCPUs * singleServerTcpSpacingMillis);
-        await delay(1000);
+        await delay(3000);
     }
 }
 
