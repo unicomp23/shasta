@@ -11,7 +11,7 @@ import {expect} from "chai";
 import {Instrumentation} from "./instrument";
 import {envVarsSync} from "../../automation";
 
-export const pairCount = 64; // Number of publisher/subscriber pairs
+export const pairCount = 96; // Number of publisher/subscriber pairs
 export const messageCount = 32; // Number of published messages per pair
 
 let sanityCountSub = 0;
