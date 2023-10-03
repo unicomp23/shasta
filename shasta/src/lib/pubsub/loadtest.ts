@@ -71,7 +71,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
     try {
         const topicConfig: ITopicConfig = {
             topic: kafkaTopicLoad,
-            numPartitions: 64,
+            numPartitions: 256,
         };
         await admin.createTopics({
             topics: [topicConfig],
