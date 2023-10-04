@@ -62,14 +62,13 @@ export class Instrumentation {
         if (!fs.existsSync(tmpDir)){
             fs.mkdirSync(tmpDir);
         }
-        const timestampsArr = Array.from(this.timestamps, ([key, value]) => ({key, value}));
         const instrumentData = {
             numCPUs,
             pairCount,
             messageCount,
-            timestamps: timestampsArr
+            timestamps: Array.from(this.timestamps.values())
         };
-        fs.writeFileSync(path.join(tmpDir, 'instrumentation.json'), JSON.stringify(instrumentData));
+        fs.writeFileSync(path.join(tmpDir, 'instrumentation.json'), JSON.stringify(instrumentData, null, 2));
     }
 
     public async writeNodeInstrumentData() {
