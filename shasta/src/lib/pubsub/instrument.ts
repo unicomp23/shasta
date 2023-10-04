@@ -66,7 +66,7 @@ export class Instrumentation {
             numCPUs,
             pairCount,
             messageCount,
-            timestamps: Array.from(this.timestamps.values())
+            timestamps: this.timestamps,
         };
         fs.writeFileSync(path.join(tmpDir, 'instrumentation.json'), JSON.stringify(instrumentData, null, 2));
     }
