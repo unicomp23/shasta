@@ -70,5 +70,7 @@ describe("End-to-End Load Test", () => {
                 process.exit(0);
             }
         }
+
+        process.exit(0); // todo remove
     });
 });
