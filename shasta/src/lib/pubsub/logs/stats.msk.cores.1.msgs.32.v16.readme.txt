@@ -1,4 +1,0 @@
-32 producers
-1024 messages per producer
-16 workers
-delay(20) per producer
