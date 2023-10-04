@@ -28,7 +28,7 @@ describe("End-to-End Load Test", () => {
         const exitQueue = new AsyncQueue<number>();
 
         if (cluster.default.isPrimary) {
-            const randomTag = "018"; // todo crypto.randomUUID();
+            const randomTag = "019"; // todo crypto.randomUUID();
             const kafkaTopicLoad = `test_topic_load-${randomTag}`;
             const groupId = `test_group_id-${randomTag}`;
 

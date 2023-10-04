@@ -66,7 +66,12 @@ export class Instrumentation {
             numCPUs,
             pairCount,
             messageCount,
-            timestamps: this.timestamps,
+            timestamps: Array.from(this.timestamps).reduce((obj: {
+                [key: string]: ITimestamps
+            }, [key, value]) => {
+                obj[key] = value;
+                return obj;
+            }, {}),
         };
         fs.writeFileSync(path.join(tmpDir, 'instrumentation.json'), JSON.stringify(instrumentData, null, 2));
     }
