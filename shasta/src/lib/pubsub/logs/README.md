@@ -22,11 +22,11 @@ Data was compiled from 40 `instr*.json` files across multiple load test nodes an
 
 ## Analysis & Visualizations
 ### Histogram of Differences
-![Histogram of Differences](histogram_of_differences.png)
+![Histogram of Differences](separate_histogram_of_differences.png)
 This histogram shows the distribution of the time differences (in milliseconds) between `afterSubscribeXRead` and `beforePublish`. The red dashed lines indicate the 25th, 50th, 75th, and 95th percentiles.
 
 ### Events Per Second
-![Events Per Second](events_per_second.png)
+![Events Per Second](separate_events_per_second.png)
 This time-series plot shows the number of events processed in each 1-second interval.
 
 ## Interpretation & Recommendations
