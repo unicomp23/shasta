@@ -10,10 +10,10 @@
 6. [Conclusion](#conclusion)
 
 ## Introduction
-This report provides an analysis of the load test conducted on a Kafka-based system. The test involved multiple nodes, each with 96 publishers, 96 subscribers, and 3 consumers.
+This report provides an analysis of the load test conducted on a Kafka-based system. The test involved 48 nodes, each with 96 producers, and 3 consumers.
 
 ## System Configuration
-- **Load Test Nodes**: AWS EC2 `m5.large` instances
+- **Load Test Nodes**: 48 AWS EC2 `m5.large` instances
 - **Kafka Brokers**: AWS EC2 `m5.4xlarge` instances
 - **Kafka Topic Partitions**: 256
 
@@ -22,11 +22,14 @@ Data was compiled from 40 `instr*.json` files across multiple load test nodes an
 
 ## Analysis & Visualizations
 ### Histogram of Differences
-![Histogram of Differences](separate_histogram_of_differences.png)
+![95th](image-4.png)
+
+![0-50ms](image-2.png)
+
 This histogram shows the distribution of the time differences (in milliseconds) between `afterSubscribeXRead` and `beforePublish`. The red dashed lines indicate the 25th, 50th, 75th, and 95th percentiles.
 
 ### Events Per Second
-![Events Per Second](separate_events_per_second.png)
+![Event rates](image-3.png)
 This time-series plot shows the number of events processed in each 1-second interval.
 
 ## Interpretation & Recommendations
@@ -38,10 +41,4 @@ This time-series plot shows the number of events processed in each 1-second inte
 The load test revealed valuable insights into the system's performance and potential bottlenecks. Further tuning and monitoring are recommended for optimal results.
 
 ## Appendix
-The below load test was executed perfectly with no issues encountered.
-
-![95th](image-4.png)
-
-![0-50ms](image-2.png)
-
-![Event rates](image-3.png)
+The load test was executed perfectly with no issues encountered. Each producer generated 32 events, spaced by 1 second.
