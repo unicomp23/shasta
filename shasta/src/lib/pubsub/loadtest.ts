@@ -10,6 +10,7 @@ import {Worker} from "./worker";
 import {expect} from "chai";
 import {Instrumentation} from "./instrument";
 import {envVarsSync} from "../../automation";
+import {env} from "process";
 
 export const pairCount = 96; // Number of publisher/subscriber pairs
 export const messageCount = 32; // Number of published messages per pair
@@ -252,3 +253,31 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
 
     return sanityCountSub;
 }
+
+export const numCPUs = 1;
+
+export async function main() {
+    if(env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
+    env.REDIS_HOST = env.MEMORY_DB_ENDPOINT_ADDRESS;
+    env.REDIS_PORT = "6379";
+    if(env.BOOTSTRAP_BROKERS && env.BOOTSTRAP_BROKERS.length > 0)
+        env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
+
+    /*** todo await deleteTestTopics();
+    const cleaner = new RedisKeyCleanup();
+    cleaner.deleteAllKeys()
+        .then(() => cleaner.disconnect())
+        .catch(console.error); ***/
+
+    console.log(`numCPUs: ${numCPUs}`);
+    const randomTag = "020"; // todo crypto.randomUUID();
+    const kafkaTopicLoad = `test_topic_load-${randomTag}`;
+    const groupId = `test_group_id-${randomTag}`;
+
+    const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
+    expect(sanityCountSub).to.equal(pairCount * messageCount);
+}
+
+main().then(() => {
+    console.log('exit main');
+});
