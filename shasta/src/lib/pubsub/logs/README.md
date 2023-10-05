@@ -40,7 +40,7 @@ The load test revealed valuable insights into the system's performance and poten
 ## Appendix
 The below load test was executed perfectly with no issues encountered.
 
-![95th](image-1.png)
+![95th](image-4.png)
 
 ![0-50ms](image-2.png)
 
