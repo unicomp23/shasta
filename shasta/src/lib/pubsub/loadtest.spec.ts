@@ -25,10 +25,10 @@ describe("End-to-End Load Test", () => {
             .catch(console.error); ***/
 
         console.log(`numCPUs: ${numCPUs}`);
-        const kafkaTopicLoad = process.env.KAFKA_TOPIC_LOAD;
-        if (kafkaTopicLoad === undefined) throw new Error("KAFKA_TOPIC_LOAD environment variable is not set");
-        const groupId = process.env.KAFKA_GROUP_ID;
-        if (groupId === undefined) throw new Error("KAFKA_GROUP_ID environment variable is not set");
+        const randomTag = "020"; // todo crypto.randomUUID();
+        const kafkaTopicLoad = `test_topic_load-${randomTag}`;
+        const groupId = `test_group_id-${randomTag}`;
+
         const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
         expect(sanityCountSub).to.equal(pairCount * messageCount);
 
