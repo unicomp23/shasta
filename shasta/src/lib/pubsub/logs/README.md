@@ -36,3 +36,12 @@ This time-series plot shows the number of events processed in each 1-second inte
 
 ## Conclusion
 The load test revealed valuable insights into the system's performance and potential bottlenecks. Further tuning and monitoring are recommended for optimal results.
+
+## Appendix
+The below load test was executed perfectly with no issues encountered.
+
+![95th](image-1.png)
+
+![0-50ms](image-2.png)
+
+![Event rates](image-3.png)
