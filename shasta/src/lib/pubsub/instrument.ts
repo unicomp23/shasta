@@ -1,7 +1,7 @@
 import {TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
 import {slog} from "../logger/slog";
 import {messageCount, pairCount} from "./loadtest";
-import {numCPUs} from "./loadtest.spec";
+import {numCPUs} from "./loadtest";
 import * as os from 'os';
 import * as Redis from 'ioredis';
 import assert from 'assert';
