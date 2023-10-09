@@ -216,7 +216,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             });
             testValTracker.add(testVal);
             // todo, await delay(50 * numCPUs);
-            await delay(1000);
+            await delay(4000);
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
 
             //tagDataArray.push(tagData);
