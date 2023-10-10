@@ -11,6 +11,7 @@ import {expect} from "chai";
 import {Instrumentation} from "./instrument";
 import {envVarsSync} from "../../automation";
 import {env} from "process";
+import { RedisKeyCleanup } from './redisKeyCleanup';
 
 export const pairCount = 96; // Number of publisher/subscriber pairs
 export const messageCount = 32; // Number of published messages per pair
