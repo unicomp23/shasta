@@ -271,7 +271,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "025"; // todo crypto.randomUUID();
+    const randomTag = "026"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
