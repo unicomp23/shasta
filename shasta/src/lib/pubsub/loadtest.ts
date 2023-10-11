@@ -19,7 +19,7 @@ export const messageCount = 32; // Number of published messages per pair
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const workerModulo = 32;
+const workerModulo = 96;
 
 const pairs = new Array<TestRef>();
 
@@ -73,7 +73,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
     try {
         const topicConfig: ITopicConfig = {
             topic: kafkaTopicLoad,
-            numPartitions: 256,
+            numPartitions: 32,
         };
         await admin.createTopics({
             topics: [topicConfig],
