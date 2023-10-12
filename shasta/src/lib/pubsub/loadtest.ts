@@ -86,6 +86,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
 
         while (!topicExists) {
             try {
+                await delay(3000);
                 const metadata = await admin.fetchTopicMetadata({topics: [kafkaTopicLoad]});
                 if (findTopicInMetadata(kafkaTopicLoad, metadata.topics)) {
                     topicExists = true;
@@ -94,8 +95,6 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
                     if (Date.now() - startTime > timeoutMs) {
                         throw new Error(`Timed out waiting for topic '${kafkaTopicLoad}' to be created.`);
                     }
-                    // Otherwise, wait 500 ms before the next check.
-                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
             } catch(error) {
                 console.log(error);
@@ -275,7 +274,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "034"; // todo crypto.randomUUID();
+    const randomTag = "035"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
