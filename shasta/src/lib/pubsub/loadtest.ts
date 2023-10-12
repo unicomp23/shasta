@@ -90,6 +90,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
                 const metadata = await admin.fetchTopicMetadata({topics: [kafkaTopicLoad]});
                 if (findTopicInMetadata(kafkaTopicLoad, metadata.topics)) {
                     topicExists = true;
+                    break;
                 } else {
                     // If the timeout is hit, throw an error.
                     if (Date.now() - startTime > timeoutMs) {
@@ -274,7 +275,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "035"; // todo crypto.randomUUID();
+    const randomTag = "036"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
