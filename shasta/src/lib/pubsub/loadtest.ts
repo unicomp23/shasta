@@ -19,7 +19,7 @@ export const messageCount = 32; // Number of published messages per pair
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const workerModulo = 128;
+const workerModulo = 16;
 
 const pairs = new Array<TestRef>();
 
@@ -73,7 +73,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
     try {
         const topicConfig: ITopicConfig = {
             topic: kafkaTopicLoad,
-            numPartitions: 32,
+            numPartitions: 128,
         };
         await admin.createTopics({
             topics: [topicConfig],
@@ -275,7 +275,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "033"; // todo crypto.randomUUID();
+    const randomTag = "034"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
