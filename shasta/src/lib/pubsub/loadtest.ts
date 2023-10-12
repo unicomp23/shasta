@@ -85,16 +85,20 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
         const startTime = Date.now();
 
         while (!topicExists) {
-            const metadata = await admin.fetchTopicMetadata({topics: [kafkaTopicLoad]});
-            if (findTopicInMetadata(kafkaTopicLoad, metadata.topics)) {
-                topicExists = true;
-            } else {
-                // If the timeout is hit, throw an error.
-                if (Date.now() - startTime > timeoutMs) {
-                    throw new Error(`Timed out waiting for topic '${kafkaTopicLoad}' to be created.`);
+            try {
+                const metadata = await admin.fetchTopicMetadata({topics: [kafkaTopicLoad]});
+                if (findTopicInMetadata(kafkaTopicLoad, metadata.topics)) {
+                    topicExists = true;
+                } else {
+                    // If the timeout is hit, throw an error.
+                    if (Date.now() - startTime > timeoutMs) {
+                        throw new Error(`Timed out waiting for topic '${kafkaTopicLoad}' to be created.`);
+                    }
+                    // Otherwise, wait 500 ms before the next check.
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
-                // Otherwise, wait 500 ms before the next check.
-                await new Promise(resolve => setTimeout(resolve, 500));
+            } catch(error) {
+                console.log(error);
             }
         }
     } finally {
