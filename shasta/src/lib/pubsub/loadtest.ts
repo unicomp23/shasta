@@ -19,7 +19,7 @@ export const messageCount = 32; // Number of published messages per pair
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const workerModulo = 16;
+const workerModulo = 8;
 
 const pairs = new Array<TestRef>();
 
@@ -221,7 +221,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             });
             testValTracker.add(testVal);
             // todo, await delay(50 * numCPUs);
-            await delay(4000);
+            await delay(1000);
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
 
             //tagDataArray.push(tagData);
@@ -275,7 +275,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "036"; // todo crypto.randomUUID();
+    const randomTag = "037"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
