@@ -14,7 +14,7 @@ import {env} from "process";
 import { RedisKeyCleanup } from './redisKeyCleanup';
 
 export const pairCount = 128; // Number of publisher/subscriber pairs
-export const messageCount = 32; // Number of published messages per pair
+export const messageCount = 64; // Number of published messages per pair
 
 let sanityCountSub = 0;
 let sanityCountPub = 0;
@@ -275,11 +275,12 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "038"; // todo crypto.randomUUID();
+    const randomTag = "039"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
     const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
+    await delay(10000);
     expect(sanityCountSub).to.equal(pairCount * messageCount);
 }
 
