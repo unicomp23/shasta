@@ -221,7 +221,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             });
             testValTracker.add(testVal);
             // todo, await delay(50 * numCPUs);
-            await delay(1000);
+            await delay(250);
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
 
             //tagDataArray.push(tagData);
@@ -275,7 +275,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "049"; // todo crypto.randomUUID();
+    const randomTag = "050"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
