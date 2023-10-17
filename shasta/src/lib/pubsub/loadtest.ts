@@ -13,7 +13,7 @@ import {envVarsSync} from "../../automation";
 import {env} from "process";
 import { RedisKeyCleanup } from './redisKeyCleanup';
 
-export const pairCount = 8; //32; // Number of publisher/subscriber pairs
+export const pairCount = 32; // Number of publisher/subscriber pairs
 export const messageCount = 64; // Number of published messages per pair
 
 let sanityCountSub = 0;
@@ -221,7 +221,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             });
             testValTracker.add(testVal);
             // todo, await delay(50 * numCPUs);
-            await delay(64);
+            await delay(1000);
             Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
 
             //tagDataArray.push(tagData);
@@ -275,7 +275,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "051"; // todo crypto.randomUUID();
+    const randomTag = "052"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
