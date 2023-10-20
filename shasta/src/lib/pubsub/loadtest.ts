@@ -12,6 +12,7 @@ import {Instrumentation} from "./instrument";
 import {envVarsSync} from "../../automation";
 import {env} from "process";
 import { RedisKeyCleanup } from './redisKeyCleanup';
+import { getServerlessBootstrapBrokers } from './msk.serverless.loadtest';
 
 export const pairCount = 8; // Number of publisher/subscriber pairs
 export const messageCount = 64; // Number of published messages per pair
@@ -262,6 +263,16 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
 export const numCPUs = 1;
 
 export async function main() {
+    const useMskServerless = process.argv[2] === 'msk-serverless';
+
+    if(useMskServerless) {
+        // Use MSK Serverless bootstrap brokers
+        env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
+    } else {
+        // Use MSK Provisioned bootstrap brokers
+        env.BOOTSTRAP_BROKERS = env.MSK_PROVISIONED_BROKERS;
+    }
+
     if(env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
     env.REDIS_HOST = env.MEMORY_DB_ENDPOINT_ADDRESS;
     env.REDIS_PORT = "6379";
