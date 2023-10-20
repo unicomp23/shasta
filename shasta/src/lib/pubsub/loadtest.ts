@@ -268,9 +268,6 @@ export async function main() {
     if(useMskServerless) {
         // Use MSK Serverless bootstrap brokers
         env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
-    } else {
-        // Use MSK Provisioned bootstrap brokers
-        env.BOOTSTRAP_BROKERS = env.MSK_PROVISIONED_BROKERS;
     }
 
     if(env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
