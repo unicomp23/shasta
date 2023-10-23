@@ -99,7 +99,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
                     }
                 }
             } catch(error) {
-                console.log(error);
+                console.error('An error occurred while waiting for the topic to be created:', error);
             }
         }
     } finally {
@@ -173,72 +173,76 @@ function findTopicInMetadata(topic: string, metadata: ITopicMetadata[]): boolean
 
 export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) {
     const runTestTasks = pairs.map(async (testRef) => {
-        if (testRef.tagDataObjectIdentifier.name === "" || testRef.tagDataObjectIdentifier.name === undefined) {
-            throw new Error("TagDataObjectIdentifier name is empty");
-        }
+        try {
+            if (testRef.tagDataObjectIdentifier.name === "" || testRef.tagDataObjectIdentifier.name === undefined) {
+                throw new Error("TagDataObjectIdentifier name is empty");
+            }
 
-        const uuidSubStream = crypto.randomUUID();
-        const testValFormat = (uuid: string, counter: number) => `Load test Value: ${uuid}, ${counter}`;
-        const testValTracker = new Set<string>();
+            const uuidSubStream = crypto.randomUUID();
+            const testValFormat = (uuid: string, counter: number) => `Load test Value: ${uuid}, ${counter}`;
+            const testValTracker = new Set<string>();
 
-        if(testRef.worker) await testRef.worker.groupJoined();
-        const messageQueue = await testRef.subscriber?.stream();
+            if(testRef.worker) await testRef.worker.groupJoined();
+            const messageQueue = await testRef.subscriber?.stream();
 
-        // consume
-        const doneConsuming = new Deferred<boolean>();
-        const consumeTask = async() => {
-            if(messageQueue) {
-                const snapshot = await messageQueue.get();
-                expect(snapshot.snapshot).to.not.be.undefined;
+            // consume
+            const doneConsuming = new Deferred<boolean>();
+            const consumeTask = async() => {
+                if(messageQueue) {
+                    const snapshot = await messageQueue.get();
+                    expect(snapshot.snapshot).to.not.be.undefined;
 
-                for (; ;) {
-                    const receivedMsg = await messageQueue.get();
-                    expect(receivedMsg.delta).to.not.be.undefined;
-                    if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
-                        testValTracker.delete(receivedMsg.delta?.data);
+                    for (; ;) {
+                        const receivedMsg = await messageQueue.get();
+                        expect(receivedMsg.delta).to.not.be.undefined;
+                        if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
+                            testValTracker.delete(receivedMsg.delta?.data);
 
-                        sanityCountSub++;
-                        if (sanityCountSub % 1000 === 0)
-                            slog.info("sanityCountSub", {sanityCountSub});
-                    }
-                    if (testValTracker.size === 0) {
-                        doneConsuming.resolve(true);
-                        break;
+                            sanityCountSub++;
+                            if (sanityCountSub % 1000 === 0)
+                                slog.info("sanityCountSub", {sanityCountSub});
+                        }
+                        if (testValTracker.size === 0) {
+                            doneConsuming.resolve(true);
+                            break;
+                        }
                     }
                 }
+            };
+            const notUsed = consumeTask();
+
+            // produce
+            const tagDataArray = new Array<TagData>();
+            for (let i = 0; i < m; i++) {
+                const testVal = testValFormat(uuidSubStream, i);
+                const tagDataObjectIdentifierNamed = testRef.tagDataObjectIdentifier.clone();
+                tagDataObjectIdentifierNamed.name = `name-${crypto.randomUUID()}`;
+                const tagData = new TagData({
+                    identifier: tagDataObjectIdentifierNamed,
+                    data: testVal,
+                });
+                testValTracker.add(testVal);
+                // todo, await delay(50 * numCPUs);
+                await delay(1000);
+                Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
+
+                //tagDataArray.push(tagData);
+                await testRef.publisher?.send(tagData);
+                Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = Date.now();
+                // todo no batching
+
+                sanityCountPub++;
+                if(sanityCountPub % 1000 === 0)
+                    slog.info("sanityCountPub", { sanityCountPub });
             }
-        };
-        const notUsed = consumeTask();
+            //await testRef.publisher.sendBatch(tagDataArray); todo no batching
 
-        // produce
-        const tagDataArray = new Array<TagData>();
-        for (let i = 0; i < m; i++) {
-            const testVal = testValFormat(uuidSubStream, i);
-            const tagDataObjectIdentifierNamed = testRef.tagDataObjectIdentifier.clone();
-            tagDataObjectIdentifierNamed.name = `name-${crypto.randomUUID()}`;
-            const tagData = new TagData({
-                identifier: tagDataObjectIdentifierNamed,
-                data: testVal,
-            });
-            testValTracker.add(testVal);
-            // todo, await delay(50 * numCPUs);
-            await delay(1000);
-            Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
+            await doneConsuming.promise;
 
-            //tagDataArray.push(tagData);
-            await testRef.publisher?.send(tagData);
-            Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = Date.now();
-            // todo no batching
-
-            sanityCountPub++;
-            if(sanityCountPub % 1000 === 0)
-                slog.info("sanityCountPub", { sanityCountPub });
+            slog.info("runLoadTest", { iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0) });
+        } catch (error) {
+            console.error('An error occurred while running the test task:', error);
         }
-        //await testRef.publisher.sendBatch(tagDataArray); todo no batching
-
-        await doneConsuming.promise;
-
-        slog.info("runLoadTest", { iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0) });
     });
 
     await Promise.all(runTestTasks);
@@ -287,11 +291,17 @@ export async function main() {
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
-    const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
-    await delay(10000);
-    expect(sanityCountSub).to.equal(pairCount * messageCount);
+    try {
+        const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
+        await delay(10000);
+        expect(sanityCountSub).to.equal(pairCount * messageCount);
+    } catch (error) {
+        console.error('An error occurred:', error);
+    }
 }
 
 main().then(() => {
     console.log('exit main');
+}).catch((error) => {
+    console.error('An error occurred:', error);
 });
