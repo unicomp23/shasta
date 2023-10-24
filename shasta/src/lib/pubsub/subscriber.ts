@@ -54,6 +54,7 @@ class Subscriber {
         try {
             // Get the TagDataSnapshot by iterating hgetall() and the snapshotSeqNo via get()
             const redisSnapshotData = await this.redisClient.hgetall(this.redisSnapshotKey);
+            Instrumentation.instance.getTimestamps(this.tagDataObjIdentifier).afterHGetAll = Date.now();
             const snapshotSeqNo = redisSnapshotData['seqno'];
             delete redisSnapshotData['seqno'];
             if (snapshotSeqNo === null) {

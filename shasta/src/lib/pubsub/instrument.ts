@@ -14,6 +14,7 @@ interface ITimestamps {
     afterConsume: number;
     afterWorkerXAdd: number;
     afterWorkerHSet: number;
+    afterHGetAll: number;
     afterSubscribeXRead: number;
 }
 
@@ -23,6 +24,7 @@ export class Timestamps implements ITimestamps {
     public afterConsume: number = 0;
     public afterWorkerXAdd: number = 0;
     public afterWorkerHSet: number = 0;
+    public afterHGetAll: number = 0;
     public afterSubscribeXRead: number = 0;
 }
 
