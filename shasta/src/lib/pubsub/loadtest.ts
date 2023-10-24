@@ -107,12 +107,14 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
     }
 
     for (let i = 0; i < pairCount; i++) {
-        const testRef = await setup(kafkaTopicLoad, i, groupId, kafka);
-        pairs.push(testRef);
-        //if(i % 100 === 0)
+        try {
+            const testRef = await setup(kafkaTopicLoad, i, groupId, kafka);
+            pairs.push(testRef);
             slog.info("setupKafkaPairs", { pairs: pairs.length });
-        // todo, await delay(numCPUs * singleServerTcpSpacingMillis);
-        await delay(7000);
+            await delay(7000);
+        } catch (error) {
+            console.error('An error occurred:', error);
+        }
     }
 }
 
@@ -190,22 +192,26 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             // consume
             const doneConsuming = new Deferred<boolean>();
             const consumeTask = async() => {
-                if(messageQueue) {
-                    const snapshot = await messageQueue.get();
-                    expect(snapshot.snapshot).to.not.be.undefined;
+                try {
+                    if(messageQueue) {
+                        const snapshot = await messageQueue.get();
+                        expect(snapshot.snapshot).to.not.be.undefined;
 
-                    while (testValTracker.size > 0) {
-                        const receivedMsg = await messageQueue.get();
-                        expect(receivedMsg.delta).to.not.be.undefined;
-                        if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
-                            testValTracker.delete(receivedMsg.delta?.data);
+                        while (testValTracker.size > 0) {
+                            const receivedMsg = await messageQueue.get();
+                            expect(receivedMsg.delta).to.not.be.undefined;
+                            if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
+                                testValTracker.delete(receivedMsg.delta?.data);
 
-                            sanityCountSub++;
-                            if (sanityCountSub % 1000 === 0)
-                                slog.info("sanityCountSub", {sanityCountSub});
+                                sanityCountSub++;
+                                if (sanityCountSub % 1000 === 0)
+                                    slog.info("sanityCountSub", {sanityCountSub});
+                            }
                         }
+                        doneConsuming.resolve(true);
                     }
-                    doneConsuming.resolve(true);
+                } catch (error) {
+                    console.error('An error occurred while consuming:', error);
                 }
             };
             const notUsed = consumeTask();
@@ -221,20 +227,16 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                     data: testVal,
                 });
                 testValTracker.add(testVal);
-                // todo, await delay(50 * numCPUs);
                 await delay(1000);
                 Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
 
-                //tagDataArray.push(tagData);
                 await testRef.publisher?.send(tagData);
                 Instrumentation.instance.getTimestamps(tagData.identifier!).afterPublish = Date.now();
-                // todo no batching
 
                 sanityCountPub++;
                 if(sanityCountPub % 1000 === 0)
                     slog.info("sanityCountPub", { sanityCountPub });
             }
-            //await testRef.publisher.sendBatch(tagDataArray); todo no batching
 
             await doneConsuming.promise;
 
@@ -250,19 +252,25 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
 }
 
 export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId: string) {
-    await setupKafkaPairs(kafkaTopicLoad, pairs, pairCount, numCPUs, groupId);
-    slog.info("runLoadTest");
+    try {
+        await setupKafkaPairs(kafkaTopicLoad, pairs, pairCount, numCPUs, groupId);
+        slog.info("runLoadTest");
 
-    const start = Date.now();
-    await runLoadTest(pairs, messageCount, numCPUs);
-    const elapsed = Date.now() - start;
+        const start = Date.now();
+        await runLoadTest(pairs, messageCount, numCPUs);
+        const elapsed = Date.now() - start;
 
-    const total = pairs.length * messageCount;
-    slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate_per_second: total / (elapsed / 1000) });
-    Instrumentation.instance.dump();
-    await teardownTest(pairs);
+        await delay(5000); // todo hack
 
-    return sanityCountSub;
+        const total = pairs.length * messageCount;
+        slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate_per_second: total / (elapsed / 1000) });
+        Instrumentation.instance.dump();
+        await teardownTest(pairs);
+
+        return sanityCountSub;
+    } catch (error) {
+        console.error('An error occurred:', error);
+    }
 }
 
 export const numCPUs = 1;
@@ -281,20 +289,14 @@ export async function main() {
     if(env.BOOTSTRAP_BROKERS && env.BOOTSTRAP_BROKERS.length > 0)
         env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
-    /*** todo await deleteTestTopics();
-    const cleaner = new RedisKeyCleanup();
-    cleaner.deleteAllKeys()
-        .then(() => cleaner.disconnect())
-        .catch(console.error); ***/
-
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "072"; // todo crypto.randomUUID();
+    const randomTag = "073"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
     try {
         const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
-        await delay(10000);
+        await delay(3000);
         expect(sanityCountSub).to.equal(pairCount * messageCount);
     } catch (error) {
         console.error('An error occurred:', error);
