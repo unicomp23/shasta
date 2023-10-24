@@ -123,7 +123,7 @@ export async function teardownTest(pairs: TestRef[]) {
         await subscriber?.disconnect();
     });
 
-    await Promise.all(tasks);
+    await Promise.allSettled(tasks);
 }
 
 async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: Kafka): Promise<TestRef> {
@@ -253,7 +253,6 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
     await runLoadTest(pairs, messageCount, numCPUs);
     const elapsed = Date.now() - start;
 
-    await delay(5000);
     const total = pairs.length * messageCount;
     slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate_per_second: total / (elapsed / 1000) });
     Instrumentation.instance.dump();
@@ -285,7 +284,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "070"; // todo crypto.randomUUID();
+    const randomTag = "071"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
