@@ -51,62 +51,66 @@ class Subscriber {
     public async stream(): Promise<AsyncQueue<Message>> {
         const queue = new AsyncQueue<Message>();
 
-        // Get the TagDataSnapshot by iterating hgetall() and the snapshotSeqNo via get()
-        const redisSnapshotData = await this.redisClient.hgetall(this.redisSnapshotKey);
-        const snapshotSeqNo = redisSnapshotData['seqno'];
-        delete redisSnapshotData['seqno'];
-        if (snapshotSeqNo === null) {
-            throw new Error("Snapshot sequence number is null");
-        }
-        const snapshot = new TagDataSnapshot({sequenceNumber: snapshotSeqNo});
-        for (const [key, val] of Object.entries(redisSnapshotData)) {
-            slog.info('subscriber.stream.snapshot: ', {
-                key,
-                val
-            });
-            snapshot.snapshot[key] = TagDataEnvelope.fromBinary(Buffer.from(val, "base64"));
-        }
-        queue.put({snapshot});
+        try {
+            // Get the TagDataSnapshot by iterating hgetall() and the snapshotSeqNo via get()
+            const redisSnapshotData = await this.redisClient.hgetall(this.redisSnapshotKey);
+            const snapshotSeqNo = redisSnapshotData['seqno'];
+            delete redisSnapshotData['seqno'];
+            if (snapshotSeqNo === null) {
+                throw new Error("Snapshot sequence number is null");
+            }
+            const snapshot = new TagDataSnapshot({sequenceNumber: snapshotSeqNo});
+            for (const [key, val] of Object.entries(redisSnapshotData)) {
+                slog.info('subscriber.stream.snapshot: ', {
+                    key,
+                    val
+                });
+                snapshot.snapshot[key] = TagDataEnvelope.fromBinary(Buffer.from(val, "base64"));
+            }
+            queue.put({snapshot});
 
-        // Set up the XREAD() loop to get the delta messages
-        const readStreamMessages = async (lastSeqNo: string) => {
-            if (this.redisClient.status == "ready") {
-                try {
-                    const streamMessages = await this.redisClient.xread(
-                        'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisStreamKey, lastSeqNo
-                    );
-                    //slog.info('xread: ', {streamMessages});
+            // Set up the XREAD() loop to get the delta messages
+            const readStreamMessages = async (lastSeqNo: string) => {
+                if (this.redisClient.status == "ready") {
+                    try {
+                        const streamMessages = await this.redisClient.xread(
+                            'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisStreamKey, lastSeqNo
+                        );
+                        //slog.info('xread: ', {streamMessages});
 
-                    if (streamMessages) {
-                        for (const [, messages] of streamMessages) {
-                            for (const [seqNo, messageData] of messages) {
-                                /*slog.info('xread.2: ', {
-                                    seqNo,
-                                    messageData
-                                });*/
-                                const [, value] = messageData;
-                                const delta = TagData.fromBinary(Buffer.from(value, 'base64'));
-                                Instrumentation.instance.getTimestamps(delta.identifier!).afterSubscribeXRead = Date.now();
-                                queue.put({delta});
+                        if (streamMessages) {
+                            for (const [, messages] of streamMessages) {
+                                for (const [seqNo, messageData] of messages) {
+                                    /*slog.info('xread.2: ', {
+                                        seqNo,
+                                        messageData
+                                    });*/
+                                    const [, value] = messageData;
+                                    const delta = TagData.fromBinary(Buffer.from(value, 'base64'));
+                                    Instrumentation.instance.getTimestamps(delta.identifier!).afterSubscribeXRead = Date.now();
+                                    queue.put({delta});
 
-                                // Update the last sequence number for the next XREAD() call
-                                lastSeqNo = seqNo;
+                                    // Update the last sequence number for the next XREAD() call
+                                    lastSeqNo = seqNo;
+                                }
                             }
                         }
+
+                        // Recursive call to keep reading from the stream
+                        readStreamMessages(lastSeqNo);
+                    } catch (e: any) {
+                        if (e.message.startsWith('Connection is closed.'))
+                            return;
+                        throw e;
                     }
-
-                    // Recursive call to keep reading from the stream
-                    readStreamMessages(lastSeqNo);
-                } catch (e: any) {
-                    if (e.message.startsWith('Connection is closed.'))
-                        return;
-                    throw e;
                 }
-            }
-        };
+            };
 
-        // Call readStreamMessages with the snapshotSeqNo or '0-0' if it doesn't exist
-        readStreamMessages(snapshotSeqNo || '0-0');
+            // Call readStreamMessages with the snapshotSeqNo or '0-0' if it doesn't exist
+            readStreamMessages(snapshotSeqNo || '0-0');
+        } catch (error) {
+            slog.error('Error during Redis operation:', error);
+        }
 
         return queue;
     }

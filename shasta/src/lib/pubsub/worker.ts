@@ -126,28 +126,32 @@ class Worker {
                         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
                         const commonRedisStreamKey = `{${redisSnapshotKey}}:strm:`;
 
-                        const snapshotSeqNo = await this.redisClient.xadd(commonRedisStreamKey, "*", "delta", Buffer.from(tagData.toBinary()).toString("base64"));
-                        if (snapshotSeqNo === null) {
-                            slog.error(`Missing redis seqno: `, {snapshotSeqNo});
-                            return;
-                        }
-                        Instrumentation.instance.getTimestamps(tagData.identifier!).afterWorkerXAdd = Date.now();
-                        const tagDataEnvelope = new TagDataEnvelope({
-                            tagData,
-                            sequenceNumber: snapshotSeqNo
-                        });
-                        if (!(snapshotSeqNo && redisDeltaKey)) {
-                            slog.error(`Failed to store the snapshot in Redis: `, {
-                                snapshotSeqNo,
-                                redisDeltaKey,
-                                tagData
+                        try {
+                            const snapshotSeqNo = await this.redisClient.xadd(commonRedisStreamKey, "*", "delta", Buffer.from(tagData.toBinary()).toString("base64"));
+                            if (snapshotSeqNo === null) {
+                                slog.error(`Missing redis seqno: `, {snapshotSeqNo});
+                                return;
+                            }
+                            Instrumentation.instance.getTimestamps(tagData.identifier!).afterWorkerXAdd = Date.now();
+                            const tagDataEnvelope = new TagDataEnvelope({
+                                tagData,
+                                sequenceNumber: snapshotSeqNo
                             });
-                            return;
+                            if (!(snapshotSeqNo && redisDeltaKey)) {
+                                slog.error(`Failed to store the snapshot in Redis: `, {
+                                    snapshotSeqNo,
+                                    redisDeltaKey,
+                                    tagData
+                                });
+                                return;
+                            }
+                            await this.redisClient.hset(commonRedisSnapshotKey,
+                                redisDeltaKey, Buffer.from(tagDataEnvelope.toBinary()).toString("base64"),
+                                "seqno", snapshotSeqNo);
+                            Instrumentation.instance.getTimestamps(tagData.identifier!).afterWorkerHSet = Date.now();
+                        } catch (error) {
+                            slog.error('Error during Redis operation:', error);
                         }
-                        await this.redisClient.hset(commonRedisSnapshotKey,
-                            redisDeltaKey, Buffer.from(tagDataEnvelope.toBinary()).toString("base64"),
-                            "seqno", snapshotSeqNo);
-                        Instrumentation.instance.getTimestamps(tagData.identifier!).afterWorkerHSet = Date.now();
 
                         /*slog.info(`Worker: `, {
                             snapshotSeqNo,
