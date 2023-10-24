@@ -192,7 +192,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                     const snapshot = await messageQueue.get();
                     expect(snapshot.snapshot).to.not.be.undefined;
 
-                    for (; ;) {
+                    while (testValTracker.size > 0) {
                         const receivedMsg = await messageQueue.get();
                         expect(receivedMsg.delta).to.not.be.undefined;
                         if (receivedMsg.delta?.data && testValTracker.has(receivedMsg.delta?.data)) {
@@ -202,11 +202,8 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                             if (sanityCountSub % 1000 === 0)
                                 slog.info("sanityCountSub", {sanityCountSub});
                         }
-                        if (testValTracker.size === 0) {
-                            doneConsuming.resolve(true);
-                            break;
-                        }
                     }
+                    doneConsuming.resolve(true);
                 }
             };
             const notUsed = consumeTask();
