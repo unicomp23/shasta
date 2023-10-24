@@ -123,7 +123,9 @@ export async function teardownTest(pairs: TestRef[]) {
         await subscriber?.disconnect();
     });
 
-    await Promise.allSettled(tasks);
+    await Promise.allSettled(tasks).catch((error) => {
+        console.error('An error occurred while tearing down the test:', error);
+    });
 }
 
 async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: Kafka): Promise<TestRef> {
@@ -242,7 +244,9 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
         }
     });
 
-    await Promise.all(runTestTasks);
+    await Promise.allSettled(runTestTasks).catch((error) => {
+        console.error('An error occurred while running the test tasks:', error);
+    });
 }
 
 export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId: string) {
@@ -284,7 +288,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "071"; // todo crypto.randomUUID();
+    const randomTag = "072"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
