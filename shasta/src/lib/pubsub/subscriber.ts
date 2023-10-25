@@ -53,6 +53,7 @@ class Subscriber {
 
         try {
             // Get the TagDataSnapshot by iterating hgetall() and the snapshotSeqNo via get()
+            Instrumentation.instance.getTimestamps(this.tagDataObjIdentifier).beforeHGetAll = Date.now();
             const redisSnapshotData = await this.redisClient.hgetall(this.redisSnapshotKey);
             Instrumentation.instance.getTimestamps(this.tagDataObjIdentifier).afterHGetAll = Date.now();
             const snapshotSeqNo = redisSnapshotData['seqno'];
@@ -87,6 +88,7 @@ class Subscriber {
                                         messageData
                                     });*/
                                     const [, value] = messageData;
+                                    Instrumentation.instance.getTimestamps(delta.identifier!).beforeSubscribeXRead = Date.now();
                                     const delta = TagData.fromBinary(Buffer.from(value, 'base64'));
                                     Instrumentation.instance.getTimestamps(delta.identifier!).afterSubscribeXRead = Date.now();
                                     queue.put({delta});
