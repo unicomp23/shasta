@@ -182,10 +182,15 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
 
             const uuidSubStream = crypto.randomUUID();
             const testValFormat = (uuid: string, counter: number) => `Load test Value: ${uuid}, ${counter}`;
-            const testValTracker = new Set<string>();
 
             if(testRef.worker) await testRef.worker.groupJoined();
             const messageQueue = await testRef.subscriber?.stream();
+
+            const testValTracker = new Set<string>();
+            for (let i = 0; i < m; i++) {
+                const testVal = testValFormat(uuidSubStream, i);
+                testValTracker.add(testVal);
+            } // pre-populate to avoid race
 
             // consume
             const doneConsuming = new Deferred<boolean>();
@@ -208,7 +213,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                     doneConsuming.resolve(true);
                 }
             };
-            const notUsed = consumeTask();
+            const consumeTaskDone = consumeTask();
 
             // produce
             const tagDataArray = new Array<TagData>();
@@ -220,7 +225,6 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                     identifier: tagDataObjectIdentifierNamed,
                     data: testVal,
                 });
-                testValTracker.add(testVal);
                 // todo, await delay(50 * numCPUs);
                 await delay(1000);
                 Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
@@ -237,6 +241,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             //await testRef.publisher.sendBatch(tagDataArray); todo no batching
 
             await doneConsuming.promise;
+            await consumeTaskDone;
 
             slog.info("runLoadTest", { iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0) });
         } catch (error) {
@@ -288,7 +293,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "084"; // todo crypto.randomUUID();
+    const randomTag = "085"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
