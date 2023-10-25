@@ -127,7 +127,6 @@ class Worker {
                         const commonRedisStreamKey = `{${redisSnapshotKey}}:strm:`;
 
                         try {
-                            Instrumentation.instance.getTimestamps(tagData.identifier!).beforeWorkerXAdd = Date.now();
                             const snapshotSeqNo = await this.redisClient.xadd(commonRedisStreamKey, "*", "delta", Buffer.from(tagData.toBinary()).toString("base64"));
                             if (snapshotSeqNo === null) {
                                 slog.error(`Missing redis seqno: `, {snapshotSeqNo});
@@ -146,7 +145,6 @@ class Worker {
                                 });
                                 return;
                             }
-                            Instrumentation.instance.getTimestamps(tagData.identifier!).beforeWorkerHSet = Date.now();
                             await this.redisClient.hset(commonRedisSnapshotKey,
                                 redisDeltaKey, Buffer.from(tagDataEnvelope.toBinary()).toString("base64"),
                                 "seqno", snapshotSeqNo);

@@ -12,13 +12,9 @@ interface ITimestamps {
     beforePublish: number;
     afterPublish: number;
     afterConsume: number;
-    beforeWorkerXAdd: number;
     afterWorkerXAdd: number;
-    beforeWorkerHSet: number;
     afterWorkerHSet: number;
-    beforeHGetAll: number;
     afterHGetAll: number;
-    beforeSubscribeXRead: number;
     afterSubscribeXRead: number;
 }
 
@@ -26,13 +22,9 @@ export class Timestamps implements ITimestamps {
     public beforePublish: number = 0;
     public afterPublish: number = 0;
     public afterConsume: number = 0;
-    public beforeWorkerXAdd: number = 0;
     public afterWorkerXAdd: number = 0;
-    public beforeWorkerHSet: number = 0;
     public afterWorkerHSet: number = 0;
-    public beforeHGetAll: number = 0;
     public afterHGetAll: number = 0;
-    public beforeSubscribeXRead: number = 0;
     public afterSubscribeXRead: number = 0;
 }
 
@@ -180,11 +172,8 @@ export class Instrumentation {
                 properties: {
                     beforePublish: {type: "number"},
                     afterPublish: {type: "number"},
-                    beforeConsume: {type: "number"},
                     afterConsume: {type: "number"},
-                    beforeWorkerXAdd: {type: "number"},
                     afterWorkerXAdd: {type: "number"},
-                    beforeWorkerHSet: {type: "number"},
                     afterWorkerHSet: {type: "number"}
                 }
             };
