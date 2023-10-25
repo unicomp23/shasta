@@ -53,6 +53,7 @@ class Subscriber {
 
         try {
             // Get the TagDataSnapshot by iterating hgetall() and the snapshotSeqNo via get()
+            Instrumentation.instance.getTimestamps(this.tagDataObjIdentifier).beforeHGetAll = Date.now();
             const redisSnapshotData = await this.redisClient.hgetall(this.redisSnapshotKey);
             Instrumentation.instance.getTimestamps(this.tagDataObjIdentifier).afterHGetAll = Date.now();
             const snapshotSeqNo = redisSnapshotData['seqno'];
@@ -74,9 +75,11 @@ class Subscriber {
             const readStreamMessages = async (lastSeqNo: string) => {
                 if (this.redisClient.status == "ready") {
                     try {
+                        Instrumentation.instance.getTimestamps(this.tagDataObjIdentifier).beforeSubscribeXRead = Date.now();
                         const streamMessages = await this.redisClient.xread(
                             'COUNT', 100, 'BLOCK', 1000, 'STREAMS', this.redisStreamKey, lastSeqNo
                         );
+                        Instrumentation.instance.getTimestamps(this.tagDataObjIdentifier!).afterSubscribeXRead = Date.now();
                         //slog.info('xread: ', {streamMessages});
 
                         if (streamMessages) {
@@ -88,7 +91,7 @@ class Subscriber {
                                     });*/
                                     const [, value] = messageData;
                                     const delta = TagData.fromBinary(Buffer.from(value, 'base64'));
-                                    Instrumentation.instance.getTimestamps(delta.identifier!).afterSubscribeXRead = Date.now();
+                                    Instrumentation.instance.getTimestamps(delta.identifier!).afterSubscribeXReadDelta = Date.now();
                                     queue.put({delta});
 
                                     // Update the last sequence number for the next XREAD() call
