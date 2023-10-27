@@ -7,11 +7,22 @@ export const singleServerTcpSpacingMillis = 100;
 
 export function createKafka(clientId: string, region: string = 'us-east-1', numCPUs = 1): Kafka {
     const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
-    console.log('kafka w/ tls')
-    return new Kafka({
-        clientId,
-        brokers: bootstrapEndpoints,
-        logLevel: kafkaLogLevel,
-        ssl: true,
-    });
+    if(process.env.USING_IAM === "true") {
+        console.log('kafka w/ iam')
+        return new Kafka({
+            clientId,
+            brokers: bootstrapEndpoints,
+            logLevel: kafkaLogLevel,
+            ssl: true,
+            sasl: createMechanism({ region: 'us-east-1'})
+        });    
+    } else {
+        console.log('kafka w/ tls')
+        return new Kafka({
+            clientId,
+            brokers: bootstrapEndpoints,
+            logLevel: kafkaLogLevel,
+            ssl: true,
+        });
+    }
 }

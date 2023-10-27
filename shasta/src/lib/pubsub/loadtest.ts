@@ -278,6 +278,7 @@ export async function main() {
     if(useMskServerless) {
         // Use MSK Serverless bootstrap brokers
         env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
+        process.env.USING_IAM = "true";
     }
 
     if(env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
