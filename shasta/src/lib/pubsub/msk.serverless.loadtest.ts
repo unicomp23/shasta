@@ -23,7 +23,8 @@ export function getServerlessBootstrapBrokers() {
         reject(err);
       } else {
         console.log(data);
-        resolve(data as string);
+        console.log(`msk-serverless-broker: ${data["BootstrapBrokerStringSaslIam"]}`);
+        resolve(data["BootstrapBrokerStringSaslIam"] as string);
       }
     });
   });
