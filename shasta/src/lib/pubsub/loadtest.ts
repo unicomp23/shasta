@@ -279,6 +279,7 @@ export async function main() {
         // Use MSK Serverless bootstrap brokers
         env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
         process.env.USING_IAM = "true";
+        console.log('Using MSK Serverless with IAM');
     }
 
     if(env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
