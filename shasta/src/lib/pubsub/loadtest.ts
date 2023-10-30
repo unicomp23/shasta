@@ -112,7 +112,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
         //if(i % 100 === 0)
             slog.info("setupKafkaPairs", { pairs: pairs.length });
         // todo, await delay(numCPUs * singleServerTcpSpacingMillis);
-        await delay(7000 + (Math.random() * 7000));
+        await delay(7000);
     }
 }
 
@@ -295,7 +295,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "108"; // todo crypto.randomUUID();
+    const randomTag = "109"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
