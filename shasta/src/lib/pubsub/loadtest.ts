@@ -274,12 +274,18 @@ export const numCPUs = 1;
 
 export async function main() {
     const useMskServerless = process.argv[2] === 'msk-serverless';
+    const isOrchestrator = process.env.ORCHESTRATOR === 'true';
 
     if(useMskServerless) {
         // Use MSK Serverless bootstrap brokers
         env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
         process.env.USING_IAM = "true";
         console.log('Using MSK Serverless with IAM');
+    }
+
+    if(isOrchestrator) {
+        console.log('This is the orchestrator node');
+        return;
     }
 
     if(env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
