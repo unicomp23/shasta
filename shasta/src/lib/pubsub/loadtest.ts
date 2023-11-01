@@ -9,9 +9,7 @@ import {Subscriber} from "./subscriber";
 import {Worker} from "./worker";
 import {expect} from "chai";
 import {Instrumentation} from "./instrument";
-import {envVarsSync} from "../../automation";
 import {env} from "process";
-import { RedisKeyCleanup } from './redisKeyCleanup';
 import { getServerlessBootstrapBrokers } from './msk.serverless.loadtest';
 
 export const pairCount = 32; // todo restore 8; // Number of publisher/subscriber pairs
@@ -33,31 +31,6 @@ enum TestType {
 const testType = TestType.Both;
 
 // todo revert, envVarsSync();
-
-export async function deleteTestTopics() {
-    const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
-    const admin = kafka.admin();
-    try {
-        await admin.connect();
-
-        // List all topics in the Kafka cluster
-        const topicMetadata = await admin.fetchTopicMetadata();
-        const topics = topicMetadata.topics.map((topicInfo) => topicInfo.name);
-
-        // Filter the topics that contain "test" (case-insensitive)
-        const testTopics = topics.filter((topic) => /test/i.test(topic));
-        slog.info("deleteTestTopics", {testTopics});
-
-        // Delete the filtered topics
-        await admin.deleteTopics({topics: testTopics});
-
-        await admin.disconnect();
-
-        await delay(3000);
-    } finally {
-        await admin.disconnect();
-    }
-}
 
 export interface TestRef {
     publisher: Publisher | null;
@@ -272,9 +245,8 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
 
 export const numCPUs = 1;
 
-export async function main() {
+async function main() {
     const useMskServerless = process.argv[2] === 'msk-serverless';
-    const deleteTestTopicsSwitch = process.argv[3] === 'delete-test-topics';
     const isOrchestrator = process.env.ORCHESTRATOR === 'true';
 
     if(useMskServerless) {
@@ -282,14 +254,6 @@ export async function main() {
         env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
         process.env.USING_IAM = "true";
         console.log('Using MSK Serverless with IAM');
-    }
-
-    if(deleteTestTopicsSwitch) {
-        deleteTestTopics();
-        const cleaner = new RedisKeyCleanup();
-        cleaner.deleteAllKeys()
-            .then(() => cleaner.disconnect())
-            .catch(console.error);
     }
 
     if(isOrchestrator) {
@@ -304,7 +268,7 @@ export async function main() {
         env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "123"; // todo crypto.randomUUID();
+    const randomTag = "125"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
@@ -318,7 +282,7 @@ export async function main() {
 }
 
 main().then(() => {
-    console.log('exit main');
+    console.log('loadTest, exit main');
 }).catch((error) => {
-    console.error('An error occurred:', error);
+    console.error('loadTest, An error occurred:', error);
 });
