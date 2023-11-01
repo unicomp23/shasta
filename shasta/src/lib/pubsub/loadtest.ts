@@ -55,13 +55,8 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
                 topics: [topicConfig],
             });
         } catch (error) {
-            if ((error as Error).name === 'KafkaJSCreateTopicError') {
-                // Log the error and continue execution
-                console.error('An error occurred while creating the topic:', error);
-            } else {
-                // If it's not a KafkaJSCreateTopicError, rethrow the error
-                throw error;
-            }
+            // Log the error and continue execution
+            console.error('An error occurred while creating the topic:', error);
         }
 
         // Repeatedly check if the topic has been created.
@@ -279,7 +274,7 @@ async function main() {
         env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "126"; // todo crypto.randomUUID();
+    const randomTag = "127"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
