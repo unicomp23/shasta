@@ -251,16 +251,18 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
 
 export const numCPUs = 1;
 
-async function main() {
-    const useMskServerless = process.argv[2] === 'msk-serverless';
-    const isOrchestrator = process.env.ORCHESTRATOR === 'true';
-
-    if(useMskServerless) {
+export async function setupServerlessEnvironment(): Promise<void> {
+    if (process.argv[2] === 'msk-serverless') {
         // Use MSK Serverless bootstrap brokers
         env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
         process.env.USING_IAM = "true";
         console.log('Using MSK Serverless with IAM');
     }
+}
+
+async function main() {
+    await setupServerlessEnvironment();
+    const isOrchestrator = process.env.ORCHESTRATOR === 'true';
 
     if(isOrchestrator) {
         console.log('This is the orchestrator node');

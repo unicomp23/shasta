@@ -3,6 +3,7 @@ import {slog} from "../logger/slog";
 import {delay} from "@esfx/async";
 import crypto from "crypto";
 import { RedisKeyCleanup } from './redisKeyCleanup';
+import { setupServerlessEnvironment } from './loadtest';
 
 export async function deleteTestTopics() {
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);
@@ -30,7 +31,8 @@ export async function deleteTestTopics() {
 }
 
 async function main() {
-    deleteTestTopics();
+    await setupServerlessEnvironment();
+    await deleteTestTopics();
     const cleaner = new RedisKeyCleanup();
     cleaner.deleteAllKeys()
         .then(() => cleaner.disconnect())
