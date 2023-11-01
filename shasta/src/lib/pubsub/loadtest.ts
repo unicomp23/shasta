@@ -14,8 +14,8 @@ import {env} from "process";
 import { RedisKeyCleanup } from './redisKeyCleanup';
 import { getServerlessBootstrapBrokers } from './msk.serverless.loadtest';
 
-export const pairCount = 32; // todo restore 32; // Number of publisher/subscriber pairs
-export const messageCount = 64; // Number of published messages per pair
+export const pairCount = 32; // todo restore 8; // Number of publisher/subscriber pairs
+export const messageCount = 256; // todo restore 64 // Number of published messages per pair
 
 let sanityCountSub = 0;
 let sanityCountPub = 0;
@@ -295,7 +295,7 @@ export async function main() {
         .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "121"; // todo crypto.randomUUID();
+    const randomTag = "122"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
