@@ -274,6 +274,7 @@ export const numCPUs = 1;
 
 export async function main() {
     const useMskServerless = process.argv[2] === 'msk-serverless';
+    const deleteTestTopicsSwitch = process.argv[3] === 'delete-test-topics';
     const isOrchestrator = process.env.ORCHESTRATOR === 'true';
 
     if(useMskServerless) {
@@ -281,6 +282,14 @@ export async function main() {
         env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
         process.env.USING_IAM = "true";
         console.log('Using MSK Serverless with IAM');
+    }
+
+    if(deleteTestTopicsSwitch) {
+        deleteTestTopics();
+        const cleaner = new RedisKeyCleanup();
+        cleaner.deleteAllKeys()
+            .then(() => cleaner.disconnect())
+            .catch(console.error);
     }
 
     if(isOrchestrator) {
@@ -293,12 +302,6 @@ export async function main() {
     env.REDIS_PORT = "6379";
     if(env.BOOTSTRAP_BROKERS && env.BOOTSTRAP_BROKERS.length > 0)
         env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
-
-    /*** todo await deleteTestTopics();
-    const cleaner = new RedisKeyCleanup();
-    cleaner.deleteAllKeys()
-        .then(() => cleaner.disconnect())
-        .catch(console.error); ***/
 
     console.log(`numCPUs: ${numCPUs}`);
     const randomTag = "123"; // todo crypto.randomUUID();
