@@ -15,12 +15,16 @@ export async function deleteTestTopics() {
         const topicMetadata = await admin.fetchTopicMetadata();
         const topics = topicMetadata.topics.map((topicInfo) => topicInfo.name);
 
-        // Filter the topics that contain "test" (case-insensitive)
-        const testTopics = topics.filter((topic) => /test/i.test(topic));
-        slog.info("deleteTestTopics", {testTopics});
+        if(topics.length > 0) {
+            // Filter the topics that contain "test" (case-insensitive)
+            const testTopics = topics.filter((topic) => /test/i.test(topic));
+            slog.info("deleteTestTopics", {testTopics});
 
-        // Delete the filtered topics
-        await admin.deleteTopics({topics: testTopics});
+            // Delete the filtered topics
+            await admin.deleteTopics({topics: testTopics});
+        } else {
+            slog.info("deleteTestTopics, no topics to delete");
+        }
 
         await admin.disconnect();
 
