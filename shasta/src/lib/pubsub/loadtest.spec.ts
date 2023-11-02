@@ -1,6 +1,6 @@
 import {expect} from "chai";
 import {describe, it} from "mocha";
-import {deleteTestTopics, loadTest, messageCount, pairCount} from "./loadtest";
+import {loadTest, messageCount, pairCount} from "./loadtest";
 import {AsyncQueue} from "@esfx/async-queue";
 import crypto from "crypto";
 import * as cluster from 'cluster';

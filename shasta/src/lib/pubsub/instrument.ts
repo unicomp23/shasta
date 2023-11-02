@@ -1,7 +1,5 @@
 import {TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
-import {slog} from "../logger/slog";
-import {messageCount, pairCount} from "./loadtest";
-import {numCPUs} from "./loadtest";
+import {messageCount, numCPUs, pairCount} from "./loadtest";
 import * as os from 'os';
 import * as Redis from 'ioredis';
 import assert from 'assert';
@@ -71,7 +69,7 @@ export class Instrumentation {
 
     public dump() {
         const tmpDir = path.join(os.homedir(), 'tmp');
-        if (!fs.existsSync(tmpDir)){
+        if (!fs.existsSync(tmpDir)) {
             fs.mkdirSync(tmpDir);
         }
         const instrumentData = {

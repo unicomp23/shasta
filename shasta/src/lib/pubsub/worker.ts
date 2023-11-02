@@ -108,7 +108,7 @@ class Worker {
                         const tagDataObjIdentifierPartition: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
                         const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
 
-                        if(tagData.identifier === undefined) {
+                        if (tagData.identifier === undefined) {
                             slog.error('invalid tagData: ', {tagData});
                             return;
                         }

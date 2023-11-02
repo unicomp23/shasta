@@ -41,7 +41,7 @@ class Publisher {
     public async sendBatch(tagDatas: TagData[]): Promise<void> {
         try {
             const messages = new Array<KafkaMessage>();
-            for(const tagData of tagDatas) {
+            for (const tagData of tagDatas) {
                 if (tagData.identifier === undefined) {
                     slog.error("TagData identifier is undefined");
                     return;

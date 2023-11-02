@@ -17,8 +17,8 @@ async function readFromStream() {
         if (!streamName) {
             throw new Error('MULTICAST_STREAM_NAME is not defined in the environment variables');
         }
-        const result = await redis.xread('COUNT', 1, 'STREAMS', streamName, '$');        
-        console.log('Finished xread', result);        
+        const result = await redis.xread('COUNT', 1, 'STREAMS', streamName, '$');
+        console.log('Finished xread', result);
     } catch (error) {
         console.error('Error during xread operation:', error);
     }

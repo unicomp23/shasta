@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import {createKafka, singleServerTcpSpacingMillis} from "../kafka/createKafka";
+import {createKafka} from "../kafka/createKafka";
 import {ITopicConfig, ITopicMetadata, Kafka} from "kafkajs";
 import {slog} from "../logger/slog";
 import {Deferred, delay} from "@esfx/async";
@@ -76,7 +76,7 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
                         throw new Error(`Timed out waiting for topic '${kafkaTopicLoad}' to be created.`);
                     }
                 }
-            } catch(error) {
+            } catch (error) {
                 console.error('An error occurred while waiting for the topic to be created:', error);
             }
         }
@@ -88,14 +88,14 @@ export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], 
         const testRef = await setup(kafkaTopicLoad, i, groupId, kafka);
         pairs.push(testRef);
         //if(i % 100 === 0)
-            slog.info("setupKafkaPairs", { pairs: pairs.length });
+        slog.info("setupKafkaPairs", {pairs: pairs.length});
         // todo, await delay(numCPUs * singleServerTcpSpacingMillis);
         await delay(7000);
     }
 }
 
 export async function teardownTest(pairs: TestRef[]) {
-    const tasks = pairs.map(async ({ worker, publisher, subscriber }) => {
+    const tasks = pairs.map(async ({worker, publisher, subscriber}) => {
         await worker?.shutdown();
         await publisher?.disconnect();
         await subscriber?.disconnect();
@@ -115,21 +115,21 @@ async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: 
 
     let publisher: Publisher | null = null;
     // @ts-ignore
-    if(testType === TestType.Producer || testType === TestType.Both) {
+    if (testType === TestType.Producer || testType === TestType.Both) {
         publisher = new Publisher(kafka, kafkaTopicLoad);
         await publisher.connect();
     }
 
     let subscriber: Subscriber | null = null;
     // @ts-ignore
-    if(testType === TestType.Producer || testType === TestType.Both) {
+    if (testType === TestType.Producer || testType === TestType.Both) {
         // redis subscriber runs on the same process as the publisher to validate the messages
         subscriber = new Subscriber(tagDataObjectIdentifier);
     }
 
     let worker: Worker | null = null;
     // @ts-ignore
-    if(testType === TestType.Consumer || testType === TestType.Both) {
+    if (testType === TestType.Consumer || testType === TestType.Both) {
         worker = (i % workerModulo == 0) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
         if (worker !== null) slog.info("setup worker", {
             i,
@@ -161,7 +161,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             const uuidSubStream = crypto.randomUUID();
             const testValFormat = (uuid: string, counter: number) => `Load test Value: ${uuid}, ${counter}`;
 
-            if(testRef.worker) await testRef.worker.groupJoined();
+            if (testRef.worker) await testRef.worker.groupJoined();
             const messageQueue = await testRef.subscriber?.stream();
 
             const testValTracker = new Set<string>();
@@ -172,8 +172,8 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
 
             // consume
             const doneConsuming = new Deferred<boolean>();
-            const consumeTask = async() => {
-                if(messageQueue) {
+            const consumeTask = async () => {
+                if (messageQueue) {
                     const snapshot = await messageQueue.get();
                     expect(snapshot.snapshot).to.not.be.undefined;
 
@@ -213,15 +213,15 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                 // todo no batching
 
                 sanityCountPub++;
-                if(sanityCountPub % 1000 === 0)
-                    slog.info("sanityCountPub", { sanityCountPub });
+                if (sanityCountPub % 1000 === 0)
+                    slog.info("sanityCountPub", {sanityCountPub});
             }
             //await testRef.publisher.sendBatch(tagDataArray); todo no batching
 
             await doneConsuming.promise;
             await consumeTaskDone;
 
-            slog.info("runLoadTest", { iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0) });
+            slog.info("runLoadTest", {iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0)});
         } catch (error) {
             console.error('An error occurred while running the test task:', error);
         }
@@ -241,7 +241,13 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
     const elapsed = Date.now() - start;
 
     const total = pairs.length * messageCount;
-    slog.info(`stats:`,{ elapsed, pairs: pairs.length, messageCount, total, event_rate_per_second: total / (elapsed / 1000) });
+    slog.info(`stats:`, {
+        elapsed,
+        pairs: pairs.length,
+        messageCount,
+        total,
+        event_rate_per_second: total / (elapsed / 1000)
+    });
     Instrumentation.instance.dump();
     await teardownTest(pairs);
 
@@ -250,18 +256,18 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
 
 export const numCPUs = 1;
 
-async function main() {
+export async function main() {
     const isOrchestrator = process.env.ORCHESTRATOR === 'true';
 
-    if(isOrchestrator) {
+    if (isOrchestrator) {
         console.log('This is the orchestrator node');
         return;
     }
 
-    if(env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
-    env.REDIS_HOST = env.MEMORY_DB_ENDPOINT_ADDRESS;
+    if (env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
+        env.REDIS_HOST = env.MEMORY_DB_ENDPOINT_ADDRESS;
     env.REDIS_PORT = "6379";
-    if(env.BOOTSTRAP_BROKERS && env.BOOTSTRAP_BROKERS.length > 0)
+    if (env.BOOTSTRAP_BROKERS && env.BOOTSTRAP_BROKERS.length > 0)
         env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
     console.log(`numCPUs: ${numCPUs}`);

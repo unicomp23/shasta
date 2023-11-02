@@ -1,6 +1,6 @@
-import { Cluster } from 'ioredis';
-import { env } from "process";
-import { slog } from "../logger/slog";
+import {Cluster} from 'ioredis';
+import {env} from "process";
+import {slog} from "../logger/slog";
 
 class RedisKeyCleanup {
     private readonly redisClient: Cluster;
@@ -10,7 +10,7 @@ class RedisKeyCleanup {
     }
 
     public static async create(): Promise<RedisKeyCleanup> {
-        if(env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
+        if (env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
             env.REDIS_HOST = env.MEMORY_DB_ENDPOINT_ADDRESS;
 
         slog.info(`Redis host: ${env.REDIS_HOST}`);
@@ -66,4 +66,4 @@ class RedisKeyCleanup {
     }
 }
 
-export { RedisKeyCleanup };
+export {RedisKeyCleanup};

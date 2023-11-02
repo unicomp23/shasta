@@ -1,4 +1,5 @@
 import * as AWS from 'aws-sdk';
+
 const s3 = new AWS.S3();
 
 async function getInstanceIds(bucketName: string) {
@@ -9,7 +10,7 @@ async function getInstanceIds(bucketName: string) {
 
     try {
         const data = await s3.listObjectsV2(params).promise();
-        return data.Contents ? data.Contents.map((item: AWS.S3.Object) => item.Key ? item.Key.replace('instanceIds/', '') : '') : [];          
+        return data.Contents ? data.Contents.map((item: AWS.S3.Object) => item.Key ? item.Key.replace('instanceIds/', '') : '') : [];
     } catch (err) {
         console.log(err);
         return [];

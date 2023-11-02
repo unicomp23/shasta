@@ -2,7 +2,7 @@ import {createKafka} from "../kafka/createKafka";
 import {slog} from "../logger/slog";
 import {delay} from "@esfx/async";
 import crypto from "crypto";
-import { RedisKeyCleanup } from './redisKeyCleanup';
+import {RedisKeyCleanup} from './redisKeyCleanup';
 
 export async function deleteTestTopics() {
     const kafka = await createKafka(`test-kafka-id-${crypto.randomUUID()}`);
@@ -15,7 +15,7 @@ export async function deleteTestTopics() {
             const topicMetadata = await admin.fetchTopicMetadata();
             const topics = topicMetadata.topics.map((topicInfo) => topicInfo.name);
 
-            if(topics.length > 0) {
+            if (topics.length > 0) {
                 // Filter the topics that contain "test" (case-insensitive)
                 const testTopics = topics.filter((topic) => /test/i.test(topic));
                 slog.info("deleteTestTopics", {testTopics});
