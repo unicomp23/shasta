@@ -10,6 +10,8 @@ class RedisKeyCleanup {
     }
 
     public static async create(): Promise<RedisKeyCleanup> {
+        slog.info(`Redis host: ${env.REDIS_HOST}`);
+        slog.info(`Redis port: ${env.REDIS_PORT || "6379"}`);
         const redisClient = new Cluster([{
             host: env.REDIS_HOST,
             port: parseInt(env.REDIS_PORT || "6379")
