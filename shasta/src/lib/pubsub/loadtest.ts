@@ -11,7 +11,7 @@ import {expect} from "chai";
 import {Instrumentation} from "./instrument";
 import {env} from "process";
 
-export const pairCount = 32; // todo restore 8; // Number of publisher/subscriber pairs
+export const pairCount = 8; // Number of publisher/subscriber pairs
 export const messageCount = 256; // todo restore 64 // Number of published messages per pair
 
 let sanityCountSub = 0;
@@ -271,7 +271,7 @@ export async function main() {
         env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "129"; // todo crypto.randomUUID();
+    const randomTag = "130"; // todo crypto.randomUUID();
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
 
