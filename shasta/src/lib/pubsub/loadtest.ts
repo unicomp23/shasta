@@ -211,7 +211,7 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
 
 export const numCPUs = 1;
 
-export async function main() {
+export async function mainLoadTest() {
     const isOrchestrator = process.env.ORCHESTRATOR === 'true';
 
     if (isOrchestrator) {
@@ -239,7 +239,7 @@ export async function main() {
     }
 }
 
-main().then(() => {
+mainLoadTest().then(() => {
     console.log('loadTest, exit main');
 }).catch((error) => {
     console.error('loadTest, An error occurred:', error);
