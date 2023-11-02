@@ -4,6 +4,7 @@ import { slog } from "../logger/slog";
 import { createKafka } from "../kafka/createKafka";
 import { env } from "process";
 import { delay } from "@esfx/async";
+import crypto from "crypto";
 
 export async function createAndVerifyKafkaTopic(kafkaTopicLoad: string): Promise<void> {
     const kafka = await createKafka(env.APP || "shasta-app-id");
@@ -92,4 +93,14 @@ export async function createTopics(topic: string): Promise<void> {
             slog.info("Error cleaning up admin client:", error);
         }
     }
+}
+
+export function generateTopicAndGroupId(): { kafkaTopicLoad: string, groupId: string } {
+    //todo const randomTag: string = crypto.randomUUID();
+    const randomTag = "131";
+
+    const kafkaTopicLoad = `test_topic_load-${randomTag}`;
+    const groupId = `test_group_id-${randomTag}`;
+
+    return { kafkaTopicLoad, groupId };
 }

@@ -10,7 +10,7 @@ import {Worker} from "./worker";
 import {expect} from "chai";
 import {Instrumentation} from "./instrument";
 import {env} from "process";
-import {createAndVerifyKafkaTopic} from "./topic";
+import {createAndVerifyKafkaTopic, generateTopicAndGroupId} from "./topic";
 
 export const pairCount = 8; // Number of publisher/subscriber pairs
 export const messageCount = 256; // todo restore 64 // Number of published messages per pair
@@ -41,8 +41,6 @@ export interface TestRef {
 
 export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number, groupId: string): Promise<void> {
     const kafka = await createKafka(`test-kafka-id-${crypto.randomUUID()}`, "us-east-1", numCPUs);
-
-    await createAndVerifyKafkaTopic(kafkaTopicLoad);
 
     for (let i = 0; i < pairCount; i++) {
         const testRef = await setup(kafkaTopicLoad, i, groupId, kafka);
@@ -226,11 +224,11 @@ export async function mainLoadTest() {
         env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
     console.log(`numCPUs: ${numCPUs}`);
-    const randomTag = "130"; // todo crypto.randomUUID();
-    const kafkaTopicLoad = `test_topic_load-${randomTag}`;
-    const groupId = `test_group_id-${randomTag}`;
+    const { kafkaTopicLoad, groupId } = generateTopicAndGroupId();
 
     try {
+        if (process.argv[2] !== 'msk-serverless')
+            await createAndVerifyKafkaTopic(kafkaTopicLoad);
         const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
         await delay(10000);
         expect(sanityCountSub).to.equal(pairCount * messageCount);
