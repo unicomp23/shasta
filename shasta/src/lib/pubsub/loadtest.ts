@@ -10,7 +10,6 @@ import {Worker} from "./worker";
 import {expect} from "chai";
 import {Instrumentation} from "./instrument";
 import {env} from "process";
-import {setupServerlessEnvironment} from "./msk.serverless.loadtest";
 
 export const pairCount = 32; // todo restore 8; // Number of publisher/subscriber pairs
 export const messageCount = 256; // todo restore 64 // Number of published messages per pair
@@ -40,7 +39,7 @@ export interface TestRef {
 }
 
 export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number, groupId: string): Promise<void> {
-    const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`, "us-east-1", numCPUs);
+    const kafka = await createKafka(`test-kafka-id-${crypto.randomUUID()}`, "us-east-1", numCPUs);
 
     const admin = kafka.admin();
     await admin.connect();
@@ -252,7 +251,6 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
 export const numCPUs = 1;
 
 async function main() {
-    await setupServerlessEnvironment();
     const isOrchestrator = process.env.ORCHESTRATOR === 'true';
 
     if(isOrchestrator) {

@@ -3,7 +3,7 @@ import {createKafka} from "../kafka/createKafka";
 import {env} from "process";
 
 export async function createTopics(topic: string): Promise<void> {
-    const kafka = createKafka(env.APP || "shasta-app-id");
+    const kafka = await createKafka(env.APP || "shasta-app-id");
 
     const admin = kafka.admin();
 

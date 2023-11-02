@@ -1,31 +1,64 @@
 import {Kafka, logLevel} from "kafkajs";
 import {kafkaLogLevel} from "./constants";
 import {createMechanism} from "@jm18457/kafkajs-msk-iam-authentication-mechanism";
-import {env} from "process";
 import { slog } from "../logger/slog";
+import * as AWS from 'aws-sdk';
+import {env} from "process";
+
+
+export function getServerlessBootstrapBrokers() {
+  AWS.config.update({region:'us-east-1'}); // replace 'us-east-1' with your region
+  const kafka = new AWS.Kafka();
+  
+  if (!process.env.MSK_SERVERLESS_CLUSTER_ARN) {
+    throw new Error('MSK_SERVERLESS_CLUSTER_ARN is not defined');
+  }
+  
+  const params = {
+    ClusterArn: process.env.MSK_SERVERLESS_CLUSTER_ARN // ARN of your MSK cluster
+  };
+  
+  kafka.getBootstrapBrokers(params, function(err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else     console.log(data);           // successful response
+  });
+  
+  return new Promise<string>((resolve, reject) => {
+    kafka.getBootstrapBrokers(params, function(err, data) {
+      if (err) {
+        console.log(err, err.stack);
+        reject(err);
+      } else {
+        console.log(data);
+        console.log(`msk-serverless-broker: ${data["BootstrapBrokerStringSaslIam"]}`);
+        resolve(data["BootstrapBrokerStringSaslIam"] as string);
+      }
+    });
+  });
+}
 
 export const singleServerTcpSpacingMillis = 100;
 
-export function createKafka(clientId: string, region: string = 'us-east-1', numCPUs = 1): Kafka {
-    const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
-    slog.info("createKafka", bootstrapEndpoints);
-    if(process.env.USING_IAM === "true") {
-        console.log('kafka w/ iam')
+export async function createKafka(clientId: string, region: string = 'us-east-1', numCPUs = 1) {
+    if(process.argv[2] === 'msk-serverless') {
+        console.log('createKafka w/ iam, using msk serverless')
         return new Kafka({
             clientId,
-            brokers: bootstrapEndpoints,
+            brokers: [await getServerlessBootstrapBrokers()],
             logLevel: kafkaLogLevel,
             ssl: true,
             sasl: createMechanism({ region: 'us-east-1'})
         });    
     } else {
-        console.log('kafka w/ tls')
-        return new Kafka({
-            clientId,
-            brokers: bootstrapEndpoints,
-            logLevel: kafkaLogLevel,
-            ssl: true,
-        });
+      const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
+      slog.info("createKafka", bootstrapEndpoints);
+      console.log('kafka w/ tls')
+      return new Kafka({
+          clientId,
+          brokers: bootstrapEndpoints,
+          logLevel: kafkaLogLevel,
+          ssl: true,
+      });
     }
 }
 
