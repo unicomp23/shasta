@@ -37,7 +37,7 @@ export async function deleteTestTopics() {
 
 async function mainDeleteTopics() {
     await deleteTestTopics();
-    const cleaner = new RedisKeyCleanup();
+    const cleaner = await RedisKeyCleanup.create();
     cleaner.deleteAllKeys()
         .then(() => cleaner.disconnect())
         .catch(console.error);

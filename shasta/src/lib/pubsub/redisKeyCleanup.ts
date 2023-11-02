@@ -5,8 +5,12 @@ import { slog } from "../logger/slog";
 class RedisKeyCleanup {
     private readonly redisClient: Cluster;
 
-    constructor() {
-        this.redisClient = new Cluster([{
+    private constructor(redisClient: Cluster) {
+        this.redisClient = redisClient;
+    }
+
+    public static async create(): Promise<RedisKeyCleanup> {
+        const redisClient = new Cluster([{
             host: env.REDIS_HOST,
             port: parseInt(env.REDIS_PORT || "6379")
         }], {
@@ -14,12 +18,16 @@ class RedisKeyCleanup {
             redisOptions: {tls: {},},
         });
 
-        this.redisClient.on('connect', async () => {
-            slog.info('Connected to Redis server');
-        });
+        return new Promise((resolve, reject) => {
+            redisClient.on('connect', () => {
+                slog.info('Connected to Redis server');
+                resolve(new RedisKeyCleanup(redisClient));
+            });
 
-        this.redisClient.on('error', async (error) => {
-            slog.error(`Redis error: ${error}`);
+            redisClient.on('error', (error) => {
+                slog.error(`Redis error: ${error}`);
+                reject(error);
+            });
         });
     }
 
