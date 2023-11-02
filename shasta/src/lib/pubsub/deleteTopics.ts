@@ -34,7 +34,7 @@ export async function deleteTestTopics() {
     }
 }
 
-async function main() {
+async function mainDeleteTopics() {
     await setupServerlessEnvironment();
     await deleteTestTopics();
     const cleaner = new RedisKeyCleanup();
@@ -43,7 +43,7 @@ async function main() {
         .catch(console.error);
 }
 
-main().then(() => {
+mainDeleteTopics().then(() => {
     console.log('deleteTestTopics, exit main');
 }).catch((error) => {
     console.error('deleteTestTopics, An error occurred:', error);
