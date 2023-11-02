@@ -10,6 +10,7 @@ import {Worker} from "./worker";
 import {expect} from "chai";
 import {Instrumentation} from "./instrument";
 import {env} from "process";
+import {createAndVerifyKafkaTopic} from "./topic";
 
 export const pairCount = 8; // Number of publisher/subscriber pairs
 export const messageCount = 256; // todo restore 64 // Number of published messages per pair
@@ -41,48 +42,7 @@ export interface TestRef {
 export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number, groupId: string): Promise<void> {
     const kafka = await createKafka(`test-kafka-id-${crypto.randomUUID()}`, "us-east-1", numCPUs);
 
-    const admin = kafka.admin();
-    await admin.connect();
-    try {
-        const topicConfig: ITopicConfig = {
-            topic: kafkaTopicLoad,
-            numPartitions: 256,
-        };
-
-        try {
-            await admin.createTopics({
-                topics: [topicConfig],
-            });
-        } catch (error) {
-            // Log the error and continue execution
-            console.error('An error occurred while creating the topic:', error);
-        }
-
-        // Repeatedly check if the topic has been created.
-        let topicExists = false;
-        const timeoutMs = 5000;
-        const startTime = Date.now();
-
-        while (!topicExists) {
-            try {
-                await delay(3000);
-                const metadata = await admin.fetchTopicMetadata({topics: [kafkaTopicLoad]});
-                if (findTopicInMetadata(kafkaTopicLoad, metadata.topics)) {
-                    topicExists = true;
-                    break;
-                } else {
-                    // If the timeout is hit, throw an error.
-                    if (Date.now() - startTime > timeoutMs) {
-                        throw new Error(`Timed out waiting for topic '${kafkaTopicLoad}' to be created.`);
-                    }
-                }
-            } catch (error) {
-                console.error('An error occurred while waiting for the topic to be created:', error);
-            }
-        }
-    } finally {
-        await admin.disconnect();
-    }
+    await createAndVerifyKafkaTopic(kafkaTopicLoad);
 
     for (let i = 0; i < pairCount; i++) {
         const testRef = await setup(kafkaTopicLoad, i, groupId, kafka);
@@ -144,11 +104,6 @@ async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: 
         worker,
         tagDataObjectIdentifier,
     };
-}
-
-// Helper function to find the topic in the topic metadata object.
-function findTopicInMetadata(topic: string, metadata: ITopicMetadata[]): boolean {
-    return metadata.some((topicMetadata: ITopicMetadata) => topicMetadata.name === topic);
 }
 
 export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) {
