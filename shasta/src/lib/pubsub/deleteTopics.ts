@@ -3,7 +3,7 @@ import {slog} from "../logger/slog";
 import {delay} from "@esfx/async";
 import crypto from "crypto";
 import { RedisKeyCleanup } from './redisKeyCleanup';
-import { setupServerlessEnvironment } from './loadtest';
+import { setupServerlessEnvironment } from './msk.serverless.loadtest';
 
 export async function deleteTestTopics() {
     const kafka = createKafka(`test-kafka-id-${crypto.randomUUID()}`);

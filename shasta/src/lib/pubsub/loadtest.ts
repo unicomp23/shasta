@@ -10,7 +10,7 @@ import {Worker} from "./worker";
 import {expect} from "chai";
 import {Instrumentation} from "./instrument";
 import {env} from "process";
-import { getServerlessBootstrapBrokers } from './msk.serverless.loadtest';
+import {setupServerlessEnvironment} from "./msk.serverless.loadtest";
 
 export const pairCount = 32; // todo restore 8; // Number of publisher/subscriber pairs
 export const messageCount = 256; // todo restore 64 // Number of published messages per pair
@@ -250,15 +250,6 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
 }
 
 export const numCPUs = 1;
-
-export async function setupServerlessEnvironment(): Promise<void> {
-    if (process.argv[2] === 'msk-serverless') {
-        // Use MSK Serverless bootstrap brokers
-        env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
-        process.env.USING_IAM = "true";
-        console.log('Using MSK Serverless with IAM');
-    }
-}
 
 async function main() {
     await setupServerlessEnvironment();

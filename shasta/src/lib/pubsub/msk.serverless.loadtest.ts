@@ -1,4 +1,7 @@
 import * as AWS from 'aws-sdk';
+import {env} from "process";
+
+
 AWS.config.update({region:'us-east-1'}); // replace 'us-east-1' with your region
 const kafka = new AWS.Kafka();
 
@@ -28,4 +31,13 @@ export function getServerlessBootstrapBrokers() {
       }
     });
   });
+}
+
+export async function setupServerlessEnvironment(): Promise<void> {
+  if (process.argv[2] === 'msk-serverless') {
+      // Use MSK Serverless bootstrap brokers
+      env.BOOTSTRAP_BROKERS = await getServerlessBootstrapBrokers();
+      process.env.USING_IAM = "true";
+      console.log('Using MSK Serverless with IAM');
+  }
 }
