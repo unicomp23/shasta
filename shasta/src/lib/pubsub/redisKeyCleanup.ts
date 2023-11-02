@@ -32,6 +32,7 @@ class RedisKeyCleanup {
     }
 
     public async deleteAllKeys(): Promise<void> {
+        slog.info("Starting to delete all keys from Redis server");
         let cursor = '0';
 
         do {
@@ -40,8 +41,10 @@ class RedisKeyCleanup {
             const keys = res[1];
 
             if (keys.length > 0) {
-                // Using Promise.all to delete keys concurrently
-                await Promise.all(keys.map(key => this.redisClient.del(key)));
+                // Delete keys sequentially
+                for (const key of keys) {
+                    await this.redisClient.del(key);
+                }
             }
         } while (cursor !== '0');
 
