@@ -24,7 +24,7 @@ export async function createAndVerifyKafkaTopic(kafkaTopicLoad: string): Promise
 
         // Repeatedly check if the topic has been created.
         let topicExists = false;
-        const timeoutMs = 5000;
+        const timeoutMs = 10000; // Increase to 10 seconds
         const startTime = Date.now();
 
         while (!topicExists) {
@@ -42,6 +42,7 @@ export async function createAndVerifyKafkaTopic(kafkaTopicLoad: string): Promise
                 }
             } catch (error) {
                 slog.error('An error occurred while waiting for the topic to be created:', error);
+                throw error; // Add this line
             }
         }
 
