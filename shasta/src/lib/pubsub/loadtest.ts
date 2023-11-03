@@ -42,13 +42,14 @@ export interface TestRef {
 export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number, groupId: string): Promise<void> {
     const kafka = await createKafka(`test-kafka-id-${crypto.randomUUID()}`, "us-east-1", numCPUs);
 
+    await delay(20000 * Math.random());
     for (let i = 0; i < pairCount; i++) {
         const testRef = await setup(kafkaTopicLoad, i, groupId, kafka);
         pairs.push(testRef);
         //if(i % 100 === 0)
         slog.info("setupKafkaPairs", {pairs: pairs.length});
         // todo, await delay(numCPUs * singleServerTcpSpacingMillis);
-        await delay(7000);
+        await delay(10000);
     }
 }
 
