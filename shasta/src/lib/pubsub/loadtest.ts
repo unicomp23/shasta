@@ -189,7 +189,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
 
 export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId: string) {
     await setupKafkaPairs(kafkaTopicLoad, pairs, pairCount, numCPUs, groupId);
-    slog.info("runLoadTest");
+    slog.info("runLoadTest.start", { time: Date.now.toString() });
 
     const start = Date.now();
     await runLoadTest(pairs, messageCount, numCPUs);
@@ -204,6 +204,7 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
         event_rate_per_second: total / (elapsed / 1000)
     });
     Instrumentation.instance.dump();
+    slog.info("runLoadTest.end", { time: Date.now.toString() });
     await teardownTest(pairs);
 
     return sanityCountSub;
