@@ -50,7 +50,7 @@ export async function createKafka(clientId: string, region: string = 'us-east-1'
             sasl: createMechanism({region: 'us-east-1'})
         });
     } else {
-        const bootstrapEndpoints = env.KAFKA_BROKERS?.split(",") || [];
+        const bootstrapEndpoints = env.BOOTSTRAP_BROKERS?.split(",") || [];
         slog.info("createKafka", bootstrapEndpoints);
         console.log('kafka w/ tls')
         return new Kafka({

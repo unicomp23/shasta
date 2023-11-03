@@ -189,7 +189,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
 
 export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId: string) {
     await setupKafkaPairs(kafkaTopicLoad, pairs, pairCount, numCPUs, groupId);
-    slog.info("runLoadTest.start", { time: Date.now.toString() });
+    slog.info("runLoadTest.start: " + Date.now.toString());
 
     const start = Date.now();
     await runLoadTest(pairs, messageCount, numCPUs);
@@ -204,7 +204,7 @@ export async function loadTest(kafkaTopicLoad: string, numCPUs: number, groupId:
         event_rate_per_second: total / (elapsed / 1000)
     });
     Instrumentation.instance.dump();
-    slog.info("runLoadTest.end", { time: Date.now.toString() });
+    slog.info("runLoadTest.end: " + Date.now.toString());
     await teardownTest(pairs);
 
     return sanityCountSub;
@@ -223,8 +223,6 @@ export async function mainLoadTest() {
     if (env.MEMORY_DB_ENDPOINT_ADDRESS && env.MEMORY_DB_ENDPOINT_ADDRESS.length > 0)
         env.REDIS_HOST = env.MEMORY_DB_ENDPOINT_ADDRESS;
     env.REDIS_PORT = "6379";
-    if (env.BOOTSTRAP_BROKERS && env.BOOTSTRAP_BROKERS.length > 0)
-        env.KAFKA_BROKERS = env.BOOTSTRAP_BROKERS;
 
     console.log(`numCPUs: ${numCPUs}`);
     const { kafkaTopicLoad, groupId } = generateTopicAndGroupId();
