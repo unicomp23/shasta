@@ -18,7 +18,7 @@ export const messageCount = 64 // Number of published messages per pair
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const workerModulo = 8;
+const workerModulo = 4;
 
 const pairs = new Array<TestRef>();
 
