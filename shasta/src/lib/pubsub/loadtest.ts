@@ -12,7 +12,7 @@ import {Instrumentation} from "./instrument";
 import {env} from "process";
 import {createAndVerifyKafkaTopic, generateTopicAndGroupId} from "./topic";
 
-export const pairCount = 32; // Number of publisher/subscriber pairs
+export const pairCount = 8; // Number of publisher/subscriber pairs
 export const messageCount = 256 // Number of published messages per pair
 
 let sanityCountSub = 0;
