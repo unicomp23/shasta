@@ -159,7 +159,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                     data: testVal,
                 });
                 // todo, await delay(50 * numCPUs);
-                await delay(1000 / 3);
+                await delay(1000 * 3);
                 Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
 
                 //tagDataArray.push(tagData);
