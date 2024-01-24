@@ -18,7 +18,7 @@ export const messageCount = 256 // Number of published messages per pair
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const workerModulo = 4;
+const workerModulo = 12;
 
 const pairs = new Array<TestRef>();
 
@@ -159,7 +159,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                     data: testVal,
                 });
                 // todo, await delay(50 * numCPUs);
-                await delay(1000);
+                await delay(1000 / 3);
                 Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
 
                 //tagDataArray.push(tagData);
