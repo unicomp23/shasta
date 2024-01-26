@@ -12,13 +12,14 @@ import {Instrumentation} from "./instrument";
 import {env} from "process";
 import {createAndVerifyKafkaTopic, generateTopicAndGroupId} from "./topic";
 
-export const pairCount = 1; // Number of publisher/subscriber pairs
-export const messageCount = 1024; // Number of published messages per pair
+export const pairCount = 8; // Number of publisher/subscriber pairs
+export const messageCount = 768; // Number of published messages per pair
 
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const workerModulo = 1;
+const workerModulo = 4;
+const eventSpacingMillis = 1000;
 
 const pairs = new Array<TestRef>();
 
@@ -159,7 +160,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
                     data: testVal,
                 });
                 // todo, await delay(50 * numCPUs);
-                await delay(125);
+                await delay(eventSpacingMillis);
                 Instrumentation.instance.getTimestamps(tagData.identifier!).beforePublish = Date.now();
 
                 //tagDataArray.push(tagData);
