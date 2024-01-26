@@ -240,7 +240,7 @@ export async function mainLoadTest() {
 }
 
 mainLoadTest().then(() => {
-    console.log('loadTest, exit main');
+    console.log(`loadTest, exit main at ${new Date().toISOString()}`);
 }).catch((error) => {
     console.error('loadTest, An error occurred:', error);
 });
