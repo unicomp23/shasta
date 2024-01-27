@@ -18,8 +18,8 @@ export const messageCount = 768; // Number of published messages per pair
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const workerModulo = 8;
-const eventSpacingMillis = 1000;
+const workerModulo = 4;
+const eventSpacingMillis = 500;
 
 const pairs = new Array<TestRef>();
 
