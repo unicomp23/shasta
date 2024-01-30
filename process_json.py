@@ -6,12 +6,12 @@ import os
 
 def extract_and_calculate(zip_path):
     differences = []
-    json_file_count = 0  # Count for all JSON files
+    json_file_count = 0
 
     with zipfile.ZipFile(zip_path, 'r') as z:
         for filename in z.namelist():
             if filename.endswith('.json'):
-                json_file_count += 1  # Increment count for every JSON file
+                json_file_count += 1
 
                 with z.open(filename) as f:
                     data = json.load(f)
@@ -37,7 +37,7 @@ def extract_and_calculate(zip_path):
         "99.9th percentile": float(np.percentile(differences_array, 99.9)),
         "99.99th percentile": float(np.percentile(differences_array, 99.99)),
         "99.999th percentile": float(np.percentile(differences_array, 99.999)),
-        "json_file_count": json_file_count  # Use json_file_count instead of instrument_file_count
+        "json_file_count": json_file_count
     }
     return stats
 
@@ -54,6 +54,31 @@ def process_directory(dir_path):
 
     return results
 
+def generate_markdown_table(results):
+    headers = ["File", "Min", "Max", "Median", "25th percentile", "50th percentile", "75th percentile", "99th percentile", "99.9th percentile", "99.99th percentile", "99.999th percentile", "JSON File Count"]
+    table = []
+    table.append("| " + " | ".join(headers) + " |")
+    table.append("| " + " | ".join("---" for _ in headers) + " |")
+
+    for result in results:
+        row = [
+            result["file"],
+            str(result["stats"]["min"]),
+            str(result["stats"]["max"]),
+            str(result["stats"]["median"]),
+            str(result["stats"]["25th percentile"]),
+            str(result["stats"]["50th percentile"]),
+            str(result["stats"]["75th percentile"]),
+            str(result["stats"]["99th percentile"]),
+            str(result["stats"]["99.9th percentile"]),
+            str(result["stats"]["99.99th percentile"]),
+            str(result["stats"]["99.999th percentile"]),
+            str(result["stats"]["json_file_count"])
+        ]
+        table.append("| " + " | ".join(row) + " |")
+
+    return "\n".join(table)
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: python process_json.py <path_to_directory>")
@@ -61,4 +86,4 @@ if __name__ == "__main__":
 
     directory_path = sys.argv[1]
     aggregated_results = process_directory(directory_path)
-    print(json.dumps(aggregated_results, indent=4))
+    print(generate_markdown_table(aggregated_results))
