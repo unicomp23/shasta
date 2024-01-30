@@ -27,16 +27,16 @@ def extract_and_calculate(zip_path):
 
     differences_array = np.array(differences)
     stats = {
-        "min": float(np.min(differences_array)),
-        "max": float(np.max(differences_array)),
-        "median": float(np.median(differences_array)),
-        "25th percentile": float(np.percentile(differences_array, 25)),
-        "50th percentile": float(np.percentile(differences_array, 50)),
-        "75th percentile": float(np.percentile(differences_array, 75)),
-        "99th percentile": float(np.percentile(differences_array, 99)),
-        "99.9th percentile": float(np.percentile(differences_array, 99.9)),
-        "99.99th percentile": float(np.percentile(differences_array, 99.99)),
-        "99.999th percentile": float(np.percentile(differences_array, 99.999)),
+        "min": round(float(np.min(differences_array)), 2),
+        "max": round(float(np.max(differences_array)), 2),
+        "median": round(float(np.median(differences_array)), 2),
+        "25th percentile": round(float(np.percentile(differences_array, 25)), 2),
+        "50th percentile": round(float(np.percentile(differences_array, 50)), 2),
+        "75th percentile": round(float(np.percentile(differences_array, 75)), 2),
+        "99th percentile": round(float(np.percentile(differences_array, 99)), 2),
+        "99.9th percentile": round(float(np.percentile(differences_array, 99.9)), 2),
+        "99.99th percentile": round(float(np.percentile(differences_array, 99.99)), 2),
+        "99.999th percentile": round(float(np.percentile(differences_array, 99.999)), 2),
         "json_file_count": json_file_count
     }
     return stats
