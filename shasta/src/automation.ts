@@ -50,7 +50,7 @@ function getConfig(): Config {
 
 export function envVarsSync() {
     const config_ = getConfig();
-    process.env["KAFKA_BROKERS"] = config_["bootstrap-endpoints"];
+    process.env["BOOTSTRAP_BROKERS"] = config_["bootstrap-endpoints"];
     process.env["REDIS_HOST"] = config_["memorydb-endpoint-address"];
     process.env["REDIS_PORT"] = config_["memorydb-endpoint-port"];
 }

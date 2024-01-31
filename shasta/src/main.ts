@@ -10,8 +10,8 @@ async function main() {
     try {
         await createTopics("tag-data");
 
-        const kafka = createKafka(env.APP_ID || "shasta-app-id");
-        worker = new Worker(kafka,
+        const kafka = await createKafka(env.APP_ID || "shasta-app-id");
+        worker = await Worker.create(kafka,
             env.CONSUMER_GROUP_ID || "tag-data-consumer-group-id",
             env.KAFKA_TOPIC || "tag-data");
         while (!await worker.groupJoined())

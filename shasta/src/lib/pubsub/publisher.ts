@@ -1,17 +1,20 @@
-import {Kafka, Producer} from 'kafkajs';
+import {Kafka, KafkaMessage, Producer} from 'kafkajs';
 import {TagData} from "../../../submodules/src/gen/tag_data_pb";
 import {slog} from "../logger/slog";
 
 // Convert message to a buffer
-const encode = (message: TagData): Buffer => {
-    return Buffer.from(message.toBinary());
-};
-
 class Publisher {
     private producer: Producer;
 
     constructor(kafka: Kafka, readonly topic: string) {
-        this.producer = kafka.producer();
+        this.producer = kafka.producer({
+            maxInFlightRequests: 20,
+            idempotent: true,
+            retry: {
+                initialRetryTime: 100,
+                retries: 8
+            }
+        });
     }
 
     // Connect to Kafka producer
@@ -35,29 +38,41 @@ class Publisher {
     }
 
     // Send TagData message to Kafka topic
-    public async send(tagData: TagData): Promise<void> {
+    public async sendBatch(tagDatas: TagData[]): Promise<void> {
         try {
-            if (tagData.identifier === undefined) {
-                slog.error("TagData identifier is undefined");
-                return;
+            const messages = new Array<KafkaMessage>();
+            for (const tagData of tagDatas) {
+                if (tagData.identifier === undefined) {
+                    slog.error("TagData identifier is undefined");
+                    return;
+                }
+
+                // Prepare Kafka message
+                const tagDataIdentifierPartition = tagData.identifier.clone();
+                const message = {
+                    value: Buffer.from(tagData.toBinary()),
+                    key: Buffer.from(tagDataIdentifierPartition.toBinary()),
+                } as KafkaMessage;
+
+                messages.push(message);
             }
 
-            // Prepare Kafka message
-            const message = {
-                value: encode(tagData),
-                key: Buffer.from(tagData.identifier.toBinary()),
-            };
-
-            // Send message
+            // Send messages
             await this.producer.send({
                 topic: this.topic,
-                messages: [message],
+                messages,
+                acks: -1,
             });
 
-            slog.info("Message published successfully");
+            //slog.info("Messages published successfully");
         } catch (error) {
             slog.error(`Failed to publish the message: : `, error);
         }
+    }
+
+    public async send(tagData: TagData): Promise<void> {
+        // call sendBatch
+        await this.sendBatch([tagData]);
     }
 }
 

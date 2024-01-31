@@ -3,6 +3,7 @@ import {Cluster} from 'ioredis';
 import {TagData, TagDataEnvelope, TagDataObjectIdentifier} from "../../../submodules/src/gen/tag_data_pb";
 import {env} from "process";
 import {slog} from "../logger/slog";
+import {Instrumentation} from "./instrument";
 
 class Worker {
     private kafkaConsumer: Consumer;
@@ -10,8 +11,12 @@ class Worker {
     private readonly topic: string;
     private groupJoined_: boolean = false;
 
-    constructor(kafka: Kafka, groupId: string, topic: string) {
-        this.kafkaConsumer = kafka.consumer({groupId});
+    private constructor(kafka: Kafka, groupId: string, topic: string) {
+        this.kafkaConsumer = kafka.consumer({
+            groupId,
+            minBytes: 1,
+            maxWaitTimeInMs: 50,
+        });
         this.redisClient = new Cluster([{
             host: env.REDIS_HOST,
             port: parseInt(env.REDIS_PORT || "6379")
@@ -29,13 +34,14 @@ class Worker {
             slog.error(`Redis error: ${error}`);
         });
 
-        // Initialize the Kafka consumer and Redis client
-        this.init().catch(e => {
-            slog.error("init error: ", {e});
-        });
-
         process.on("SIGINT", () => this.shutdown());
         process.on("SIGTERM", () => this.shutdown());
+    }
+
+    public static async create(kafka: Kafka, groupId: string, topic: string) {
+        const worker = new Worker(kafka, groupId, topic);
+        await worker.init();
+        return worker;
     }
 
     public async groupJoined(): Promise<boolean> {
@@ -99,46 +105,62 @@ class Worker {
 
                 if (message.key && message.value) {
                     try {
-                        const tagDataObjIdentifier: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
+                        const tagDataObjIdentifierPartition: TagDataObjectIdentifier = TagDataObjectIdentifier.fromBinary(Buffer.from(message.key));
+                        const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
 
-                        const redisDeltaKey = tagDataObjIdentifier.name;
-                        if (redisDeltaKey === undefined || redisDeltaKey === "seqno") {
-                            slog.error('invalid tagDataObjIdentifier.name: ', {tagDataObjIdentifier});
+                        if (tagData.identifier === undefined) {
+                            slog.error('invalid tagData: ', {tagData});
                             return;
                         }
-                        tagDataObjIdentifier.name = "";
-                        const redisSnapshotKey = Buffer.from(tagDataObjIdentifier.toBinary()).toString("base64");
 
-                        const tagData: TagData = TagData.fromBinary(Buffer.from(message.value));
+                        const redisDeltaKey = tagData.identifier.name;
+                        if (redisDeltaKey === undefined || redisDeltaKey === "seqno" || redisDeltaKey === "") {
+                            slog.error('invalid tagDataObjIdentifier.name: ', {tagDataObjIdentifier: tagDataObjIdentifierPartition});
+                            return;
+                        }
+
+                        tagDataObjIdentifierPartition.name = "";
+                        Instrumentation.instance.getTimestamps(tagData.identifier!).afterConsume = Date.now();
+                        const redisSnapshotKey = Buffer.from(tagDataObjIdentifierPartition.toBinary()).toString("base64");
+
                         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
                         const commonRedisStreamKey = `{${redisSnapshotKey}}:strm:`;
 
-                        const snapshotSeqNo = await this.redisClient.xadd(commonRedisStreamKey, "*", "delta", Buffer.from(tagData.toBinary()).toString("base64"));
-                        if (snapshotSeqNo === null) {
-                            slog.error(`Missing redis seqno: `, {snapshotSeqNo});
-                            return;
-                        }
-                        const tagDataEnvelope = new TagDataEnvelope({
-                            tagData,
-                            sequenceNumber: snapshotSeqNo
-                        });
-                        if (!(snapshotSeqNo && redisDeltaKey)) {
-                            slog.error(`Failed to store the snapshot in Redis: `, {
-                                snapshotSeqNo,
-                                tagData
+                        try {
+                            Instrumentation.instance.getTimestamps(tagData.identifier!).beforeWorkerXAdd = Date.now();
+                            const snapshotSeqNo = await this.redisClient.xadd(commonRedisStreamKey, "*", "delta", Buffer.from(tagData.toBinary()).toString("base64"));
+                            if (snapshotSeqNo === null) {
+                                slog.error(`Missing redis seqno: `, {snapshotSeqNo});
+                                return;
+                            }
+                            Instrumentation.instance.getTimestamps(tagData.identifier!).afterWorkerXAdd = Date.now();
+                            const tagDataEnvelope = new TagDataEnvelope({
+                                tagData,
+                                sequenceNumber: snapshotSeqNo
                             });
-                            return;
+                            if (!(snapshotSeqNo && redisDeltaKey)) {
+                                slog.error(`Failed to store the snapshot in Redis: `, {
+                                    snapshotSeqNo,
+                                    redisDeltaKey,
+                                    tagData
+                                });
+                                return;
+                            }
+                            Instrumentation.instance.getTimestamps(tagData.identifier!).beforeWorkerHSet = Date.now();
+                            await this.redisClient.hset(commonRedisSnapshotKey,
+                                redisDeltaKey, Buffer.from(tagDataEnvelope.toBinary()).toString("base64"),
+                                "seqno", snapshotSeqNo);
+                            Instrumentation.instance.getTimestamps(tagData.identifier!).afterWorkerHSet = Date.now();
+                        } catch (error) {
+                            slog.error('Error during Redis operation:', error);
                         }
-                        await this.redisClient.hset(commonRedisSnapshotKey,
-                            redisDeltaKey, Buffer.from(tagDataEnvelope.toBinary()).toString("base64"),
-                            "seqno", snapshotSeqNo);
 
-                        slog.info(`Worker: `, {
+                        /*slog.info(`Worker: `, {
                             snapshotSeqNo,
                             commonRedisSnapshotKey,
                             commonRedisStreamKey,
                             tagData
-                        });
+                        });*/
                     } catch (e) {
                         slog.error(`Error processing message ${message.key}: ${e}`);
                     }
