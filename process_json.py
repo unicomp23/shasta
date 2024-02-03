@@ -43,26 +43,38 @@ def extract_and_calculate(zip_path):
 
 def process_directory(dir_path):
     results = []
+    zip_files = []
 
+    # Gather all zip file paths first to calculate total and progress
     for root, dirs, files in os.walk(dir_path):
         for file in files:
             if file.endswith(".zip"):
                 zip_file_path = os.path.join(root, file)
-                print(f"Processing file: {zip_file_path}")
-                stats = extract_and_calculate(zip_file_path)
-                results.append({"file": zip_file_path, "stats": stats})
+                zip_files.append(zip_file_path)
+
+    total_files = len(zip_files)
+    print(f"Total zip files to process: {total_files}")
+
+    # Process each zip file and update progress
+    for i, zip_file_path in enumerate(zip_files, start=1):
+        dir_name = os.path.basename(os.path.dirname(zip_file_path))
+        print(f"Processing file {i} of {total_files}: {dir_name}...")
+        stats = extract_and_calculate(zip_file_path)
+        results.append({"dir_name": dir_name, "stats": stats})
 
     return results
 
 def generate_markdown_table(results):
-    headers = ["File", "Min", "Max", "Median", "25th percentile", "50th percentile", "75th percentile", "99th percentile", "99.9th percentile", "99.99th percentile", "99.999th percentile", "JSON File Count"]
+    headers = ["Directory", "Min", "Max", "Median", "25th percentile", "50th percentile", "75th percentile", "99th percentile", "99.9th percentile", "99.99th percentile", "99.999th percentile", "JSON File Count"]
     table = []
     table.append("| " + " | ".join(headers) + " |")
     table.append("| " + " | ".join("---" for _ in headers) + " |")
 
     for result in results:
+        dir_name = result["dir_name"]
+
         row = [
-            result["file"],
+            dir_name,
             str(result["stats"]["min"]),
             str(result["stats"]["max"]),
             str(result["stats"]["median"]),
