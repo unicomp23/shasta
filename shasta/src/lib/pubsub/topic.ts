@@ -12,7 +12,7 @@ export async function createAndVerifyKafkaTopic(kafkaTopicLoad: string): Promise
 
     const topicConfig: ITopicConfig = {
         topic: kafkaTopicLoad,
-        numPartitions: 256,
+        numPartitions: 4,
     };
 
     try {
