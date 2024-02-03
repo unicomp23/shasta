@@ -15,7 +15,7 @@ class Worker {
         this.kafkaConsumer = kafka.consumer({
             groupId,
             minBytes: 1,
-            maxWaitTimeInMs: 50,
+            maxWaitTimeInMs: 0,
         });
         this.redisClient = new Cluster([{
             host: env.REDIS_HOST,
