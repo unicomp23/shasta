@@ -19,7 +19,7 @@ export const messageCount = 1800; // Number of published messages per pair
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
-const workerModulo = 8;
+const workerModulo = 1;
 const eventSpacingMillis = 1000;
 
 const pairs = new Array<TestRef>();
@@ -92,7 +92,7 @@ async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: 
     let worker: Worker | null = null;
     // @ts-ignore
     if (testType === TestType.Consumer || testType === TestType.Both) {
-        const consumerFileExists = true; // todo fs.existsSync('/tmp/consumer.txt');
+        const consumerFileExists = fs.existsSync('/tmp/consumer.txt');
         worker = (i % workerModulo == 0 && consumerFileExists) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
         if (worker !== null) slog.info("setup worker", {
             i,
