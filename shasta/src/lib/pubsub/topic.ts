@@ -98,7 +98,7 @@ export async function createTopics(topic: string): Promise<void> {
 
 export function generateTopicAndGroupId(): { kafkaTopicLoad: string, groupId: string } {
     //todo const randomTag: string = crypto.randomUUID();
-    const randomTag = "225";
+    const randomTag = "226";
 
     const kafkaTopicLoad = `test_topic_load-${randomTag}`;
     const groupId = `test_group_id-${randomTag}`;
