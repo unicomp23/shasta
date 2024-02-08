@@ -73,6 +73,7 @@ export class Instrumentation {
             fs.mkdirSync(tmpDir);
         }
         const instrumentData = {
+            hostName: os.hostname(),
             numCPUs,
             pairCount,
             messageCount,
@@ -207,4 +208,3 @@ export class Instrumentation {
 
     }
 }
-
