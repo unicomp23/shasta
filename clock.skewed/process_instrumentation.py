@@ -49,14 +49,12 @@ def calculate_percentiles(intermediate_path):
     latencies_by_pair = {}
 
     for entry in data.values():
-        # Check for the presence of all required keys and non-zero 'afterConsume' and 'beforePublish'
         required_keys = ["srcInstrumentationUuid", "dstInstrumentationUuid", "afterConsume", "beforePublish"]
         if all(key in entry for key in required_keys) and entry["afterConsume"] != 0 and entry["beforePublish"] != 0:
             src_id = entry["srcInstrumentationUuid"]
             dst_id = entry["dstInstrumentationUuid"]
             latency = entry["afterConsume"] - entry["beforePublish"]
             
-            # Proceed only if latency calculation is meaningful (non-zero result)
             if latency != 0:
                 pair_key = (src_id, dst_id)
                 if pair_key not in latencies_by_pair:
@@ -67,13 +65,13 @@ def calculate_percentiles(intermediate_path):
 
     for pair, latencies in latencies_by_pair.items():
         latencies_array = np.array(latencies)
-        median_latency = np.median(latencies_array)
+        # Format the percentile values to display as milliseconds with two decimal places
         results[pair] = {
-            "Median": median_latency,
-            "99th Percentile": np.percentile(latencies_array, 99),
-            "99.9th Percentile": np.percentile(latencies_array, 99.9),
-            "99.99th Percentile": np.percentile(latencies_array, 99.99),
-            "99.999th Percentile": np.percentile(latencies_array, 99.999)
+            "Median": f"{np.median(latencies_array):.2f}",
+            "99th Percentile": f"{np.percentile(latencies_array, 99):.2f}",
+            "99.9th Percentile": f"{np.percentile(latencies_array, 99.9):.2f}",
+            "99.99th Percentile": f"{np.percentile(latencies_array, 99.99):.2f}",
+            "99.999th Percentile": f"{np.percentile(latencies_array, 99.999):.2f}"
         }
 
     return results
