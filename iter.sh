@@ -7,4 +7,4 @@ if [ "$#" -ne 1 ]; then
 fi
 
 # Run the Python script with the provided directory
-python3 process_json.py "$1"
+python3 process.instrumentation.round.trip.py "$1"

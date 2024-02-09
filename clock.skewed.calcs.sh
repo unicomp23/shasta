@@ -9,4 +9,4 @@ fi
 ZIP_PATH="$1"
 
 # Replace the path below with the actual path to your process_instrumentation.py script
-python3 process_instrumentation.py "$ZIP_PATH"
+python3 process.instrumentation.clock.skewed.py "$ZIP_PATH"
