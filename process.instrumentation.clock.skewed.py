@@ -133,12 +133,12 @@ if __name__ == "__main__":
     print(f"Data has been processed and written to {intermediate_json_path}")
 
     # Calculate and print percentiles
-    percentiles_results = calculate_percentiles(intermediate_json_path)
-    print("Percentiles Results:")
-    for pair, results in percentiles_results.items():
-        print(f"Pair {pair}:")
-        for metric, value in results.items():
-            print(f"  {metric}: {value}")
+    # percentiles_results = calculate_percentiles(intermediate_json_path)
+    # print("Percentiles Results:")
+    # for pair, results in percentiles_results.items():
+    #     print(f"Pair {pair}:")
+    #     for metric, value in results.items():
+    #         print(f"  {metric}: {value}")
     # Calculate and print differences and stats
     stats_results = calculate_differences_and_stats(intermediate_json_path)
     print("Differences Stats:")
