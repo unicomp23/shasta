@@ -1,0 +1,38 @@
+{
+    "CjBzb21lLWFwcC1pZC04YjE4NWE4ZC01ZDBhLTRhYzMtOWQyOS01NDA3ZjJhNzMxZGQSK3RhZy1pZC03OGZlYTllMi1iZDkyLTQyNzEtOWZmNC03YTcxNjIzMTRiMjcaLXNjb3BlLWlkLWI3NTNiYjQ2LWQ1MDItNDU3Mi1iOTY1LTc1YjI2NGYwY2VjZCIpbmFtZS03ODZjYWY4Yy02N2ViLTQzZjQtOTc4Mi1lYzVhNmQ3YTJmYTA=": {
+        "beforePublish": 1707354219209,
+        "srcInstrumentationUuid": "8ba33488-2a37-4023-926e-3651c66031a4",
+        "afterPublish": 1707354219255,
+        "afterSubscribeXReadDelta": 1707354220156,
+        "afterConsume": 1707354220151,
+        "dstInstrumentationUuid": "9f15da81-383f-4d5e-bf9b-c15b65150828",
+        "beforeWorkerXAdd": 1707354220151,
+        "afterWorkerXAdd": 1707354220157,
+        "beforeWorkerHSet": 1707354220157,
+        "afterWorkerHSet": 1707354220162
+    },
+    "CjBzb21lLWFwcC1pZC1iMTZkYWMxZS02MGQxLTQ1ZGYtYTAzNy0yOTg3YmYyYzdmNTkSK3RhZy1pZC1iOGQ0YmQxMy03OWIzLTQ5YWQtYjliMC1hNTI2MDY1YmY1NjkaLXNjb3BlLWlkLWMyZDAyMDcyLTU4ZjgtNDRkYy05ZWE5LWVmZDQzZGM5ZTE1NSIpbmFtZS03MjlmNTc2MS1hYjU2LTRhZjgtYTkwYi04MmI5ZDk1YTQ5NGE=": {
+        "beforePublish": 1707354219220,
+        "srcInstrumentationUuid": "8ba33488-2a37-4023-926e-3651c66031a4",
+        "afterPublish": 1707354219255,
+        "afterSubscribeXReadDelta": 1707354220159,
+        "afterConsume": 1707354220154,
+        "dstInstrumentationUuid": "210c44bf-2b3f-4a04-8c5e-e72f64127944",
+        "beforeWorkerXAdd": 1707354220154,
+        "afterWorkerXAdd": 1707354220159,
+        "beforeWorkerHSet": 1707354220159,
+        "afterWorkerHSet": 1707354220164
+    },
+    "CjBzb21lLWFwcC1pZC04ZTY3MzE2OS02M2NlLTQxNmEtYjQyZi00Njc1NjYyZmUyYzISK3RhZy1pZC1mNjVjZGU5ZS0wNTg2LTRlNWItOTcwYS1mOGNmYWVmMDFmNTkaLXNjb3BlLWlkLTZhZmY1YzRhLTI5NzItNDNlNS05Zjk0LTM4ZjM3NDJjYWJlNSIpbmFtZS0zNzY1ZGRmOC05YzVjLTQyNjAtYTQ2Yy05NDRhMTMyYWE2Zjk=": {
+        "beforePublish": 1707354219220,
+        "srcInstrumentationUuid": "8ba33488-2a37-4023-926e-3651c66031a4",
+        "afterPublish": 1707354219250,
+        "afterSubscribeXReadDelta": 1707354220196,
+        "afterConsume": 1707354220190,
+        "dstInstrumentationUuid": "9f15da81-383f-4d5e-bf9b-c15b65150828",
+        "beforeWorkerXAdd": 1707354220190,
+        "afterWorkerXAdd": 1707354220196,
+        "beforeWorkerHSet": 1707354220196,
+        "afterWorkerHSet": 1707354220202
+    }
+}
