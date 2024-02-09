@@ -66,6 +66,9 @@ def calculate_percentiles(intermediate_path):
             "P50": np.percentile(latencies_array, 50),
             "P90": np.percentile(latencies_array, 90),
             "P99": np.percentile(latencies_array, 99),
+            "P99.9": np.percentile(latencies_array, 99.9),
+            "P99.99": np.percentile(latencies_array, 99.99),
+            "P99.999": np.percentile(latencies_array, 99.999),  # Adding the 99.999th percentile
         }
 
     return percentiles_results
