@@ -130,7 +130,7 @@ if __name__ == "__main__":
     intermediate_json_path = '/tmp/instrumentation.intermediate.json'
     write_intermediate_json(merged_data, intermediate_json_path)
     
-    print(f"Data has been processed and written to {intermediate_json_path}")
+    #print(f"Data has been processed and written to {intermediate_json_path}")
 
     # Calculate and print percentiles
     # percentiles_results = calculate_percentiles(intermediate_json_path)
