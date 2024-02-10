@@ -38,16 +38,12 @@ def extract_and_merge_data(zip_path):
 
     return merged_data
 
-def write_intermediate_json(merged_data, intermediate_path):
-    with open(intermediate_path, 'w') as f:
-        json.dump(merged_data, f, indent=4)
+# This function is simplified to just return the merged_data dictionary
+def write_intermediate_json(merged_data):
+    return merged_data
 
-def calculate_percentiles(intermediate_path):
-    with open(intermediate_path) as f:
-        data = json.load(f)
-
+def calculate_percentiles(data):
     latencies_by_pair = {}
-
     # Collect latencies
     for entry in data.values():
         required_keys = ["srcInstrumentationUuid", "dstInstrumentationUuid", "afterConsume", "beforePublish"]
@@ -68,15 +64,12 @@ def calculate_percentiles(intermediate_path):
             "P99": np.percentile(latencies_array, 99),
             "P99.9": np.percentile(latencies_array, 99.9),
             "P99.99": np.percentile(latencies_array, 99.99),
-            "P99.999": np.percentile(latencies_array, 99.999),  # Adding the 99.999th percentile
+            "P99.999": np.percentile(latencies_array, 99.999),
         }
 
     return percentiles_results
 
-def calculate_differences_and_stats(intermediate_path):
-    with open(intermediate_path) as f:
-        data = json.load(f)
-
+def calculate_differences_and_stats(data):
     latencies_by_pair = {}
     differences_by_pair = {}
 
@@ -107,18 +100,18 @@ def calculate_differences_and_stats(intermediate_path):
         for key, value in differences.items():
             all_differences[key].append(value)
 
-    # Calculate and return statistics
-    stats = {}
-    for key, values in all_differences.items():
-        values_array = np.array(values)
-        stats[key] = {
-            "Mean": np.mean(values_array),
-            "Median": np.median(values_array),
-            "Max": np.max(values_array),
-            "Min": np.min(values_array),
+    stats_results = {}
+    for key, diffs in all_differences.items():
+        diffs_array = np.array(diffs)
+        stats_results[key] = {
+            "Median": np.median(diffs_array),
+            "Mean": np.mean(diffs_array),
+            "StdDev": np.std(diffs_array),
+            "Max": np.max(diffs_array),
+            "Min": np.min(diffs_array),
         }
 
-    return stats
+    return stats_results
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -127,20 +120,18 @@ if __name__ == "__main__":
 
     zip_file_path = sys.argv[1]
     merged_data = extract_and_merge_data(zip_file_path)
-    intermediate_json_path = '/tmp/instrumentation.intermediate.json'
-    write_intermediate_json(merged_data, intermediate_json_path)
-    
-    #print(f"Data has been processed and written to {intermediate_json_path}")
+    intermediate_data = write_intermediate_json(merged_data)  # This is now a dictionary
 
     # Calculate and print percentiles
-    # percentiles_results = calculate_percentiles(intermediate_json_path)
-    # print("Percentiles Results:")
-    # for pair, results in percentiles_results.items():
-    #     print(f"Pair {pair}:")
-    #     for metric, value in results.items():
-    #         print(f"  {metric}: {value}")
+    # percentiles_results = calculate_percentiles(intermediate_data)
+    # print("Latency Percentiles:")
+    # for pair, percentiles in percentiles_results.items():
+    #     print(f"{pair}:")
+    #     for percentile, value in percentiles.items():
+    #         print(f"  {percentile}: {value}")
+    
     # Calculate and print differences and stats
-    stats_results = calculate_differences_and_stats(intermediate_json_path)
+    stats_results = calculate_differences_and_stats(intermediate_data)
     print("Differences Stats:")
     for key, stats in stats_results.items():
         print(f"{key}:")
