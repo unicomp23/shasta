@@ -8,8 +8,5 @@ fi
 
 DIRECTORY_PATH="$1"
 
-# Find all zip files recursively in the directory and process each one
-find "$DIRECTORY_PATH" -type f -name '*.zip' | while read ZIP_PATH; do
-    echo "Processing $ZIP_PATH"
-    python3 process.instrumentation.clock.skewed.py "$ZIP_PATH"
-done
+# Call the Python script with the directory path
+python3 process.instrumentation.clock.skewed.py "$DIRECTORY_PATH"

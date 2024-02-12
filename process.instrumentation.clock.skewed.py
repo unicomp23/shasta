@@ -3,6 +3,7 @@ import json
 from zipfile import ZipFile
 import uuid
 import numpy as np
+import os
 
 def extract_and_merge_data(zip_path):
     merged_data = {}
@@ -132,17 +133,24 @@ def generate_markdown_table(stats_results):
 
     return "\n".join(table)
 
+def process_directory(directory_path):
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(".zip"):
+                zip_path = os.path.join(root, file)
+                print(f"Processing {zip_path}")
+                merged_data = extract_and_merge_data(zip_path)
+                intermediate_data = write_intermediate_json(merged_data)  # This is now a dictionary
+
+                # Calculate and print differences and stats
+                stats_results = calculate_differences_and_stats(intermediate_data)
+                print("Differences Stats:")
+                print(generate_markdown_table(stats_results))
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python process_instrumentation.py <path_to_zip_file>")
+        print("Usage: python process_instrumentation.py <path_to_directory>")
         sys.exit(1)
 
-    zip_file_path = sys.argv[1]
-    merged_data = extract_and_merge_data(zip_file_path)
-    intermediate_data = write_intermediate_json(merged_data)  # This is now a dictionary
-
-    # Calculate and print differences and stats
-    stats_results = calculate_differences_and_stats(intermediate_data)
-    print("Differences Stats:")
-    print(generate_markdown_table(stats_results))
-
+    directory_path = sys.argv[1]
+    process_directory(directory_path)
