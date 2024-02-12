@@ -113,6 +113,25 @@ def calculate_differences_and_stats(data):
 
     return stats_results
 
+def generate_markdown_table(stats_results):
+    headers = ["Metric", "Median", "Mean", "StdDev", "Max", "Min"]
+    table = []
+    table.append("| " + " | ".join(headers) + " |")
+    table.append("| " + " | ".join("---" for _ in headers) + " |")
+
+    for key, stats in stats_results.items():
+        row = [
+            key,  # Metric name (D2, D3, D4, D5)
+            str(round(stats["Median"], 2)),
+            str(round(stats["Mean"], 2)),
+            str(round(stats["StdDev"], 2)),
+            str(round(stats["Max"], 2)),
+            str(round(stats["Min"], 2))
+        ]
+        table.append("| " + " | ".join(row) + " |")
+
+    return "\n".join(table)
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python process_instrumentation.py <path_to_zip_file>")
@@ -122,18 +141,8 @@ if __name__ == "__main__":
     merged_data = extract_and_merge_data(zip_file_path)
     intermediate_data = write_intermediate_json(merged_data)  # This is now a dictionary
 
-    # Calculate and print percentiles
-    # percentiles_results = calculate_percentiles(intermediate_data)
-    # print("Latency Percentiles:")
-    # for pair, percentiles in percentiles_results.items():
-    #     print(f"{pair}:")
-    #     for percentile, value in percentiles.items():
-    #         print(f"  {percentile}: {value}")
-    
     # Calculate and print differences and stats
     stats_results = calculate_differences_and_stats(intermediate_data)
     print("Differences Stats:")
-    for key, stats in stats_results.items():
-        print(f"{key}:")
-        for stat_name, value in stats.items():
-            print(f"  {stat_name}: {value}")
+    print(generate_markdown_table(stats_results))
+
