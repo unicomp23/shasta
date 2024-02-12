@@ -114,27 +114,29 @@ def calculate_differences_and_stats(data):
 
     return stats_results
 
-def generate_markdown_table(stats_results, parent_dir_name):
+def generate_markdown_table(all_stats_results):
     headers = ["Parent Directory", "Metric", "Median", "Mean", "StdDev", "Max", "Min"]
     table = []
     table.append("| " + " | ".join(headers) + " |")
     table.append("| " + " | ".join("---" for _ in headers) + " |")
 
-    for key, stats in stats_results.items():
-        row = [
-            parent_dir_name,  # Parent directory name now on the far left
-            key,  # Metric name (D2, D3, D4, D5)
-            str(round(stats["Median"], 2)),
-            str(round(stats["Mean"], 2)),
-            str(round(stats["StdDev"], 2)),
-            str(round(stats["Max"], 2)),
-            str(round(stats["Min"], 2)),
-        ]
-        table.append("| " + " | ".join(row) + " |")
+    for parent_dir_name, stats_results in all_stats_results.items():
+        for key, stats in stats_results.items():
+            row = [
+                parent_dir_name,  # Parent directory name now on the far left
+                key,  # Metric name (D2, D3, D4, D5)
+                str(round(stats["Median"], 2)),
+                str(round(stats["Mean"], 2)),
+                str(round(stats["StdDev"], 2)),
+                str(round(stats["Max"], 2)),
+                str(round(stats["Min"], 2)),
+            ]
+            table.append("| " + " | ".join(row) + " |")
 
     return "\n".join(table)
 
 def process_directory(directory_path):
+    all_stats_results = {}  # Collect stats results from all directories
     for root, dirs, files in os.walk(directory_path):
         for file in files:
             if file.endswith(".zip"):
@@ -144,10 +146,13 @@ def process_directory(directory_path):
                 merged_data = extract_and_merge_data(zip_path)
                 intermediate_data = write_intermediate_json(merged_data)  # This is now a dictionary
 
-                # Calculate and print differences and stats
+                # Calculate stats for current zip file
                 stats_results = calculate_differences_and_stats(intermediate_data)
-                print("Differences Stats:")
-                print(generate_markdown_table(stats_results, parent_dir_name))  # Pass the parent directory name here
+                all_stats_results[parent_dir_name] = stats_results
+
+    # Generate and print a single markdown table for all directories
+    print("Differences Stats for All Directories:")
+    print(generate_markdown_table(all_stats_results))
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
