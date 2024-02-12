@@ -114,20 +114,21 @@ def calculate_differences_and_stats(data):
 
     return stats_results
 
-def generate_markdown_table(stats_results):
-    headers = ["Metric", "Median", "Mean", "StdDev", "Max", "Min"]
+def generate_markdown_table(stats_results, parent_dir_name):
+    headers = ["Parent Directory", "Metric", "Median", "Mean", "StdDev", "Max", "Min"]
     table = []
     table.append("| " + " | ".join(headers) + " |")
     table.append("| " + " | ".join("---" for _ in headers) + " |")
 
     for key, stats in stats_results.items():
         row = [
+            parent_dir_name,  # Parent directory name now on the far left
             key,  # Metric name (D2, D3, D4, D5)
             str(round(stats["Median"], 2)),
             str(round(stats["Mean"], 2)),
             str(round(stats["StdDev"], 2)),
             str(round(stats["Max"], 2)),
-            str(round(stats["Min"], 2))
+            str(round(stats["Min"], 2)),
         ]
         table.append("| " + " | ".join(row) + " |")
 
@@ -138,6 +139,7 @@ def process_directory(directory_path):
         for file in files:
             if file.endswith(".zip"):
                 zip_path = os.path.join(root, file)
+                parent_dir_name = os.path.basename(os.path.dirname(zip_path))  # Get the parent directory name
                 print(f"Processing {zip_path}")
                 merged_data = extract_and_merge_data(zip_path)
                 intermediate_data = write_intermediate_json(merged_data)  # This is now a dictionary
@@ -145,7 +147,7 @@ def process_directory(directory_path):
                 # Calculate and print differences and stats
                 stats_results = calculate_differences_and_stats(intermediate_data)
                 print("Differences Stats:")
-                print(generate_markdown_table(stats_results))
+                print(generate_markdown_table(stats_results, parent_dir_name))  # Pass the parent directory name here
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
