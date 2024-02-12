@@ -135,6 +135,43 @@ def generate_markdown_table(all_stats_results):
 
     return "\n".join(table)
 
+def generate_d2_d3_markdown_tables(all_stats_results):
+    # Define headers for D2 and D3 tables
+    headers = ["Configuration", "Median", "Mean", "StdDev", "Max", "Min"]
+    
+    # Initialize tables for D2 and D3
+    d2_table = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
+    d3_table = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
+    
+    for parent_dir_name, stats_results in all_stats_results.items():
+        if "D2" in stats_results:
+            d2_stats = stats_results["D2"]
+            d2_row = [
+                parent_dir_name,
+                str(round(d2_stats["Median"], 2)),
+                str(round(d2_stats["Mean"], 2)),
+                str(round(d2_stats["StdDev"], 2)),
+                str(round(d2_stats["Max"], 2)),
+                str(round(d2_stats["Min"], 2)),
+            ]
+            d2_table.append("| " + " | ".join(d2_row) + " |")
+        
+        if "D3" in stats_results:
+            d3_stats = stats_results["D3"]
+            d3_row = [
+                parent_dir_name,
+                str(round(d3_stats["Median"], 2)),
+                str(round(d3_stats["Mean"], 2)),
+                str(round(d3_stats["StdDev"], 2)),
+                str(round(d3_stats["Max"], 2)),
+                str(round(d3_stats["Min"], 2)),
+            ]
+            d3_table.append("| " + " | ".join(d3_row) + " |")
+    
+    # Combine D2 and D3 tables into a single string with a separator
+    combined_tables = "\n\nD2 Metrics Table:\n" + "\n".join(d2_table) + "\n\nD3 Metrics Table:\n" + "\n".join(d3_table)
+    return combined_tables
+
 def process_directory(directory_path):
     all_stats_results = {}  # Collect stats results from all directories
     for root, dirs, files in os.walk(directory_path):
@@ -153,6 +190,10 @@ def process_directory(directory_path):
     # Generate and print a single markdown table for all directories
     print("Differences Stats for All Directories:")
     print(generate_markdown_table(all_stats_results))
+    
+    # Generate and print D2 and D3 tables
+    print("\nD2 and D3 Metrics Tables:")
+    print(generate_d2_d3_markdown_tables(all_stats_results))
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
