@@ -12,7 +12,8 @@ export async function createAndVerifyKafkaTopic(kafkaTopicLoad: string): Promise
 
     const topicConfig: ITopicConfig = {
         topic: kafkaTopicLoad,
-        numPartitions: 128,
+        numPartitions: 15,
+        replicationFactor: 3,
     };
 
     try {
