@@ -126,7 +126,7 @@ class Worker {
                         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
                         const commonRedisStreamKey = `{${redisSnapshotKey}}:strm:`;
 
-                        try {
+                        /* todo try {
                             Instrumentation.instance.getTimestamps(tagData.identifier!).beforeWorkerXAdd = Date.now();
                             const snapshotSeqNo = await this.redisClient.xadd(commonRedisStreamKey, "*", "delta", Buffer.from(tagData.toBinary()).toString("base64"));
                             if (snapshotSeqNo === null) {
@@ -153,7 +153,7 @@ class Worker {
                             Instrumentation.instance.getTimestamps(tagData.identifier!).afterWorkerHSet = Date.now();
                         } catch (error) {
                             slog.error('Error during Redis operation:', error);
-                        }
+                        } */
 
                         /*slog.info(`Worker: `, {
                             snapshotSeqNo,
