@@ -177,7 +177,6 @@ export async function runLoadTest(pairs: TestRef[], messageCount: number, numCPU
 
             // todo, await doneConsuming.promise;
             // todo, await consumeTaskDone;
-            await delay((messageCount + 10) * eventSpacingMillis);
 
             slog.info("runLoadTest", {iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0)});
         } catch (error) {
