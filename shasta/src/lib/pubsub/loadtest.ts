@@ -108,7 +108,7 @@ async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: 
     };
 }
 
-export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) {
+export async function runLoadTest(pairs: TestRef[], messageCount: number, numCPUs: number) {
     const runTestTasks = pairs.map(async (testRef) => {
         try {
             if (testRef.tagDataObjectIdentifier.name === "" || testRef.tagDataObjectIdentifier.name === undefined) {
@@ -122,7 +122,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
             const messageQueue = await testRef.subscriber?.stream();
 
             const testValTracker = new Set<string>();
-            for (let i = 0; i < m; i++) {
+            for (let i = 0; i < messageCount; i++) {
                 const testVal = testValFormat(uuidSubStream, i);
                 testValTracker.add(testVal);
             } // pre-populate to avoid race
@@ -152,7 +152,7 @@ export async function runLoadTest(pairs: TestRef[], m: number, numCPUs: number) 
 
             // produce
             const tagDataArray = new Array<TagData>();
-            for (let i = 0; i < m; i++) {
+            for (let i = 0; i < messageCount; i++) {
                 const testVal = testValFormat(uuidSubStream, i);
                 const tagDataObjectIdentifierNamed = testRef.tagDataObjectIdentifier.clone();
                 tagDataObjectIdentifierNamed.name = `name-${crypto.randomUUID()}`;
