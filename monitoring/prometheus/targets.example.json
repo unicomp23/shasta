@@ -1,0 +1,22 @@
+[
+    {
+      "labels": {
+        "job": "jmx"
+      },
+      "targets": [
+        "b-3.mskworkshopclustercliv.xyz.c6.kafka.us-east-1.amazonaws.com:11001",
+        "b-2.mskworkshopclustercliv.xyz.c6.kafka.us-east-1.amazonaws.com:11001",
+        "b-1.mskworkshopclustercliv.xyz.c6.kafka.us-east-1.amazonaws.com:11001"
+      ]
+    },
+    {
+      "labels": {
+        "job": "node"
+      },
+      "targets": [
+        "b-3.mskworkshopclustercliv.xyz.c6.kafka.us-east-1.amazonaws.com:11002",
+        "b-2.mskworkshopclustercliv.xyz.c6.kafka.us-east-1.amazonaws.com:11002",
+        "b-1.mskworkshopclustercliv.xyz.c6.kafka.us-east-1.amazonaws.com:11002"
+      ]
+    }
+]
