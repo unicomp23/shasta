@@ -72,19 +72,25 @@ export class Instrumentation {
         if (!fs.existsSync(tmpDir)) {
             fs.mkdirSync(tmpDir);
         }
-        const instrumentData = {
-            hostName: os.hostname(),
-            numCPUs,
-            pairCount,
-            messageCount,
-            timestamps: Array.from(this.timestamps).reduce((obj: {
-                [key: string]: ITimestamps
-            }, [key, value]) => {
-                obj[key] = value;
-                return obj;
-            }, {}),
-        };
-        fs.writeFileSync(path.join(tmpDir, 'instrumentation.json'), JSON.stringify(instrumentData, null, 2));
+        const filePath = path.join(tmpDir, 'instrumentation.json');
+        const writeStream = fs.createWriteStream(filePath, { flags: 'w' });
+        writeStream.write('{\n');
+        writeStream.write(`"hostName": "${os.hostname()}",\n`);
+        writeStream.write(`"numCPUs": ${numCPUs},\n`);
+        writeStream.write(`"pairCount": ${pairCount},\n`);
+        writeStream.write(`"messageCount": ${messageCount},\n`);
+        writeStream.write('"timestamps": {\n');
+        let first = true;
+        for (const [key, value] of this.timestamps) {
+            if (!first) {
+                writeStream.write(',\n');
+            }
+            first = false;
+            writeStream.write(`"${key}": ${JSON.stringify(value)}`);
+        }
+        writeStream.write('\n}\n');
+        writeStream.write('}\n');
+        writeStream.end();
     }
 
     public async writeNodeInstrumentData() {
