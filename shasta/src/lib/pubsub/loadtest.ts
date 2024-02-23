@@ -14,13 +14,13 @@ import {createAndVerifyKafkaTopic, generateTopicAndGroupId} from "./topic";
 import fs from "fs";
 
 export const pairCount = 8; // Number of publisher/subscriber pairs
-export const messageCount = 14400; //1800; // Number of published messages per pair
+export const messageCount = 43200; //1800; // Number of published messages per pair
 
 let sanityCountSub = 0;
 let sanityCountPub = 0;
 
 const workerModulo = 1;
-const eventSpacingMillis = 20; //1000;
+const eventSpacingMillis = 500; //1000;
 
 const pairs = new Array<TestRef>();
 
