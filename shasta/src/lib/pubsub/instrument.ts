@@ -68,7 +68,7 @@ export class Instrumentation {
     }
 
     public dump() {
-        const tmpDir = path.join(os.homedir(), 'tmp');
+        const tmpDir = '/tmp';
         if (!fs.existsSync(tmpDir)) {
             fs.mkdirSync(tmpDir);
         }
