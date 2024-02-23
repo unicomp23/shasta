@@ -175,6 +175,7 @@ export async function runLoadTest(pairs: TestRef[], messageCount: number, numCPU
             }
             //await testRef.publisher.sendBatch(tagDataArray); todo no batching
 
+            await delay(60000);
             // todo // await doneConsuming.promise;
             // todo // await consumeTaskDone;
 
