@@ -121,6 +121,7 @@ class Worker {
 
                         tagDataObjIdentifierPartition.name = "";
                         Instrumentation.instance.getTimestamps(tagData.identifier!).afterConsume = Date.now();
+                        /*** todo
                         const redisSnapshotKey = Buffer.from(tagDataObjIdentifierPartition.toBinary()).toString("base64");
 
                         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
@@ -153,7 +154,7 @@ class Worker {
                             Instrumentation.instance.getTimestamps(tagData.identifier!).afterWorkerHSet = Date.now();
                         } catch (error) {
                             slog.error('Error during Redis operation:', error);
-                        }
+                        } todo ***/
 
                         /*slog.info(`Worker: `, {
                             snapshotSeqNo,

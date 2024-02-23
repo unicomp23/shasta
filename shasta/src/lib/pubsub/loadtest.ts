@@ -175,8 +175,8 @@ export async function runLoadTest(pairs: TestRef[], messageCount: number, numCPU
             }
             //await testRef.publisher.sendBatch(tagDataArray); todo no batching
 
-            await doneConsuming.promise;
-            await consumeTaskDone;
+            // todo // await doneConsuming.promise;
+            // todo // await consumeTaskDone;
 
             slog.info("runLoadTest", {iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0)});
         } catch (error) {
