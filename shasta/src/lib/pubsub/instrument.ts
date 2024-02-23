@@ -86,7 +86,13 @@ export class Instrumentation {
                 writeStream.write(',\n');
             }
             first = false;
-            writeStream.write(`"${key}": ${JSON.stringify(value)}`);
+            const nonZeroFields = Object.entries(value).reduce((acc, [fieldKey, fieldValue]) => {
+                if (fieldValue !== 0) {
+                    acc[fieldKey] = fieldValue;
+                }
+                return acc;
+            }, {});
+            writeStream.write(`"${key}": ${JSON.stringify(nonZeroFields)}`);
         }
         writeStream.write('\n}\n');
         writeStream.write('}\n');
