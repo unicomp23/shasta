@@ -8,8 +8,7 @@ do
   mkdir -p ~/tmp/loadtest/$ip
 
   # Copy the file from each instance into its respective directory
-  scp -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem ec2-user@$ip:tmp/instrumentation.json ~/tmp/loadtest/$ip/
-
+  scp -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem ec2-user@$ip:/tmp/instrumentation.json ~/tmp/loadtest/$ip/
   # Copy the log.test.txt file from each instance into its respective directory
-  scp -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem ec2-user@$ip:tmp/log.test.txt ~/tmp/loadtest/$ip/
+  scp -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem ec2-user@$ip:/tmp/log.test.txt ~/tmp/loadtest/$ip/
 done
