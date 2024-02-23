@@ -36,8 +36,8 @@ do
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
       --parameters 'commands=["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && npx ts-node src/lib/pubsub/loadtest.ts > ~/tmp/log.test.txt 2>&1\""]' \
-      --instance-ids "${batch_instances[@]}" >/dev/null 2>&1
-
+      --instance-ids "${batch_instances[@]}" \
+      --timeout-seconds 43200 >/dev/null 2>&1
   # Sleep for 1 second before moving on to the next batch
   sleep 1
 done
