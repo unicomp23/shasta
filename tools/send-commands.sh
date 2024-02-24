@@ -35,7 +35,7 @@ do
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters 'commands=["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=--max-old-space-size=16384 npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""]' \
+      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=--max-old-space-size=16384 npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["43200"]}' \
       --instance-ids "${batch_instances[@]}" \
       --timeout-seconds 43200 >/dev/null 2>&1
   # Sleep for 1 second before moving on to the next batch
