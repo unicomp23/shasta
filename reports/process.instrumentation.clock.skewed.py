@@ -12,6 +12,7 @@ def extract_and_merge_data(zip_path):
     with ZipFile(zip_path, 'r') as zip_ref:
         for file_info in zip_ref.infolist():
             if 'instrumentation.json' in file_info.filename:
+                print(f"Processing JSON file: {file_info.filename}")  # Log the JSON file path
                 with zip_ref.open(file_info.filename) as file:
                     data = json.load(file)
                     # Generate UUID when file is first encountered
