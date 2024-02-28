@@ -73,33 +73,57 @@ export class Instrumentation {
         if (!fs.existsSync(tmpDir)) {
             fs.mkdirSync(tmpDir);
         }
-        // Generate a unique filename using UUID
-        const fileName = `instrumentation-${uuidv4()}.json`;
-        const filePath = path.join(tmpDir, fileName);
-        const writeStream = fs.createWriteStream(filePath, { flags: 'w' });
-        writeStream.write('{\n');
-        writeStream.write(`"hostName": "${os.hostname()}",\n`);
-        writeStream.write(`"numCPUs": ${numCPUs},\n`);
-        writeStream.write(`"pairCount": ${pairCount},\n`);
-        writeStream.write(`"messageCount": ${messageCount},\n`);
-        writeStream.write('"timestamps": {\n');
-        let first = true;
-        for (const [key, value] of this.timestamps) {
-            if (!first) {
-                writeStream.write(',\n');
-            }
-            first = false;
-            const nonZeroFields = Object.entries(value).reduce((acc, [fieldKey, fieldValue]) => {
-                if (fieldValue !== 0) {
-                    acc[fieldKey] = fieldValue;
+
+        const batchSize = 1000000; // Set the batch size to 10^6
+        let batchNumber = 0;
+        let currentBatchSize = 0;
+
+        // Function to write a batch to a file
+        const writeBatch = (batch: [string, ITimestamps][], batchNum: number) => {
+            const fileName = `instrumentation-${uuidv4()}-${batchNum}.json`;
+            const filePath = path.join(tmpDir, fileName);
+            const writeStream = fs.createWriteStream(filePath, { flags: 'w' });
+            writeStream.write('{\n');
+            writeStream.write(`"hostName": "${os.hostname()}",\n`);
+            writeStream.write(`"numCPUs": ${numCPUs},\n`);
+            writeStream.write(`"pairCount": ${pairCount},\n`);
+            writeStream.write(`"messageCount": ${messageCount},\n`);
+            writeStream.write('"timestamps": {\n');
+            batch.forEach(([key, value], index) => {
+                const nonZeroFields = Object.entries(value).reduce((acc, [fieldKey, fieldValue]) => {
+                    if (fieldValue !== 0) {
+                        acc[fieldKey] = fieldValue;
+                    }
+                    return acc;
+                }, {});
+                writeStream.write(`"${key}": ${JSON.stringify(nonZeroFields)}`);
+                if (index < batch.length - 1) {
+                    writeStream.write(',\n');
                 }
-                return acc;
-            }, {});
-            writeStream.write(`"${key}": ${JSON.stringify(nonZeroFields)}`);
+            });
+            writeStream.write('\n}\n');
+            writeStream.write('}\n');
+            writeStream.end();
+        };
+
+        // Initialize the current batch
+        let currentBatch: [string, ITimestamps][] = [];
+
+        for (const [key, value] of this.timestamps) {
+            currentBatch.push([key, value]);
+            currentBatchSize++;
+            if (currentBatchSize === batchSize) {
+                writeBatch(currentBatch, batchNumber);
+                currentBatch = []; // Reset the current batch
+                currentBatchSize = 0; // Reset the current batch size
+                batchNumber++; // Increment the batch number
+            }
         }
-        writeStream.write('\n}\n');
-        writeStream.write('}\n');
-        writeStream.end();
+
+        // Write the last batch if it has any timestamps
+        if (currentBatchSize > 0) {
+            writeBatch(currentBatch, batchNumber);
+        }
     }
 
     public async writeNodeInstrumentData() {
