@@ -14,13 +14,23 @@ def extract_and_merge_data(zip_path):
             if 'instrumentation.json' in file_info.filename:
                 print(f"Processing JSON file: {file_info.filename}")  # Log the JSON file path
                 with zip_ref.open(file_info.filename) as file:
-                    data = json.load(file)
+                    file_content = file.read().decode('utf-8')
+                    
+                    try:
+                        # Attempt to load the JSON data
+                        data = json.loads(file_content)
+                    except json.decoder.JSONDecodeError as e:
+                        # If there is extra data, process valid part of the JSON
+                        valid_json_part = file_content[:e.pos]
+                        data = json.loads(valid_json_part)
+                        print(f"Warning: Processed valid part of JSON data in {file_info.filename} up to position {e.pos}. Extra data ignored.")
+
                     # Generate UUID when file is first encountered
                     if file_info.filename not in file_uuids:
                         file_uuids[file_info.filename] = str(uuid.uuid4())
                     current_file_uuid = file_uuids[file_info.filename]
                     
-                    for ts_key, ts_values in data["timestamps"].items():
+                    for ts_key, ts_values in data.get("timestamps", {}).items():
                         if ts_key not in merged_data:
                             merged_data[ts_key] = {}
                         

@@ -7,10 +7,10 @@ do
   # Create a directory for each IP
   mkdir -p ~/tmp/loadtest/$ip
 
-  # Copy the file from each instance into its respective directory
-  scp -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem ec2-user@$ip:/tmp/instrumentation.json ~/tmp/loadtest/$ip/
-  # Copy the log.test.txt file from each instance into its respective directory
-  scp -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem ec2-user@$ip:/tmp/log.test.txt ~/tmp/loadtest/$ip/
+  # Copy all files matching instrumentation*.json from each instance into its respective directory using rsync
+  rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem" ec2-user@$ip:/tmp/instrumentation*.json ~/tmp/loadtest/$ip/
+  # Copy the log.test.txt file from each instance into its respective directory using rsync
+  rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem" ec2-user@$ip:/tmp/log.test.txt ~/tmp/loadtest/$ip/
 done
 # List all EC2 instances with the tag "SubRole=consumer"
 consumer_instances=$(aws ec2 describe-instances --filters "Name=tag:SubRole,Values=consumer" --query "Reservations[*].Instances[*].PublicIpAddress" --output text --region us-east-1)
@@ -21,8 +21,9 @@ do
   # Create a directory for each IP
   mkdir -p ~/tmp/loadtest/$ip
 
-  # Copy the file from each consumer instance into its respective directory
-  scp -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem ec2-user@$ip:/tmp/instrumentation.json ~/tmp/loadtest/$ip/
-  # Copy the log.test.txt file from each consumer instance into its respective directory
-  scp -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem ec2-user@$ip:/tmp/log.test.txt ~/tmp/loadtest/$ip/
+  # Copy all files matching instrumentation*.json from each consumer instance into its respective directory using rsync
+  rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem" ec2-user@$ip:/tmp/instrumentation*.json ~/tmp/loadtest/$ip/
+  # Copy the log.test.txt file from each consumer instance into its respective directory using rsync
+  rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ~/Downloads/john.davis.keypair.pem" ec2-user@$ip:/tmp/log.test.txt ~/tmp/loadtest/$ip/
 done
+
