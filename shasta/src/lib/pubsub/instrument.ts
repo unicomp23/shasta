@@ -77,10 +77,11 @@ export class Instrumentation {
         const batchSize = 1000000; // Set the batch size to 10^6
         let batchNumber = 0;
         let currentBatchSize = 0;
+        const commonUuid = uuidv4(); // Generate a common UUID for all files
 
         // Function to write a batch to a file
         const writeBatch = (batch: [string, ITimestamps][], batchNum: number) => {
-            const fileName = `instrumentation-${uuidv4()}-${batchNum}.json`;
+            const fileName = `instrumentation-${commonUuid}-${batchNum}.json`; // Use the common UUID here
             const filePath = path.join(tmpDir, fileName);
             const writeStream = fs.createWriteStream(filePath, { flags: 'w' });
             writeStream.write('{\n');
