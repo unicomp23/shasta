@@ -5,6 +5,7 @@ import * as Redis from 'ioredis';
 import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid'; // Add this import at the top of your file
 
 interface ITimestamps {
     beforePublish: number;
@@ -72,7 +73,9 @@ export class Instrumentation {
         if (!fs.existsSync(tmpDir)) {
             fs.mkdirSync(tmpDir);
         }
-        const filePath = path.join(tmpDir, 'instrumentation.json');
+        // Generate a unique filename using UUID
+        const fileName = `instrumentation-${uuidv4()}.json`;
+        const filePath = path.join(tmpDir, fileName);
         const writeStream = fs.createWriteStream(filePath, { flags: 'w' });
         writeStream.write('{\n');
         writeStream.write(`"hostName": "${os.hostname()}",\n`);
