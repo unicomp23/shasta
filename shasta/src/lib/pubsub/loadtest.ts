@@ -20,7 +20,7 @@ let sanityCountSub = 0;
 let sanityCountPub = 0;
 
 const workerModulo = 1;
-const eventSpacingMillis = 500; //1000;
+const eventSpacingMillis = 20; //1000;
 
 const pairs = new Array<TestRef>();
 
@@ -175,9 +175,9 @@ export async function runLoadTest(pairs: TestRef[], messageCount: number, numCPU
             }
             //await testRef.publisher.sendBatch(tagDataArray); todo no batching
 
-            await delay(60000);
-            //await doneConsuming.promise;
-            //await consumeTaskDone;
+            //await delay(60000);
+            await doneConsuming.promise;
+            await consumeTaskDone;
 
             slog.info("runLoadTest", {iteration: testValTracker.size, testVal: testValFormat(uuidSubStream, 0)});
         } catch (error) {
