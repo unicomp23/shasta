@@ -20,17 +20,9 @@ let sanityCountSub = 0;
 let sanityCountPub = 0;
 
 const workerModulo = 1;
-const eventSpacingMillis = 20; //1000;
+const eventSpacingMillis = 40; //1000;
 
 const pairs = new Array<TestRef>();
-
-enum TestType {
-    Consumer = "consumer",
-    Producer = "producer",
-    Both = "both",
-}
-
-const testType = TestType.Both;
 
 // todo revert, envVarsSync();
 
@@ -75,31 +67,28 @@ async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: 
     tagDataObjectIdentifier.scope = `scope-id-${crypto.randomUUID()}`;
     tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
 
+    const consumerFileExists = fs.existsSync('/tmp/consumer.txt');
     let publisher: Publisher | null = null;
-    // @ts-ignore
-    if (testType === TestType.Producer || testType === TestType.Both) {
+    let subscriber: Subscriber | null = null;
+
+    if(!consumerFileExists) {
+        // @ts-ignore
         publisher = new Publisher(kafka, kafkaTopicLoad);
         await publisher.connect();
-    }
 
-    let subscriber: Subscriber | null = null;
-    // @ts-ignore
-    if (testType === TestType.Producer || testType === TestType.Both) {
+        // @ts-ignore
         // redis subscriber runs on the same process as the publisher to validate the messages
         subscriber = new Subscriber(tagDataObjectIdentifier);
     }
 
-    let worker: Worker | null = null;
     // @ts-ignore
-    if (testType === TestType.Consumer || testType === TestType.Both) {
-        const consumerFileExists = fs.existsSync('/tmp/consumer.txt');
-        worker = (i % workerModulo == 0 && consumerFileExists) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
-        if (worker !== null) slog.info("setup worker", {
-            i,
-            groupId,
-            kafkaTopicLoad
-        });
-    }
+    let worker = (i % workerModulo == 0 && consumerFileExists) ? await Worker.create(kafka, groupId, kafkaTopicLoad) : null;
+    if (worker !== null) slog.info("setup worker", {
+        i,
+        groupId,
+        kafkaTopicLoad
+    });
+
     return {
         publisher,
         subscriber,
