@@ -99,6 +99,7 @@ class Worker {
             fromBeginning: true
         });
 
+        let sanityCountConsumer = 0;
         await this.kafkaConsumer.run({
             eachMessage: async (payload: EachMessagePayload) => {
                 const message: KafkaMessage = payload.message;
@@ -121,6 +122,11 @@ class Worker {
 
                         tagDataObjIdentifierPartition.name = "";
                         Instrumentation.instance.getTimestamps(tagData.identifier!).afterConsume = Date.now();
+                        
+                        sanityCountConsumer++;
+                        if (sanityCountConsumer % 1000 === 0)
+                            slog.info("sanityCountConsumer", {sanityCountConsumer: sanityCountConsumer});
+
                         const redisSnapshotKey = Buffer.from(tagDataObjIdentifierPartition.toBinary()).toString("base64");
 
                         const commonRedisSnapshotKey = `{${redisSnapshotKey}}:snap:`;
