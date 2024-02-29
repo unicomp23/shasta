@@ -7,11 +7,11 @@ import os
 
 def extract_and_merge_data(zip_path):
     merged_data = {}
-    file_uuids = {}  # Stores UUIDs for files, generated lazily
+    file_identifiers = {}  # Stores parent directory names for files
 
     with ZipFile(zip_path, 'r') as zip_ref:
         for file_info in zip_ref.infolist():
-            if 'instrumentation.json' in file_info.filename:
+            if file_info.filename.endswith('.json'):  # Adjusted to check for any .json file
                 print(f"Processing JSON file: {file_info.filename}")  # Log the JSON file path
                 with zip_ref.open(file_info.filename) as file:
                     file_content = file.read().decode('utf-8')
@@ -25,10 +25,10 @@ def extract_and_merge_data(zip_path):
                         data = json.loads(valid_json_part)
                         print(f"Warning: Processed valid part of JSON data in {file_info.filename} up to position {e.pos}. Extra data ignored.")
 
-                    # Generate UUID when file is first encountered
-                    if file_info.filename not in file_uuids:
-                        file_uuids[file_info.filename] = str(uuid.uuid4())
-                    current_file_uuid = file_uuids[file_info.filename]
+                    # Use parent directory name as identifier
+                    parent_dir_name = os.path.basename(os.path.dirname(file_info.filename))
+                    file_identifiers[file_info.filename] = parent_dir_name
+                    current_file_identifier = file_identifiers[file_info.filename]
                     
                     for ts_key, ts_values in data.get("timestamps", {}).items():
                         if ts_key not in merged_data:
@@ -44,9 +44,9 @@ def extract_and_merge_data(zip_path):
                             if is_valid:
                                 merged_data[ts_key][field] = value
                                 if field == "beforePublish":
-                                    merged_data[ts_key]["srcInstrumentationUuid"] = current_file_uuid
+                                    merged_data[ts_key]["srcInstrumentationIdentifier"] = current_file_identifier
                                 elif field == "afterConsume":
-                                    merged_data[ts_key]["dstInstrumentationUuid"] = current_file_uuid
+                                    merged_data[ts_key]["dstInstrumentationIdentifier"] = current_file_identifier
 
     return merged_data
 
@@ -58,10 +58,10 @@ def calculate_percentiles(data):
     latencies_by_pair = {}
     # Collect latencies
     for entry in data.values():
-        required_keys = ["srcInstrumentationUuid", "dstInstrumentationUuid", "afterConsume", "beforePublish"]
+        required_keys = ["srcInstrumentationIdentifier", "dstInstrumentationIdentifier", "afterConsume", "beforePublish"]
         if all(key in entry for key in required_keys):
-            src_id = entry["srcInstrumentationUuid"]
-            dst_id = entry["dstInstrumentationUuid"]
+            src_id = entry["srcInstrumentationIdentifier"]
+            dst_id = entry["dstInstrumentationIdentifier"]
             latency = entry["afterConsume"] - entry["beforePublish"]
             pair_key = (src_id, dst_id)
             latencies_by_pair.setdefault(pair_key, []).append(latency)
@@ -87,10 +87,10 @@ def calculate_differences_and_stats(data):
 
     # Collect latencies
     for entry in data.values():
-        required_keys = ["srcInstrumentationUuid", "dstInstrumentationUuid", "afterConsume", "beforePublish"]
+        required_keys = ["srcInstrumentationIdentifier", "dstInstrumentationIdentifier", "afterConsume", "beforePublish"]
         if all(key in entry for key in required_keys):
-            src_id = entry["srcInstrumentationUuid"]
-            dst_id = entry["dstInstrumentationUuid"]
+            src_id = entry["srcInstrumentationIdentifier"]
+            dst_id = entry["dstInstrumentationIdentifier"]
             latency = entry["afterConsume"] - entry["beforePublish"]
             pair_key = (src_id, dst_id)
             latencies_by_pair.setdefault(pair_key, []).append(latency)
