@@ -22,7 +22,7 @@ let sanityCountSub = 0;
 let sanityCountPub = 0;
 
 const workerModulo = 1;
-const eventSpacingMillis = 500; //1000;
+const eventSpacingMillis = 40; //1000;
 
 const pairs = new Array<TestRef>();
 
