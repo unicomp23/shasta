@@ -12,8 +12,6 @@ import {Instrumentation} from "./instrument";
 import {env} from "process";
 import {createAndVerifyKafkaTopic, generateTopicAndGroupId} from "./topic";
 import fs from "fs";
-import cluster from 'cluster';
-import os from 'os';
 
 export const pairCount = 8; // Number of publisher/subscriber pairs
 export const messageCount = 43200; //1800; // Number of published messages per pair
@@ -34,8 +32,6 @@ export interface TestRef {
     worker: Worker | null;
     tagDataObjectIdentifier: TagDataObjectIdentifier;
 }
-
-const consumerFileExists = fs.existsSync('/tmp/consumer.txt');
 
 export async function setupKafkaPairs(kafkaTopicLoad: string, pairs: TestRef[], pairCount: number, numCPUs: number, groupId: string): Promise<void> {
     const kafka = await createKafka(`test-kafka-id-${crypto.randomUUID()}`, "us-east-1", numCPUs);
@@ -71,6 +67,7 @@ async function setup(kafkaTopicLoad: string, i: number, groupId: string, kafka: 
     tagDataObjectIdentifier.scope = `scope-id-${crypto.randomUUID()}`;
     tagDataObjectIdentifier.name = `name-${crypto.randomUUID()}`;
 
+    const consumerFileExists = fs.existsSync('/tmp/consumer.txt');
     let publisher: Publisher | null = null;
     let subscriber: Subscriber | null = null;
 
@@ -222,43 +219,14 @@ export async function mainLoadTest() {
     console.log(`numCPUs: ${numCPUs}`);
     const { kafkaTopicLoad, groupId } = generateTopicAndGroupId();
 
-    if (consumerFileExists) {
-        if (cluster.isPrimary) {
-            console.log(`Master ${process.pid} is running`);
-
-            // Fork workers.
-            for (let i = 0; i < 16; i++) {
-                cluster.fork();
-            }
-
-            cluster.on('exit', (worker, code, signal) => {
-                console.log(`worker ${worker.process.pid} died`);
-            });
-        } else {
-            // Workers can share any TCP connection
-            // In this case, it is an HTTP server
-            console.log(`Worker ${process.pid} started`);
-            try {
-                if (process.argv[2] !== 'msk-serverless')
-                    await createAndVerifyKafkaTopic(kafkaTopicLoad);
-                const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
-                await delay(10000);
-                expect(sanityCountSub).to.equal(pairCount * messageCount);
-            } catch (error) {
-                console.error('An error occurred:', error);
-            }
-        }
-    } else {
-        // Existing logic for when consumerFileExists is false
-        try {
-            if (process.argv[2] !== 'msk-serverless')
-                await createAndVerifyKafkaTopic(kafkaTopicLoad);
-            const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
-            await delay(10000);
-            expect(sanityCountSub).to.equal(pairCount * messageCount);
-        } catch (error) {
-            console.error('An error occurred:', error);
-        }
+    try {
+        if (process.argv[2] !== 'msk-serverless')
+            await createAndVerifyKafkaTopic(kafkaTopicLoad);
+        const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
+        await delay(10000);
+        expect(sanityCountSub).to.equal(pairCount * messageCount);
+    } catch (error) {
+        console.error('An error occurred:', error);
     }
 }
 
