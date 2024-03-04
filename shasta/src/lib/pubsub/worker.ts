@@ -122,7 +122,7 @@ class Worker {
 
                         tagDataObjIdentifierPartition.name = "";
                         Instrumentation.instance.getTimestamps(tagData.identifier!).afterConsume = Date.now();
-                        
+                        /***
                         sanityCountConsumer++;
                         if (sanityCountConsumer % 1000 === 0)
                             slog.info("sanityCountConsumer", {sanityCountConsumer: sanityCountConsumer});
@@ -167,7 +167,7 @@ class Worker {
                             await this.redisClient.expire(commonRedisSnapshotKey, 86400);
                         } catch (error) {
                             slog.error('Error during Redis operation:', error);
-                        }
+                        }***/
 
                         /*slog.info(`Worker: `, {
                             snapshotSeqNo,
