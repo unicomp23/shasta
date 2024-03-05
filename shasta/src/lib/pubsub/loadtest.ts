@@ -226,8 +226,8 @@ export async function mainLoadTest() {
             await createAndVerifyKafkaTopic(kafkaTopicLoad);
         const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
         await delay(10000);
-        expect(sanityCountSub).to.equal(pairCount * messageCount);
         eventLoopStats.dumpPausesToJson();
+        expect(sanityCountSub).to.equal(pairCount * messageCount);
     } catch (error) {
         console.error('An error occurred:', error);
     }
