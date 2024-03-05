@@ -12,6 +12,7 @@ import {Instrumentation} from "./instrument";
 import {env} from "process";
 import {createAndVerifyKafkaTopic, generateTopicAndGroupId} from "./topic";
 import fs from "fs";
+import EventLoopStats from "./eventloop.stats";
 
 export const pairCount = 8; // Number of publisher/subscriber pairs
 export const messageCount = 43200; //1800; // Number of published messages per pair
@@ -20,7 +21,7 @@ let sanityCountSub = 0;
 let sanityCountPub = 0;
 
 const workerModulo = 1;
-const eventSpacingMillis = 1000; //1000;
+const eventSpacingMillis = 40; //1000;
 
 const pairs = new Array<TestRef>();
 
@@ -220,11 +221,13 @@ export async function mainLoadTest() {
     const { kafkaTopicLoad, groupId } = generateTopicAndGroupId();
 
     try {
+        const eventLoopStats = new EventLoopStats();
         if (process.argv[2] !== 'msk-serverless')
             await createAndVerifyKafkaTopic(kafkaTopicLoad);
         const sanityCountSub = await loadTest(kafkaTopicLoad, numCPUs, groupId);
         await delay(10000);
         expect(sanityCountSub).to.equal(pairCount * messageCount);
+        eventLoopStats.dumpPausesToJson();
     } catch (error) {
         console.error('An error occurred:', error);
     }
