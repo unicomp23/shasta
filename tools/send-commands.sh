@@ -18,9 +18,9 @@ do
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=--max-old-space-size=16384 npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["43200"]}' \
+      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=--max-old-space-size=16384 npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["86400"]}' \
       --instance-ids "$instance" \
-      --timeout-seconds 43200 >/dev/null 2>&1
+      --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before moving on to the next instance
   sleep 0.05
 done
@@ -43,9 +43,9 @@ do
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=--max-old-space-size=16384 npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["43200"]}' \
+      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=--max-old-space-size=16384 npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["86400"]}' \
       --instance-ids "$instance" \
-      --timeout-seconds 43200 >/dev/null 2>&1
+      --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before sending the next command
   sleep 0.05
 done
