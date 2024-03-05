@@ -14,7 +14,8 @@ def extract_and_merge_data(zip_path):
             if file_info.filename.endswith('.json'):  # Adjusted to check for any .json file
                 print(f"Processing JSON file: {file_info.filename}")  # Log the JSON file path
                 with zip_ref.open(file_info.filename) as file:
-                    file_content = file.read().decode('utf-8')
+                    # Use 'ignore' to skip invalid byte sequences
+                    file_content = file.read().decode('utf-8', 'ignore')
                     
                     try:
                         # Attempt to load the JSON data
