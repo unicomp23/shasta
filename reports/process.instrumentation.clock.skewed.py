@@ -4,14 +4,16 @@ from zipfile import ZipFile
 import uuid
 import numpy as np
 import os
+import re  # Import the regular expression module
 
 def extract_and_merge_data(zip_path):
     merged_data = {}
     file_identifiers = {}  # Stores parent directory names for files
 
     with ZipFile(zip_path, 'r') as zip_ref:
+        pattern = re.compile(r'.*/instrumentation-[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-\d+\.json$', re.IGNORECASE)
         for file_info in zip_ref.infolist():
-            if file_info.filename.endswith('.json'):  # Adjusted to check for any .json file
+            if pattern.match(file_info.filename):
                 print(f"Processing JSON file: {file_info.filename}")  # Log the JSON file path
                 with zip_ref.open(file_info.filename) as file:
                     # Use 'ignore' to skip invalid byte sequences
