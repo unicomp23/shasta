@@ -18,7 +18,7 @@ do
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && npx ts-node --expose-gc src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["86400"]}' \
+      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && node --expose-gc -r ts-node/register src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["86400"]}' \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before moving on to the next instance
@@ -43,7 +43,7 @@ do
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && npx ts-node --expose-gc src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["86400"]}' \
+      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && node --expose-gc -r ts-node/register src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["86400"]}' \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before sending the next command
