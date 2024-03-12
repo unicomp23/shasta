@@ -1,13 +1,22 @@
 import { performance } from 'perf_hooks';
 import { writeFile } from 'fs';
+import fs from "fs";
+
+export enum EventType {
+  PRODUCER = 'PRODUCER',
+  CONSUMER = 'CONSUMER',
+}
 
 class EventLoopStats {
   private delayThreshold = 1; // milliseconds
   private checkInterval = 20; // milliseconds
-  private pauses: { timestamp: number; delta: number }[] = [];
+  private pauses: { timestamp: number; delta: number; type: string }[] = [];
   private scheduledTime: number;
+  private eventType: EventType; // Add this line
 
-  constructor() {
+  constructor() { // Modify this line
+    const consumerFileExists = fs.existsSync('/tmp/consumer.txt');
+    this.eventType = consumerFileExists ? EventType.CONSUMER : EventType.PRODUCER; // Modify this line
     this.scheduledTime = performance.now();
     this.monitorEventLoop();
   }
@@ -19,7 +28,7 @@ class EventLoopStats {
       const delta = now - this.scheduledTime - this.checkInterval;
 
       if (delta > this.delayThreshold) { // More than 1ms over the expected delay indicates a pause
-        this.pauses.push({ timestamp: nowEpoch, delta }); // Use nowEpoch for the timestamp
+        this.pauses.push({ timestamp: nowEpoch, delta, type: this.eventType }); // Modified line
       }
 
       this.scheduledTime = now;

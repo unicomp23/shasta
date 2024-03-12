@@ -12,7 +12,7 @@ import {Instrumentation} from "./instrument";
 import {env} from "process";
 import {createAndVerifyKafkaTopic, generateTopicAndGroupId} from "./topic";
 import fs from "fs";
-import EventLoopStats from "./eventloop.stats";
+import EventLoopStats, { EventType } from "./eventloop.stats";
 
 export const pairCount = 8; // Number of publisher/subscriber pairs
 export const messageCount = 43200; //1800; // Number of published messages per pair
