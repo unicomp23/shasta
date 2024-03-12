@@ -44,21 +44,24 @@ def extract_and_process_data(zip_path):
 
 # The rest of the functions (calculate_statistics) remain unchanged
 
-def generate_markdown_table(pause_durations_buckets):
-    table = "Interval (ms) | Count\n"
-    table += "---|---\n"
+def generate_github_markdown_table(pause_durations_buckets):
+    # Start with the header row
+    table = "| Interval (ms) | Count |\n"
+    table += "|---------------|-------|\n"
     # Ensure the ">1000" bucket is sorted correctly
     sorted_keys = sorted(pause_durations_buckets.keys(), key=lambda x: int(x.split('-')[0]) if '-' in x else float('inf'))
     for bucket in sorted_keys:
         count = pause_durations_buckets[bucket]
-        table += f"{bucket} | {count}\n"
+        # Use backticks for the ">1000" bucket to ensure it's treated as a literal string
+        bucket_display = f"`{bucket}`" if bucket == ">1000" else bucket
+        table += f"| {bucket_display} | {count} |\n"
     return table
 
 def process_directory(directory_path):
     print(f"Processing directory: {directory_path}")
     pause_durations_buckets = extract_and_process_data(directory_path)
     print("Event Loop Pause Statistics:")
-    print(generate_markdown_table(pause_durations_buckets))
+    print(generate_github_markdown_table(pause_durations_buckets))
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
