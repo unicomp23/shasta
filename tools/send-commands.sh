@@ -9,18 +9,16 @@ instance_array=($instances)
 # Print out the number of instances
 echo "Number of workers: ${#instance_array[@]}"
 
-# Loop over the instances for workers
+# Loop over the instances
 for instance in "${instance_array[@]}"
 do
   # Log the instance ID
   echo "Sending command to instance: $instance"
-  # Define the command to send
-  cmd_to_send="sudo -u ec2-user -i /bin/bash -c 'mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=\"--max-old-space-size=16384 --expose-gc\" npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1'"
   # Send the command to the instance
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters "{\"commands\":[\"$cmd_to_send\"], \"executionTimeout\":[\"86400\"]}" \
+      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=--max-old-space-size=16384 npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["86400"]}' \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before moving on to the next instance
@@ -36,18 +34,16 @@ instance_array=($instances)
 # Print out the number of instances
 echo "Number of consumers: ${#instance_array[@]}"
 
-# Loop over the instances for consumers
+# Loop over the instances
 for instance in "${instance_array[@]}"
 do
   # Log the instance ID and command number
   echo "Sending command to instance: $instance"
-  # Define the command to send
-  cmd_to_send="sudo -u ec2-user -i /bin/bash -c 'mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=\"--max-old-space-size=16384 --expose-gc\" npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1'"
   # Send the command to the instance
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters "{\"commands\":[\"$cmd_to_send\"], \"executionTimeout\":[\"86400\"]}" \
+      --parameters '{"commands":["sudo -u ec2-user -i /bin/bash -c \"mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && NODE_OPTIONS=--max-old-space-size=16384 npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1\""], "executionTimeout":["86400"]}' \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before sending the next command
