@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Define NODE_OPTIONS outside the loops
-export NODE_OPTIONS="--max-old-space-size=16384 --expose-gc"
-
 # Get the list of instance IDs for the workers
 instances=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" "Name=tag:Role,Values=worker" --query "Reservations[*].Instances[*].InstanceId" --output text --region us-east-1)
 
@@ -19,7 +16,7 @@ do
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1'\"]}" \
+      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'export NODE_OPTIONS=\\\"--max-old-space-size=32768 --expose-gc\\\" && mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1'\"]}" \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   sleep 0.05
@@ -41,7 +38,7 @@ do
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1'\"]}" \
+      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'export NODE_OPTIONS=\\\"--max-old-space-size=32768 --expose-gc\\\" && mkdir -p ~/tmp && cd ~/repo/ShastaCdkRepo/shasta && npm i && npx ts-node src/lib/pubsub/loadtest.ts > /tmp/log.test.txt 2>&1'\"]}" \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   sleep 0.05
