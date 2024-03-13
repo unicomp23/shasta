@@ -122,7 +122,7 @@ class Worker {
 
                         tagDataObjIdentifierPartition.name = "";
                         Instrumentation.instance.getTimestamps(tagData.identifier!).afterConsume = Date.now();
-                        if(global.gc) global.gc();
+                        //if(global.gc) global.gc();
                         
                         /***
                         sanityCountConsumer++;
