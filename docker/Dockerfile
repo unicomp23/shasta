@@ -1,0 +1,137 @@
+# Use a lightweight base image
+FROM ubuntu:22.04 AS build
+
+# Set DEBIAN_FRONTEND to noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install required packages and remove unnecessary ones
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common \
+    wget \
+    ca-certificates \
+    gnupg \
+    apt-transport-https \
+    curl \
+    build-essential \
+    cmake \
+    ninja-build \
+    ccache \
+    git \
+    git-lfs \
+    golang-go \
+    yasm \
+    unzip \
+    zip \
+    emacs \
+    exuberant-ctags \
+    python3 \
+    python3-pip \
+    clang-13 \
+    libstdc++-12-dev \
+    zlib1g-dev \
+    libjemalloc-dev \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up Python and pip
+RUN ln -sf /usr/bin/python3 /usr/bin/python && \
+    ln -sf /usr/bin/pip3 /usr/bin/pip && \
+    pip install --no-cache-dir --upgrade pip
+
+# Set up Git configuration
+RUN git config --global user.email "john.davis@cantina.ai" && \
+    git config --global user.name "John Davis"
+
+# Install Deno
+RUN curl -fsSL https://github.com/denoland/deno/releases/download/v1.35.1/deno-x86_64-unknown-linux-gnu.zip -o deno.zip && \
+    unzip deno.zip && \
+    rm deno.zip && \
+    chmod +x deno && \
+    mv deno /usr/local/bin
+ENV DENO_INSTALL="/usr/local"
+ENV PATH="${DENO_INSTALL}/bin:${PATH}"
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    echo "source \$HOME/.cargo/env" >> /root/.bashrc
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    npm install -g cdk8s-cli aws-cdk typescript typescript-language-server
+
+# Create necessary directories and clone repositories
+WORKDIR /root/repo/dev
+RUN echo "git clone git@github.com:airtimemedia/shasta.git" >> clone.shasta.sh && \
+    echo "git clone git@github.com:unicomp23/omni.git" >> clone.omni.sh && \
+    chmod +x ./clone.shasta.sh ./clone.omni.sh
+
+# Install AWS CLI
+RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm -rf awscliv2.zip ./aws
+
+# Install Boost libraries
+RUN apt-get update && apt-get install -y --no-install-recommends libboost-all-dev && rm -rf /var/lib/apt/lists/*
+
+# Optionally, set the default clang version to clang-13
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-13 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-13 100
+
+# Install Docker Engine and Docker CLI
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        docker-ce \
+        docker-ce-cli \
+        containerd.io \
+        docker-compose-plugin && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install OpenSSH server
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server && \
+    rm -rf /var/lib/apt/lists/*
+
+# Configure SSH server
+RUN mkdir /var/run/sshd && \
+    echo 'root:pwd' | chpasswd && \
+    sed -i 's/#*PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#*PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Expose SSH server port
+EXPOSE 22
+
+# Download typescript-ctags configuration file
+RUN curl https://raw.githubusercontent.com/jb55/typescript-ctags/master/.ctags -o /root/.ctags
+
+# Install AWS Corretto dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends java-common && rm -rf /var/lib/apt/lists/*
+
+# Install AWS Corretto
+RUN wget -O corretto.deb https://corretto.aws/downloads/latest/amazon-corretto-11-x64-linux-jdk.deb && \
+    dpkg --install corretto.deb && \
+    rm -f corretto.deb
+
+# Install SDKMAN and Kotlin
+RUN curl -s "https://get.sdkman.io" | bash && \
+    bash -c "source \$HOME/.sdkman/bin/sdkman-init.sh && sdk install kotlin"
+
+# Disable Emacs backup files
+RUN echo "(setq make-backup-files nil)" >> /root/.emacs
+
+# Start SSH server
+CMD ["/usr/sbin/sshd", "-D"]
