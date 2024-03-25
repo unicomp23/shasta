@@ -8,6 +8,12 @@ RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - && \
     yum install -y nodejs && \
     yum clean all
 
+# Install findutils to fix the find command issue
+RUN yum install -y findutils
+
+# Install emacs, wget, and curl
+RUN yum install -y emacs wget curl
+
 # Copy the shasta directory from the build stage
 COPY shasta /root/repo/dev/shasta
 
