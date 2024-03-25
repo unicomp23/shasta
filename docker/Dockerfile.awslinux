@@ -12,7 +12,7 @@ RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - && \
 RUN yum install -y findutils
 
 # Install emacs, wget, and curl
-RUN yum install -y emacs wget curl
+RUN yum install -y emacs
 
 # Copy the shasta directory from the build stage
 COPY shasta /root/repo/dev/shasta
