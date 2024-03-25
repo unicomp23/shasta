@@ -39,4 +39,3 @@ echo "Pushing the Docker image to ECR..."
 docker push $ECR_REPO_URI:$IMAGE_TAG
 
 echo "Image pushed successfully."
-

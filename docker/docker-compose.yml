@@ -3,8 +3,8 @@ services:
   shasta:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.awslinux  # Changed to Dockerfile.awslinux
-    image: unicomp21/shasta-awslinux:latest  # Updated username to unicomp21
+      dockerfile: docker/Dockerfile.awslinux
+    image: shasta-awslinux:latest
     volumes:
       - ../:/root/repo/dev/shasta
     ports:
@@ -12,9 +12,10 @@ services:
   shasta-devenv:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.devenv  # Added Dockerfile.devenv
-    image: unicomp21/shasta-devenv:latest  # Updated username to unicomp21
+      dockerfile: docker/Dockerfile.devenv
+    image: shasta-devenv:latest
     volumes:
       - ../:/root/repo/dev/shasta
     ports:
       - "22:22"
+      
