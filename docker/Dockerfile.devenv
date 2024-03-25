@@ -1,4 +1,4 @@
-# Use a lightweight base image
+# Stage 1: Build stage
 FROM ubuntu:22.04 AS build
 
 # Set DEBIAN_FRONTEND to noninteractive
@@ -132,6 +132,3 @@ RUN curl -s "https://get.sdkman.io" | bash && \
 
 # Disable Emacs backup files
 RUN echo "(setq make-backup-files nil)" >> /root/.emacs
-
-# Start SSH server
-CMD ["/usr/sbin/sshd", "-D"]

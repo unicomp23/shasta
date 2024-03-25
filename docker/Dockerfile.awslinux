@@ -1,0 +1,18 @@
+FROM amazonlinux:2023
+
+# Set DEBIAN_FRONTEND to noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install Node.js 18
+RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - && \
+    yum install -y nodejs && \
+    yum clean all
+
+# Copy the shasta directory from the build stage
+COPY shasta /root/repo/dev/shasta
+
+# Set the working directory
+WORKDIR /root/repo/dev/shasta
+
+# Specify the command to run your Node.js application
+CMD ["node", "app.js"]
