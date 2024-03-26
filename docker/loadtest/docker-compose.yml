@@ -1,10 +1,10 @@
 version: '3.8'
 services:
   loadtest:
-    image: ${SHASTA_CDK_ECR_REPO_URI}:shasta-devenv  # Dynamically use the ECR repo URI and tag from environment variables
+    image: ${SHASTA_CDK_ECR_REPO_URI}:shasta-devenv
     command: /bin/bash -c "npx ts-node src/lib/pubsub/loadtest.ts > /tmp/loadtest_$$(date +%Y-%m-%d-%H%M%S)_$${HOSTNAME}_$${RANDOM}.log 2>&1"
     environment:
-      CODECOMMIT_REPO_SSH: ${CODECOMMIT_REPO_SSH}  # Use environment variables from the host
+      CODECOMMIT_REPO_SSH: ${CODECOMMIT_REPO_SSH}
       CODECOMMIT_STREAM_NAME: ${CODECOMMIT_STREAM_NAME}
       SHASTA_CDK_ECR_REPO_URI: ${SHASTA_CDK_ECR_REPO_URI}
       SNS_TOPIC_ARN: ${SNS_TOPIC_ARN}
@@ -12,4 +12,5 @@ services:
       MULTICAST_STREAM_NAME: ${MULTICAST_STREAM_NAME}
       CODECOMMIT_REPO_HTTPS: ${CODECOMMIT_REPO_HTTPS}
     volumes:
-      - /tmp:/tmp  # Mount /tmp directory as in docker_run.sh
+      - /tmp:/tmp
+    working_dir: /root/repo/dev/shasta  # Set the working directory here
