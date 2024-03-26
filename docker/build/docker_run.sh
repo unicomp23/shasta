@@ -32,4 +32,5 @@ docker run --rm -it \
   -e BOOTSTRAP_BROKERS \
   -e MULTICAST_STREAM_NAME \
   -e CODECOMMIT_REPO_HTTPS \
+  -v /tmp:/tmp \
   $IMAGE_REPO:$IMAGE_TAG $CMD
