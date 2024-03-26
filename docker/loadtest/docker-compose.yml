@@ -11,6 +11,7 @@ services:
       BOOTSTRAP_BROKERS: ${BOOTSTRAP_BROKERS}
       MULTICAST_STREAM_NAME: ${MULTICAST_STREAM_NAME}
       CODECOMMIT_REPO_HTTPS: ${CODECOMMIT_REPO_HTTPS}
+      MEMORY_DB_ENDPOINT_ADDRESS: ${MEMORY_DB_ENDPOINT_ADDRESS}  # Add your variable here
     volumes:
       - /tmp:/tmp
     working_dir: /root/repo/dev/shasta  # Set the working directory here
