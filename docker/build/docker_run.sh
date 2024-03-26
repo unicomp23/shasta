@@ -22,5 +22,13 @@ if ! docker image inspect $IMAGE_REPO:$IMAGE_TAG &> /dev/null; then
     exit 1
 fi
 
-# Run Docker image
-docker run --rm -it $IMAGE_REPO:$IMAGE_TAG bash
+# Run Docker image with environment variables from the host
+docker run --rm -it \
+  -e CODECOMMIT_REPO_SSH \
+  -e CODECOMMIT_STREAM_NAME \
+  -e SHASTA_CDK_ECR_REPO_URI \
+  -e SNS_TOPIC_ARN \
+  -e BOOTSTRAP_BROKERS \
+  -e MULTICAST_STREAM_NAME \
+  -e CODECOMMIT_REPO_HTTPS \
+  $IMAGE_REPO:$IMAGE_TAG bash
