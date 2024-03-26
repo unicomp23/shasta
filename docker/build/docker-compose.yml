@@ -2,8 +2,8 @@ version: '3'
 services:
   shasta:
     build:
-      context: ../..
-      dockerfile: docker/Dockerfile.awslinux
+      context: ../../..
+      dockerfile: docker/build/Dockerfile.awslinux
     image: shasta-awslinux:latest
     volumes:
       - ../:/root/repo/dev/shasta
@@ -11,8 +11,8 @@ services:
       - "22:22"
   shasta-devenv:
     build:
-      context: ../..
-      dockerfile: docker/Dockerfile.devenv
+      context: ../../..
+      dockerfile: docker/build/Dockerfile.devenv
     image: shasta-devenv:latest
     volumes:
       - ../:/root/repo/dev/shasta
