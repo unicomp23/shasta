@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   loadtest:
-    image: ${SHASTA_CDK_ECR_REPO_URI}:shasta-devenv
+    image: ${SHASTA_CDK_ECR_REPO_URI}:shasta-awslinux
     command: /bin/bash -c "npx ts-node src/lib/pubsub/loadtest.ts > /tmp/loadtest_$$(date +%Y-%m-%d-%H%M%S)_$${HOSTNAME}_$${RANDOM}.log 2>&1"
     environment:
       CODECOMMIT_REPO_SSH: ${CODECOMMIT_REPO_SSH}
