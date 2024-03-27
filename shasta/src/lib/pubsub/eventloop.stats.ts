@@ -1,6 +1,7 @@
 import { performance } from 'perf_hooks';
 import { writeFile } from 'fs';
 import fs from "fs";
+import { v4 as uuidv4 } from 'uuid';
 
 export enum EventType {
   PRODUCER = 'PRODUCER',
@@ -41,12 +42,12 @@ class EventLoopStats {
   }
 
   public dumpPausesToJson() {
-    const filePath = '/tmp/eventLoopPauses.json';
-    writeFile(filePath, JSON.stringify(this.pauses, null, 2), (err) => {
+    const uniqueFileName = `/tmp/eventLoopPauses_${uuidv4()}.json`;
+    writeFile(uniqueFileName, JSON.stringify(this.pauses, null, 2), (err) => {
       if (err) {
         console.error('Error writing pauses to file:', err);
       } else {
-        console.log(`Pauses dumped to ${filePath}`);
+        console.log(`Pauses dumped to ${uniqueFileName}`);
       }
     });
   }
