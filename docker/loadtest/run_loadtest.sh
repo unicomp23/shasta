@@ -12,4 +12,4 @@ N=$1 # Number of instances
 export N
 
 # Use the environment variable in the docker compose command
-docker-compose up --scale loadtest=$N
+docker compose up --scale loadtest=$N
