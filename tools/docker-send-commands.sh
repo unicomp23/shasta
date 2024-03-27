@@ -25,11 +25,11 @@ for instance in "${instance_array[@]}"
 do
   # Log the instance ID
   echo "Sending command to instance: $instance"
-  # Send the command to the instance
+  # Send the command to the instance with the new log filename
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'cd ~/repo/ShastaCdkRepo/docker/loadtest && ./run_loadtest.sh $N > /tmp/worker.log 2>&1'\"], \"executionTimeout\":[\"86400\"]}" \
+      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'cd ~/repo/ShastaCdkRepo/docker/loadtest && ./run_loadtest.sh $N > /tmp/log-$(uuidgen).test.txt 2>&1'\"], \"executionTimeout\":[\"86400\"]}" \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before moving on to the next instance
@@ -50,11 +50,11 @@ for instance in "${instance_array[@]}"
 do
   # Log the instance ID
   echo "Sending command to instance: $instance"
-  # Send the command to the instance
+  # Send the command to the instance with the new log filename
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'cd ~/repo/ShastaCdkRepo/docker/loadtest && ./run_loadtest.sh $N > /tmp/consumer.log 2>&1'\"], \"executionTimeout\":[\"86400\"]}" \
+      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'cd ~/repo/ShastaCdkRepo/docker/loadtest && ./run_loadtest.sh $N > /tmp/log-$(uuidgen).test.txt 2>&1'\"], \"executionTimeout\":[\"86400\"]}" \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before moving on to the next instance
