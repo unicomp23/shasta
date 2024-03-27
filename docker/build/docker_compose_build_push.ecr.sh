@@ -17,13 +17,13 @@ aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --
 
 # Build and push shasta-awslinux image
 echo "Building and pushing shasta-awslinux image..."
-docker compose build shasta
+docker-compose build shasta
 docker tag shasta-awslinux:latest $ECR_REPO_URI:shasta-awslinux
 docker push $ECR_REPO_URI:shasta-awslinux
 
 # Build and push shasta-devenv image
 echo "Building and pushing shasta-devenv image..."
-docker compose build shasta-devenv
+docker-compose build shasta-devenv
 docker tag shasta-devenv:latest $ECR_REPO_URI:shasta-devenv
 docker push $ECR_REPO_URI:shasta-devenv
 
