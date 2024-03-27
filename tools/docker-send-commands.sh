@@ -29,7 +29,7 @@ do
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'cd ~/repo/ShastaCdkRepo/docker/loadtest && ./run_loadtest.sh $N > /tmp/log-$(uuidgen).test.txt 2>&1'\"], \"executionTimeout\":[\"86400\"]}" \
+      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'cd ~/repo/ShastaCdkRepo/docker/loadtest && ./run_loadtest.sh $N shasta-awslinux > /tmp/log-$(uuidgen).test.txt 2>&1'\"], \"executionTimeout\":[\"86400\"]}" \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before moving on to the next instance
@@ -54,7 +54,7 @@ do
   aws ssm send-command \
       --region us-east-1 \
       --document-name "AWS-RunShellScript" \
-      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'cd ~/repo/ShastaCdkRepo/docker/loadtest && ./run_loadtest.sh $N > /tmp/log-$(uuidgen).test.txt 2>&1'\"], \"executionTimeout\":[\"86400\"]}" \
+      --parameters "{\"commands\":[\"sudo -u ec2-user -i /bin/bash -c 'cd ~/repo/ShastaCdkRepo/docker/loadtest && ./run_loadtest.sh $N shasta-awslinux > /tmp/log-$(uuidgen).test.txt 2>&1'\"], \"executionTimeout\":[\"86400\"]}" \
       --instance-ids "$instance" \
       --timeout-seconds 86400 >/dev/null 2>&1
   # Sleep for 50ms before moving on to the next instance
